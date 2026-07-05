@@ -1,0 +1,22 @@
+const fs = require('fs');
+const path = require('path');
+
+const iconsDir = path.join(__dirname, 'icons');
+if (!fs.existsSync(iconsDir)){
+    fs.mkdirSync(iconsDir);
+}
+
+const base64Icons = {
+  // 16x16 Violet circle with central white star/highlight mark
+  'icon16.png': 'iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVR42mNkoBAwUkMfA9UMmB/VDJhKBoYI/+EExA5A7ArErkDswsDQz/CfoR9MDIQZCBmA1DAw/GfABrAZCNIAbBgwMAxEEwOZgIEB6gIMDFAXYGCAugADFL//Z/jPgB1Q/GcgBIj9gNgRiF2B2AWKf7AAsSMQu+LVwID5DBS5B4phqGkKoxEDAK4/LTmXq9F3AAAAAElFTORK5CYII=',
+  // 48x48 Gradient Violet circle
+  'icon48.png': 'iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAYAAABXAvmHAAABQklEQVR42u2ZsU3DQBCGf4tEDZESEkUo6IAOKKGjZA5o6AARUiI6IAIKoAE6oAOiI9ExRMYCqACv4D1hZ/w6n53ts/TlyHLCv+92797dzfL7F4tE4i0x5n+3k5U3oYvXFggWCBZILBAsECyQWCBcoJ0FWnI6k+t/ktyX5KaA8S25L/lT47kG5lCgJS05P8s1lDkoc9aSUwk81sAcCmTkyVwA/J7kQc1fT54yQO9K/tZ4qoFBFMjIg7gAyJ9JXtXsleTNDGgpyFYNdE0gIx/iA/h7ktsW+JL8aIGwGth1BDrIjPgcF4DL3yTfy6tO2b0vBVo7F/oI4M4N5K/5xI+1a9G2Wf1z6B6bFv032uGqA/rBAsECyQLuLHBXwPhf/B6+WCBcIFiQWCBcoI0FCvG6A6mN12aBYMEb00Z/mG/wE0t7AAAAAElFTORK5CYII=',
+  // 128x128 Gradient Violet circle
+  'icon128.png': 'iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAACWElEQVR42u3cMY4DMRTEsJn//+Rchw4VlF+Qh62G8Apg4t2uVwF/z3m/25fXWvY3eAPggABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgADwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgADwgADwgABwgABwgABwgADwgACwH9gA6a3a9WJgZ38AAAAASUVORK5CYII='
+};
+
+Object.entries(base64Icons).forEach(([filename, base64]) => {
+  const filePath = path.join(iconsDir, filename);
+  fs.writeFileSync(filePath, Buffer.from(base64, 'base64'));
+  console.log(`Saved ${filename} to ${filePath}`);
+});
