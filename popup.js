@@ -310,10 +310,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="highlight-source">
           <div class="source-title">${escapeHtml(hl.title)}</div>
           <div class="source-meta">
-            <a href="${escapeHtml(hl.url)}" target="_blank" class="source-url" title="${escapeHtml(hl.url)}">${escapeHtml(getDomain(hl.url))}</a>
+            <a href="${escapeHtml(hl.url)}" target="_blank" class="source-url" title="${escapeHtml(hl.url)}">
+              <img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(getDomain(hl.url))}&sz=32" class="favicon-icon" alt="" onerror="this.style.display='none'"/>
+              <span>${escapeHtml(getDomain(hl.url))}</span>
+            </a>
             <span>${formatTime(hl.timestamp)}</span>
           </div>
         </div>
+
         <div class="card-actions">
           <button class="card-btn btn-summarize" data-id="${hl.id}">
             <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.53c-.26-.81-1-1.4-1.9-1.4h-1v-3c0-.55-.45-1-1-1h-6v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.4z"/></svg>
