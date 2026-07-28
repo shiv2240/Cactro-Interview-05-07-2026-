@@ -840,8 +840,18 @@ function showAiSummaryModal(text, contextValid) {
   }
 
   chrome.storage.local.get(['session_token', 'groq_api_key'], async (result) => {
-    const token   = result.session_token;
-    const apiKey  = result.groq_api_key || '';
+    const token = result.session_token;
+    
+    // Priority: window.HS_CONFIG -> chrome.storage.local
+    let apiKey = (typeof window !== 'undefined' && window.HS_CONFIG?.GROQ_API_KEY) || result.groq_api_key || '';
+    if (apiKey === 'REPLACE_WITH_YOUR_GROQ_API_KEY' || apiKey === 'YOUR_GROQ_API_KEY_HERE') {
+      const storedKey = result.groq_api_key;
+      if (storedKey && storedKey !== 'REPLACE_WITH_YOUR_GROQ_API_KEY' && storedKey !== 'YOUR_GROQ_API_KEY_HERE') {
+        apiKey = storedKey;
+      } else {
+        apiKey = '';
+      }
+    }
 
     if (!token) {
       showAuthRequired(body);
@@ -850,10 +860,13 @@ function showAiSummaryModal(text, contextValid) {
     }
 
     if (!apiKey) {
-      showError(body, 'Groq API key not configured. Please set it in the extension popup settings.');
+      showError(body, 'Groq API key not configured. Please set it in config.js or in extension popup settings.');
       copyBtn.disabled = false;
       return;
     }
+
+    // Persist valid key to chrome.storage.local for future consistency
+    chrome.storage.local.set({ groq_api_key: apiKey });
 
     // Show loading skeleton
     showLoading(body);
