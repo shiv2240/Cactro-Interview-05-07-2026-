@@ -759,3 +759,58 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ── API Key Settings Banner ───────────────────────────────────────────────── */
+.api-key-banner {
+  background: rgba(99, 102, 241, 0.07);
+  border-bottom: 1px solid rgba(99, 102, 241, 0.2);
+  padding: 10px 14px 8px;
+  animation: slide-down 0.2s ease;
+}
+@keyframes slide-down {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.api-key-banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.api-key-icon {
+  width: 16px;
+  height: 16px;
+  fill: #818cf8;
+  flex-shrink: 0;
+}
+#api-key-input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+  font-family: 'Inter', monospace;
+  min-width: 0;
+}
+#api-key-input:focus {
+  border-color: var(--border-focus);
+  background: rgba(255, 255, 255, 0.09);
+}
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+}
+.api-key-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+}
+.api-key-hint a {
+  color: var(--text-link);
+  text-decoration: none;
+}
+.api-key-hint a:hover { text-decoration: underline; }

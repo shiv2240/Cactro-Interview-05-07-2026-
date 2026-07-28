@@ -5,9 +5,14 @@
 
 // ── Config ────────────────────────────────────────────────────────────────
 const CONVEX_HTTP_URL = 'https://ardent-partridge-610.convex.site';
-// NOTE: Store your Groq API key in .env.local as GROQ_API_KEY=gsk_...
-// It is read from chrome.storage.local where it is persisted after first use.
-const GROQ_API_KEY_DEFAULT = 'REPLACE_WITH_YOUR_GROQ_API_KEY';
+
+function syncConfigApiKey() {
+  const envKey = window.HS_CONFIG?.GROQ_API_KEY;
+  if (envKey && envKey !== 'YOUR_GROQ_API_KEY_HERE' && envKey !== 'REPLACE_WITH_YOUR_GROQ_API_KEY') {
+    chrome.storage.local.set({ groq_api_key: envKey });
+  }
+}
+syncConfigApiKey();
 
 // ── Auth helpers (session token in chrome.storage.local) ──────────────────
 function getSession() {
@@ -192,12 +197,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       currentToken = result.token;
       await saveSession(result.token, result.email);
-      // Store session token + Groq API key for content.js to use
-      chrome.storage.local.set({
-        session_token: result.token,
-        groq_api_key:  GROQ_API_KEY_DEFAULT
-      });
+      // Store session token for content.js to use
+      chrome.storage.local.set({ session_token: result.token });
+      syncConfigApiKey();
       showMainApp(result.email);
+
     } catch (err) {
       showAuthError(err.message);
     } finally {
@@ -389,7 +393,7 @@ Keep it concise, clear, and useful for someone who is learning.`;
     }
 
     showSummaryPanel(panelTitle);
-    requestGroqSummary(GROQ_API_KEY_DEFAULT, prompt);
+    requestGroqSummary(prompt);
   }
 
   // ── Summarize all ─────────────────────────────────────────────────────────
@@ -400,13 +404,23 @@ Keep it concise, clear, and useful for someone who is learning.`;
       .map((hl, i) => `Highlight ${i + 1} (from "${hl.title}"):\n"${hl.text}"`)
       .join('\n\n');
     requestGroqSummary(
-      GROQ_API_KEY_DEFAULT,
       `Below are multiple text highlights collected from websites. Create a coherent, structured digest summarizing the core information and key takeaways. Use bullet points where appropriate.\n\n${combined}`
     );
   });
 
-  // ── Groq API call ─────────────────────────────────────────────────────────
-  async function requestGroqSummary(apiKey, prompt) {
+  // ── Groq API call (reads key from chrome.storage.local) ─────────────────
+  async function requestGroqSummary(prompt) {
+    // Read the Groq key stored during login (or set manually)
+    const stored = await new Promise(resolve =>
+      chrome.storage.local.get(['groq_api_key'], resolve)
+    );
+    const apiKey = stored.groq_api_key || '';
+
+    if (!apiKey || apiKey === 'REPLACE_WITH_YOUR_GROQ_API_KEY') {
+      renderSummaryError('Groq API key not set. Please sign out and sign back in, or configure the key in extension settings.');
+      return;
+    }
+
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
