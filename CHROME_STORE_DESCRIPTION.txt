@@ -1,0 +1,70 @@
+================================================================================
+WEBSITE HIGHLIGHT SAVER — CHROME WEB STORE DESCRIPTION
+================================================================================
+
+Website Highlight Saver is your ultimate AI-powered reading companion and knowledge capture tool for Google Chrome. Seamlessly highlight, organize, and summarize text on any webpage with zero workflow interruption.
+
+Whether you are a student conducting research, a professional analyzing reports, a writer collecting insights, or a lifelong learner reading articles, Website Highlight Saver transforms how you capture and digest information online.
+
+--------------------------------------------------------------------------------
+KEY FEATURES
+--------------------------------------------------------------------------------
+
+★ IN-PAGE SMART TOOLTIP & AI SUMMARY
+• Highlight text on any webpage to trigger an instant interactive tooltip.
+• Save highlights with a single click or tap "AI Summary" for immediate real-time explanations.
+• Smart AI Mode:
+  - 1–2 Words: Performs a rich word lookup (definitions, part of speech, etymology, example sentences, synonyms, and usage tips).
+  - Short Phrases: Provides context, real-world usage examples, and related terms.
+  - Paragraphs & Long Text: Delivers key takeaways, bullet points, and core summaries instantly in an in-page modal dialog.
+
+★ CLOUD & LOCAL SYNCHRONIZATION
+• Cloud Backed: Automatically syncs your highlights to a secure, serverless database (powered by Convex).
+• Cross-Device Persistence: Access your saved highlights across browsers and sessions.
+• Offline Fallback: Local storage keeps your data available even when offline.
+
+★ FEATURE-RICH POPUP DASHBOARD
+• Searchable Highlight Vault: Instantly filter through saved highlights by title, URL, or content using real-time search.
+• Full Date & Time Tracking: Every highlight records localized timestamps so you know exactly when and where you found key insights.
+• 10-Item Paginated View: Clean, scrollable list with fast pagination controls (Prev/Next) for seamless navigation.
+• Quick Actions: Expand long text cards, jump to original source URLs, or delete unwanted entries with one click.
+• AI Digest: Generate a combined AI summary across all your saved highlights in one click.
+
+★ PRIVACY & ISOLATION BY DESIGN
+• Shadow DOM Insulated: All in-page tooltips and AI dialogs run inside a Shadow DOM. Host webpage CSS cannot mess up your interface.
+• Secure Authentication: Private user accounts via encrypted password sessions.
+• Your Data Belongs to You: Export, copy, or manage your stored reading lists whenever you need them.
+
+--------------------------------------------------------------------------------
+HOW TO USE
+--------------------------------------------------------------------------------
+
+1. INSTALL & SIGN IN
+   Click "Add to Chrome" and open the extension popup from your toolbar to sign in or create an account.
+
+2. HIGHLIGHT & CAPTURE
+   Select any text on Wikipedia, blogs, news sites, or documentation. A floating tooltip will appear above your selection.
+
+3. INSIGHTS AT A GLANCE
+   Click "Save Highlight" to add it to your dashboard, or click "AI Summary" to read an instant AI breakdown right inside your current tab.
+
+4. REVIEW YOUR DASHBOARD
+   Click the extension icon anytime to browse, search, paginate, or summarize your collected highlights in one place.
+
+--------------------------------------------------------------------------------
+WHO IS THIS FOR?
+--------------------------------------------------------------------------------
+
+• Students & Researchers: Collect quotes, citations, and terminology definitions while reading academic papers.
+• Content Creators & Writers: Gather reference materials, industry insights, and story ideas across web sources.
+• Developers & Engineers: Save code snippets, API notes, and technical documentation references.
+• Avid Readers: Instantly look up difficult vocabulary and save favorite book quotes or news highlights.
+
+--------------------------------------------------------------------------------
+SUPPORT & CONTACT
+--------------------------------------------------------------------------------
+
+Built with passion to elevate web reading and note-taking.
+If you have feedback, feature requests, or questions, please visit our support page or contact us directly.
+
+Start saving smarter today with Website Highlight Saver!
