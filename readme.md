@@ -23,6 +23,7 @@
 | Feature | Description |
 |---|---|
 | 🖱️ **In-Page Tooltip** | Select any text — a floating tooltip appears with three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** |
+| 🎨 **Lumina Slate Glassmorphic UI** | Premium glassmorphism design system with left-edge gradient accent strips, command search bar (`⌘K`), and Modern Violet themes |
 | 📄 **Full Webpage Summarization** | Click "Summarize Page" to extract webpage content and generate structured sections: **Overview**, **Agenda & Main Topics**, and **Key Takeaways** |
 | ☀️ **Light / Dark Theme** | Modern Light Mode by default with a live theme switcher (☀️/🌙) in the popup header to toggle between light and dark aesthetics |
 | 🌐 **Website Favicon Icons** | Displays original site favicons alongside saved highlights for easy visual website recognition |
@@ -37,6 +38,7 @@
 | 📄 **Dashboard Pagination** | Highlights list is paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
 | 🔑 **Change Password** | Secure password updates in settings using **Current Password Verification** |
 | 🛡️ **Shadow DOM Isolation** | Tooltip and AI dialog UI are fully isolated from host page CSS |
+
 
 
 ---
