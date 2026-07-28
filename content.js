@@ -1,7 +1,7 @@
 // content.js - Website Highlight Saver Content Script
 // Storage: Convex cloud + chrome.storage.local (fallback)
 const CONVEX_HTTP_URL = 'https://ardent-partridge-610.convex.site';
-const GROQ_API_URL    = 'https://api.groq.com/openai/v1/chat/completions';
+const GROQ_API_URL = 'https://api.groq.com/openai/v1/chat/completions';
 // Groq API key is stored in chrome.storage.local as 'groq_api_key' (set by the popup).
 // Set it once via the extension popup settings or chrome.storage.local.set({ groq_api_key: 'gsk_...' })
 
@@ -135,7 +135,7 @@ function showTooltip(selection, text, contextValid) {
   try {
     if (selection.rangeCount === 0) return;
     const range = selection.getRangeAt(0);
-    const rect  = range.getBoundingClientRect();
+    const rect = range.getBoundingClientRect();
 
     const container = document.createElement('div');
     container.id = 'highlight-saver-tooltip-root';
@@ -283,10 +283,10 @@ function showTooltip(selection, text, contextValid) {
     document.body.appendChild(container);
 
     // Position tooltip
-    const tooltipWidth  = tooltip.offsetWidth  || 260;
+    const tooltipWidth = tooltip.offsetWidth || 260;
     const tooltipHeight = tooltip.offsetHeight || 40;
 
-    let top  = rect.top + window.scrollY - tooltipHeight - 10;
+    let top = rect.top + window.scrollY - tooltipHeight - 10;
     let left = rect.left + window.scrollX + (rect.width - tooltipWidth) / 2;
 
     if (top < window.scrollY) top = rect.bottom + window.scrollY + 10;
@@ -294,7 +294,7 @@ function showTooltip(selection, text, contextValid) {
     else if (left + tooltipWidth > document.documentElement.clientWidth + window.scrollX - 10)
       left = document.documentElement.clientWidth + window.scrollX - tooltipWidth - 10;
 
-    container.style.top  = `${top}px`;
+    container.style.top = `${top}px`;
     container.style.left = `${left}px`;
 
     // ── Save button handler ──────────────────────────────────────────────────
@@ -304,8 +304,8 @@ function showTooltip(selection, text, contextValid) {
         // Fade out tooltip after save
         setTimeout(() => {
           container.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-          container.style.opacity    = '0';
-          container.style.transform  = 'translateY(-4px) scale(0.95)';
+          container.style.opacity = '0';
+          container.style.transform = 'translateY(-4px) scale(0.95)';
           window.getSelection()?.removeAllRanges();
           setTimeout(() => container.remove(), 250);
         }, 900);
@@ -334,10 +334,10 @@ function doSaveHighlight(text, feedbackEl, onSaved) {
   if (!isContextValid()) { window.location.reload(); return; }
 
   const newHighlight = {
-    id:        'hl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-    text:      text,
-    url:       window.location.href,
-    title:     document.title || window.location.hostname,
+    id: 'hl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    text: text,
+    url: window.location.href,
+    title: document.title || window.location.hostname,
     timestamp: Date.now()
   };
 
@@ -364,15 +364,15 @@ function doSaveHighlight(text, feedbackEl, onSaved) {
             (async function syncToConvex() {
               try {
                 const stored = await new Promise(r => chrome.storage.local.get(['session_token'], r));
-                const token  = stored.session_token;
+                const token = stored.session_token;
                 if (!token) { console.warn('[Highlight Saver] No session token — Convex sync skipped.'); return; }
                 const r = await fetch(`${CONVEX_HTTP_URL}/highlights`, {
-                  method:  'POST',
+                  method: 'POST',
                   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                  body:    JSON.stringify(newHighlight)
+                  body: JSON.stringify(newHighlight)
                 });
                 if (r.ok) console.log('[Highlight Saver] Synced to Convex.');
-                else      console.warn('[Highlight Saver] Convex sync failed:', r.status);
+                else console.warn('[Highlight Saver] Convex sync failed:', r.status);
               } catch (err) {
                 console.warn('[Highlight Saver] Convex sync error:', err.message);
               }
@@ -765,7 +765,7 @@ function showAiSummaryModal(text, contextValid) {
       </div>
       <div>
         <div class="header-title">${escapeHtml(modalTitle)}</div>
-        <div class="header-subtitle">Powered by Groq · LLaMA 3.3 70B</div>
+        <div class="header-subtitle">Powered by Shiv Sahni</div>
       </div>
     </div>
     <button class="close-modal-btn" id="hs-close-modal">&times;</button>
@@ -809,19 +809,19 @@ function showAiSummaryModal(text, contextValid) {
   // ── Wire up close ─────────────────────────────────────────────────────────
   const closeModalBtn = shadow.getElementById('hs-close-modal');
   const closeModal = () => {
-    modal.style.transition   = 'opacity 0.2s ease, transform 0.2s ease';
+    modal.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
     backdrop.style.transition = 'opacity 0.2s ease';
-    modal.style.opacity      = '0';
-    modal.style.transform    = 'scale(0.95)';
-    backdrop.style.opacity   = '0';
+    modal.style.opacity = '0';
+    modal.style.transform = 'scale(0.95)';
+    backdrop.style.opacity = '0';
     setTimeout(() => host.remove(), 220);
   };
   closeModalBtn.addEventListener('click', closeModal);
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(); });
 
   // ── Wire up Save ─────────────────────────────────────────────────────────
-  const saveBtn  = shadow.getElementById('hs-save-btn');
-  const copyBtn  = shadow.getElementById('hs-copy-btn');
+  const saveBtn = shadow.getElementById('hs-save-btn');
+  const copyBtn = shadow.getElementById('hs-copy-btn');
 
   if (!contextValid) {
     saveBtn.disabled = true;
@@ -841,7 +841,7 @@ function showAiSummaryModal(text, contextValid) {
 
   chrome.storage.local.get(['session_token', 'groq_api_key'], async (result) => {
     const token = result.session_token;
-    
+
     // Priority: window.HS_CONFIG -> chrome.storage.local
     let apiKey = (typeof window !== 'undefined' && window.HS_CONFIG?.GROQ_API_KEY) || result.groq_api_key || '';
     if (apiKey === 'REPLACE_WITH_YOUR_GROQ_API_KEY' || apiKey === 'YOUR_GROQ_API_KEY_HERE') {
@@ -878,20 +878,20 @@ function showAiSummaryModal(text, contextValid) {
       const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
-          'Content-Type':  'application/json',
+          'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model:       'llama-3.3-70b-versatile',
+          model: 'llama-3.3-70b-versatile',
           messages: [
             {
-              role:    'system',
+              role: 'system',
               content: 'You are a professional reading assistant. Provide concise, clear, and structured explanations using bold headings and bullet points. Do not include introductory filler phrases.'
             },
             { role: 'user', content: prompt }
           ],
           temperature: 0.5,
-          max_tokens:  500
+          max_tokens: 500
         })
       });
 
@@ -900,7 +900,7 @@ function showAiSummaryModal(text, contextValid) {
         throw new Error(errData.error?.message || `HTTP ${response.status}`);
       }
 
-      const data    = await response.json();
+      const data = await response.json();
       const content = data.choices?.[0]?.message?.content?.trim() || '(No response)';
 
       showResult(body, content);
