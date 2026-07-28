@@ -1,0 +1,27 @@
+{
+  "name": "test-975",
+  "version": "1.0.0",
+  "description": "A Google Chrome Extension that allows users to highlight text on any webpage and save highlights locally, search/delete them, and generate automated AI summaries of saved highlights using the OpenAI API.",
+  "main": "content.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shiv2240/Cactro-Interview-05-07-2026-.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/shiv2240/Cactro-Interview-05-07-2026-/issues"
+  },
+  "homepage": "https://github.com/shiv2240/Cactro-Interview-05-07-2026-#readme",
+  "dependencies": {
+    "convex": "^1.42.3"
+  },
+  "devDependencies": {
+    "sharp": "^0.35.3"
+  }
+}

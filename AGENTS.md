@@ -1,0 +1,51 @@
+# Website Highlight Saver — Agent Rules
+
+<!-- convex-ai-start -->
+
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read
+`convex/_generated/ai/guidelines.md` first** for important guidelines on
+how to correctly use Convex APIs and patterns. The file contains rules that
+override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running
+`npx convex ai-files install`.
+
+<!-- convex-ai-end -->
+
+---
+
+## Project Overview
+
+**Website Highlight Saver** is a Chrome Extension (Manifest V3) that:
+- Injects a tooltip on any webpage when text is selected (content script)
+- Tooltip has two buttons: **Save Highlight** and **AI Summary**
+- **AI Summary** opens an in-page Shadow DOM modal calling the Groq API directly
+- The popup dashboard shows saved highlights, allows search/delete, and Groq-powered summary of all highlights
+- Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local`
+
+## Key Files
+
+| File | Purpose |
+|---|---|
+| `content.js` | Tooltip + in-page AI modal (Shadow DOM, Groq API, Convex sync) |
+| `popup.js` | Extension popup — auth, CRUD, AI summary of all highlights |
+| `popup.html` / `popup.css` | Popup UI — glassmorphism dark theme |
+| `convex/` | Backend — auth, highlights schema, mutations, queries |
+| `manifest.json` | MV3 config — permissions, host permissions, content scripts |
+
+## Architecture Rules
+
+- **Content script** (`content.js`) runs in the webpage context — it cannot use ES modules or import Convex client directly. It calls Convex via the HTTP REST API and Groq via `fetch`.
+- **Popup** (`popup.js`) uses the Convex HTTP REST API and `chrome.storage.local` for the session token.
+- **Session token** is stored in `chrome.storage.local` as `session_token` by the popup after login, and read by `content.js` for Convex sync.
+- **Shadow DOM** is used for all injected UI to prevent CSS bleed from host pages.
+- **API keys** live in `.env.local` (gitignored). The Groq key is also hardcoded in `content.js` and `popup.js` for convenience during development.
+
+## Coding Conventions
+
+- All injected UI (tooltip, modal) must use Shadow DOM (`attachShadow({ mode: 'open' })`)
+- Always clear `window.getSelection()` when dismissing the tooltip to prevent re-triggering the `mouseup` handler
+- Always wrap Chrome storage callbacks in their own `try/catch` — outer `try/catch` does NOT catch callback exceptions
+- Check `isContextValid()` before any `chrome.*` API call in the content script

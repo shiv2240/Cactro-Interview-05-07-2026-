@@ -11,114 +11,130 @@
 </head>
 <body>
   <div class="app-container">
-    <!-- Header -->
-    <header class="app-header">
-      <div class="logo-area">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24">
-            <path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
-          </svg>
-        </div>
-        <div class="logo-text">
-          <h1>Highlighter</h1>
-          <span id="highlight-count" class="badge">0 saved</span>
-        </div>
-      </div>
-      <div class="header-actions">
-        <button id="summarize-all-btn" class="icon-btn btn-primary" title="Summarize all highlights">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1L14 13.76V16h-4v-2.24l-.85-.56A5.025 5.025 0 017 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.09-2.15 4.1z"/>
-          </svg>
-        </button>
-        <button id="toggle-settings-btn" class="icon-btn" title="Settings">
-          <svg class="icon" viewBox="0 0 24 24">
-            <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
-          </svg>
-        </button>
-      </div>
-    </header>
 
-    <!-- Main View -->
-    <main class="app-body">
-      <!-- Search -->
-      <div class="search-bar">
-        <svg class="search-icon" viewBox="0 0 24 24">
-          <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <!-- AUTH SCREEN (shown when logged out) -->
+    <div id="auth-screen" class="auth-screen hidden">
+      <div class="auth-logo">
+        <svg viewBox="0 0 24 24" width="32" height="32">
+          <defs>
+            <linearGradient id="authGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#6366f1"/>
+              <stop offset="100%" style="stop-color:#8b5cf6"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#authGrad)" d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
         </svg>
-        <input type="text" id="search-input" placeholder="Search saved highlights...">
+        <span class="auth-logo-text">Highlighter</span>
       </div>
 
-      <!-- Highlights List -->
-      <div id="highlights-list" class="highlights-list scrollable">
-        <!-- Highlights will be dynamically injected here -->
+      <div class="auth-tabs">
+        <button id="tab-login" class="auth-tab active">Sign In</button>
+        <button id="tab-register" class="auth-tab">Sign Up</button>
       </div>
-      
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-state hidden">
-        <div class="empty-icon">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
-          </svg>
-        </div>
-        <p class="empty-title">No highlights saved yet</p>
-        <p class="empty-text">Highlight text on any website and click "Save Highlight" to see them here.</p>
-      </div>
-    </main>
 
-    <!-- Settings Panel (Collapsible Drawer) -->
-    <section id="settings-panel" class="settings-panel hidden">
-      <div class="settings-header">
-        <h2>OpenAI AI Summary Settings</h2>
-        <button id="close-settings-btn" class="close-text-btn">&times;</button>
-      </div>
-      <div class="settings-body">
+      <div id="auth-error" class="auth-error hidden"></div>
+
+      <div class="auth-form">
         <div class="form-group">
-          <label for="openai-api-key">OpenAI API Key</label>
-          <input type="password" id="openai-api-key" placeholder="sk-proj-...">
-          <small class="form-help">Saved locally in your browser storage. Required for the summarization feature.</small>
+          <label for="auth-email">Email</label>
+          <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email">
         </div>
-        <button id="save-settings-btn" class="btn btn-full btn-indigo">Save API Key</button>
+        <div class="form-group">
+          <label for="auth-password">Password</label>
+          <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button id="auth-submit-btn" class="btn btn-full btn-indigo">Sign In</button>
       </div>
-    </section>
 
-    <!-- AI Summary Overlay -->
-    <section id="summary-overlay" class="summary-overlay hidden">
-      <div class="overlay-card">
-        <header class="overlay-header">
-          <div class="overlay-title-group">
-            <svg class="icon-sparkle" viewBox="0 0 24 24">
-              <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+      <p class="auth-footer-note">Your highlights are private and tied to your account.</p>
+    </div>
+
+    <!-- MAIN APP (shown when logged in) -->
+    <div id="main-app" class="hidden">
+
+      <!-- Header -->
+      <header class="app-header">
+        <div class="logo-area">
+          <div class="logo-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
             </svg>
-            <h2 id="summary-title">AI Summary</h2>
           </div>
-          <button id="close-summary-btn" class="close-text-btn">&times;</button>
-        </header>
-        
-        <div class="overlay-body">
-          <!-- Loading State -->
-          <div id="summary-loading" class="summary-loading hidden">
-            <div class="skeleton-line header-skeleton"></div>
-            <div class="skeleton-line body-skeleton-1"></div>
-            <div class="skeleton-line body-skeleton-2"></div>
-            <div class="skeleton-line body-skeleton-3"></div>
-          </div>
-          
-          <!-- Content Area -->
-          <div id="summary-text" class="summary-text scrollable">
-            <!-- Text injected here -->
+          <div class="logo-text">
+            <h1>Highlighter</h1>
+            <span id="highlight-count" class="badge">0 saved</span>
           </div>
         </div>
-
-        <footer class="overlay-footer">
-          <button id="copy-summary-btn" class="btn btn-secondary">
-            <svg class="icon-small" viewBox="0 0 24 24">
-              <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+        <div class="header-actions">
+          <span id="user-email-display" class="user-email"></span>
+          <button id="summarize-all-btn" class="icon-btn btn-primary" title="Summarize all highlights">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1L14 13.76V16h-4v-2.24l-.85-.56A5.025 5.025 0 017 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.09-2.15 4.1z"/>
             </svg>
-            Copy to Clipboard
           </button>
-        </footer>
-      </div>
-    </section>
+          <button id="signout-btn" class="icon-btn" title="Sign out">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5-5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main View -->
+      <main class="app-body">
+        <div class="search-bar">
+          <svg class="search-icon" viewBox="0 0 24 24">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+          </svg>
+          <input type="text" id="search-input" placeholder="Search saved highlights...">
+        </div>
+
+        <div id="highlights-list" class="highlights-list scrollable"></div>
+
+        <div id="empty-state" class="empty-state hidden">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24">
+              <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2zm0-4H7V7h10v2zm-4 8H7v-2h6v2z"/>
+            </svg>
+          </div>
+          <p class="empty-title">No highlights saved yet</p>
+          <p class="empty-text">Highlight text on any website and click "Save Highlight" to see them here.</p>
+        </div>
+      </main>
+
+      <!-- AI Summary Overlay -->
+      <section id="summary-overlay" class="summary-overlay hidden">
+        <div class="overlay-card">
+          <header class="overlay-header">
+            <div class="overlay-title-group">
+              <svg class="icon-sparkle" viewBox="0 0 24 24">
+                <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/>
+              </svg>
+              <h2 id="summary-title">AI Summary</h2>
+            </div>
+            <button id="close-summary-btn" class="close-text-btn">&times;</button>
+          </header>
+          <div class="overlay-body">
+            <div id="summary-loading" class="summary-loading hidden">
+              <div class="skeleton-line header-skeleton"></div>
+              <div class="skeleton-line body-skeleton-1"></div>
+              <div class="skeleton-line body-skeleton-2"></div>
+              <div class="skeleton-line body-skeleton-3"></div>
+            </div>
+            <div id="summary-text" class="summary-text scrollable"></div>
+          </div>
+          <footer class="overlay-footer">
+            <button id="copy-summary-btn" class="btn btn-secondary">
+              <svg class="icon-small" viewBox="0 0 24 24">
+                <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+              </svg>
+              Copy to Clipboard
+            </button>
+          </footer>
+        </div>
+      </section>
+
+    </div><!-- /#main-app -->
   </div>
   <script src="popup.js"></script>
 </body>
