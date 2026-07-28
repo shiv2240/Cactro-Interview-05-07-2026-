@@ -4,33 +4,38 @@
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
   --bg-card-hover: #f1f5f9;
-  --border-color: #cbd5e1;
-  --border-focus: #6366f1;
+  --border-color: #e2e8f0;
+  --border-focus: #8b5cf6;
   --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-link: #4f46e5;
-  --scrollbar-thumb: rgba(15, 23, 42, 0.25);
-  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.45);
+  --text-muted: #64748b;
+  --text-link: #6d3bd7;
+  --scrollbar-thumb: rgba(15, 23, 42, 0.2);
+  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.4);
   
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
+  --primary: #8b5cf6;
+  --primary-hover: #7c3aed;
+  --primary-gradient: linear-gradient(135deg, #a078ff, #6d3bd7);
+  --accent-strip: linear-gradient(to bottom, #a078ff, #6d3bd7);
   --danger: #ef4444;
   --danger-hover: #dc2626;
   --success: #10b981;
 }
 
 [data-theme="dark"] {
-  --bg-app: #0b0f19;
-  --bg-card: rgba(22, 28, 45, 0.95);
-  --bg-card-hover: rgba(30, 41, 59, 0.95);
+  --bg-app: #15121b;
+  --bg-card: rgba(30, 41, 59, 0.7);
+  --bg-card-hover: rgba(37, 51, 74, 0.85);
   --border-color: rgba(255, 255, 255, 0.08);
-  --border-focus: #6366f1;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --text-link: #818cf8;
-  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
-  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
+  --border-focus: #a078ff;
+  --text-main: #e7e0ed;
+  --text-muted: #cbc3d7;
+  --text-link: #d0bcff;
+  --scrollbar-thumb: rgba(208, 188, 255, 0.3);
+  --scrollbar-thumb-hover: #d0bcff;
+  --primary-gradient: linear-gradient(135deg, #a078ff, #6d3bd7);
+  --accent-strip: linear-gradient(to bottom, #d0bcff, #6d3bd7);
 }
+
 
 
 
@@ -165,14 +170,14 @@ body {
 }
 
 .icon-btn.btn-primary {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  background: var(--primary-gradient);
   border: none;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
 }
 
 .icon-btn.btn-primary:hover {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  background: linear-gradient(135deg, #8b5cf6, #5516be);
+  box-shadow: 0 6px 16px rgba(139, 92, 246, 0.45);
 }
 
 .icon-btn svg {
@@ -209,10 +214,10 @@ body {
 
 .search-bar input {
   width: 100%;
-  padding: 10px 12px 10px 38px;
+  padding: 10px 42px 10px 38px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: 14px;
   color: var(--text-main);
   font-family: inherit;
   font-size: 13px;
@@ -223,7 +228,21 @@ body {
 .search-bar input:focus {
   background: var(--bg-card-hover);
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.18);
+}
+
+.search-badge {
+  position: absolute;
+  right: 12px;
+  font-size: 10px;
+  font-family: monospace;
+  color: var(--text-muted);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: 6px;
+  pointer-events: none;
+  background: var(--bg-card);
+  opacity: 0.7;
 }
 
 /* Highlights List */
@@ -240,15 +259,28 @@ body {
 .highlight-card {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 14px;
-  padding: 12px;
+  border-radius: 16px;
+  padding: 14px 14px 14px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  flex-shrink: 0;
   transition: all 0.25s ease;
   animation: card-fade-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   position: relative;
+  overflow: hidden;
 }
+
+.accent-strip {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3.5px;
+  border-radius: 0 4px 4px 0;
+  background: var(--accent-strip);
+}
+
 
 .highlight-card:hover {
   background: var(--bg-card-hover);
@@ -290,7 +322,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 3px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid var(--border-color);
   padding-top: 8px;
 }
 
@@ -308,8 +340,9 @@ body {
   justify-content: space-between;
   align-items: center;
   font-size: 10px;
-  color: rgba(255, 255, 255, 0.4);
+  color: var(--text-muted);
 }
+
 
 .source-url {
   display: inline-flex;

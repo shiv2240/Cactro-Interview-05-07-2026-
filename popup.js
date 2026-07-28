@@ -296,22 +296,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function loadHighlights() {
     if (!currentToken) return;
     try {
+      // 1. Instantly read local storage so UI renders immediately without waiting for network
+      const localResult = await new Promise(r => chrome.storage.local.get({ highlights: [] }, r));
+      const localHighlights = localResult.highlights || [];
+
+      if (localHighlights.length > 0) {
+        allHighlights = localHighlights;
+        renderHighlights(allHighlights);
+      }
+
+      // 2. Fetch cloud highlights from Convex
       const cloudHighlights = await convexGetHighlights(currentToken);
-      if (cloudHighlights !== null) {
-        allHighlights = cloudHighlights;
+      if (cloudHighlights !== null && Array.isArray(cloudHighlights)) {
+        // Merge cloud & local highlights by ID
+        const mergedMap = new Map();
+        cloudHighlights.forEach(hl => { if (hl && hl.id) mergedMap.set(hl.id, hl); });
+        localHighlights.forEach(hl => { if (hl && hl.id && !mergedMap.has(hl.id)) mergedMap.set(hl.id, hl); });
+
+        allHighlights = Array.from(mergedMap.values()).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         chrome.storage.local.set({ highlights: allHighlights });
         renderHighlights(allHighlights);
-      } else {
-        // Fallback to local storage
-        chrome.storage.local.get({ highlights: [] }, (result) => {
-          allHighlights = result.highlights || [];
-          renderHighlights(allHighlights);
-        });
+      } else if (localHighlights.length === 0) {
+        renderHighlights([]);
       }
     } catch (e) {
       console.error('[Highlight Saver] loadHighlights error:', e);
     }
   }
+
 
   function renderHighlights(highlights) {
     currentFilteredHighlights = highlights;
@@ -346,6 +358,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       card.dataset.id = hl.id;
 
       card.innerHTML = `
+        <div class="accent-strip"></div>
         <div class="highlight-text" title="Click to expand/collapse">${escapeHtml(hl.text)}</div>
         <div class="highlight-source">
           <div class="source-title">${escapeHtml(hl.title)}</div>
@@ -357,6 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             <span>${formatTime(hl.timestamp)}</span>
           </div>
         </div>
+
 
         <div class="card-actions">
           <button class="card-btn btn-summarize" data-id="${hl.id}">
