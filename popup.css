@@ -122,10 +122,9 @@ body {
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.3px;
-  background: linear-gradient(to right, #ffffff, #c7d2fe);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
 }
+
 
 .badge {
   display: inline-block;
@@ -205,7 +204,7 @@ body {
 .search-bar input {
   width: 100%;
   padding: 10px 12px 10px 38px;
-  background: rgba(30, 41, 59, 0.4);
+  background: var(--bg-card);
   border: 1px solid var(--border-color);
   border-radius: 12px;
   color: var(--text-main);
@@ -216,7 +215,7 @@ body {
 }
 
 .search-bar input:focus {
-  background: rgba(30, 41, 59, 0.6);
+  background: var(--bg-card-hover);
   border-color: var(--border-focus);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
@@ -247,9 +246,9 @@ body {
 
 .highlight-card:hover {
   background: var(--bg-card-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--border-focus);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
 }
 
 @keyframes card-fade-in {
@@ -266,7 +265,7 @@ body {
 .highlight-text {
   font-size: 13px;
   line-height: 1.5;
-  color: #e2e8f0;
+  color: var(--text-main);
   word-break: break-word;
   white-space: pre-wrap;
   max-height: 90px;
@@ -275,6 +274,7 @@ body {
   cursor: pointer;
   transition: max-height 0.3s ease;
 }
+
 
 .highlight-text.expanded {
   max-height: 1000px;
@@ -482,7 +482,7 @@ body {
 .form-group input {
   width: 100%;
   padding: 10px 12px;
-  background: rgba(30, 41, 59, 0.5);
+  background: var(--bg-app);
   border: 1px solid var(--border-color);
   border-radius: 8px;
   color: var(--text-main);
@@ -491,6 +491,7 @@ body {
   outline: none;
   transition: border-color 0.2s ease;
 }
+
 
 .form-group input:focus {
   border-color: var(--border-focus);
@@ -585,7 +586,7 @@ body {
 .overlay-card {
   width: 100%;
   max-height: 80%;
-  background: #111827;
+  background: var(--bg-card);
   border-top: 1px solid var(--border-color);
   border-top-left-radius: 20px;
   border-top-right-radius: 20px;
@@ -594,7 +595,7 @@ body {
   padding: 18px;
   transform: translateY(0);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.2);
 }
 
 .summary-overlay.hidden .overlay-card {
@@ -618,9 +619,7 @@ body {
   font-size: 14px;
   font-weight: 600;
   font-family: 'Outfit', sans-serif;
-  background: linear-gradient(to right, #a78bfa, #c084fc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--text-main);
 }
 
 .icon-sparkle {
@@ -640,11 +639,12 @@ body {
 .summary-text {
   font-size: 12.5px;
   line-height: 1.6;
-  color: #e2e8f0;
+  color: var(--text-main);
   overflow-y: auto;
   padding-right: 4px;
   max-height: 240px;
 }
+
 
 .summary-text p {
   margin-bottom: 10px;

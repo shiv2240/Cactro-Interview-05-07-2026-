@@ -20,10 +20,11 @@ Convex agent skills for common tasks can be installed by running
 
 **Website Highlight Saver** is a Chrome Extension (Manifest V3) that:
 - Injects a tooltip on any webpage when text is selected (content script)
-- Tooltip has two buttons: **Save Highlight** and **AI Summary**
-- **AI Summary** opens an in-page Shadow DOM modal calling the Groq API directly
-- The popup dashboard shows saved highlights, allows search/delete, and Groq-powered summary of all highlights
+- Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page**
+- **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal calling the Groq API directly (formatting page summaries into Overview, Agenda, and Key Takeaways)
+- The popup dashboard shows saved highlights (with domain favicons & pagination), search/delete, theme switcher (Light/Dark), password updates, and AI summary of all highlights
 - Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local`
+
 
 ## Key Files
 
