@@ -269,6 +269,18 @@ function showTooltip(selection, text, contextValid) {
       AI Summary
     `;
 
+    // ── Summarize Page button ────────────────────────────────────────────────
+    const divider2 = document.createElement('div');
+    divider2.className = 'divider';
+
+    const pageBtn = document.createElement('button');
+    pageBtn.className = 'btn btn-ai';
+    pageBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+    pageBtn.innerHTML = `
+      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+      Summarize Page
+    `;
+
     // ── Close button ─────────────────────────────────────────────────────────
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close-btn';
@@ -278,9 +290,12 @@ function showTooltip(selection, text, contextValid) {
     tooltip.appendChild(saveBtn);
     tooltip.appendChild(divider);
     tooltip.appendChild(aiBtn);
+    tooltip.appendChild(divider2);
+    tooltip.appendChild(pageBtn);
     tooltip.appendChild(closeBtn);
     shadow.appendChild(tooltip);
     document.body.appendChild(container);
+
 
     // Position tooltip
     const tooltipWidth = tooltip.offsetWidth || 260;
@@ -316,7 +331,15 @@ function showTooltip(selection, text, contextValid) {
     aiBtn.addEventListener('click', () => {
       container.remove();
       window.getSelection()?.removeAllRanges();
-      showAiSummaryModal(text, contextValid);
+      showAiSummaryModal(text, contextValid, false);
+    });
+
+    // ── Summarize Page button handler ────────────────────────────────────────
+    pageBtn.addEventListener('click', () => {
+      container.remove();
+      window.getSelection()?.removeAllRanges();
+      const pageText = extractPageContent();
+      showAiSummaryModal(pageText, contextValid, true);
     });
 
     closeBtn.addEventListener('click', () => {
@@ -328,6 +351,31 @@ function showTooltip(selection, text, contextValid) {
     console.error('[Highlight Saver] showTooltip error:', err);
   }
 }
+
+// ── Extract main webpage content ────────────────────────────────────────────
+function extractPageContent() {
+  const article = document.querySelector('article') || document.querySelector('main') || document.body;
+  if (!article) return document.body.innerText || '';
+  
+  const clone = article.cloneNode(true);
+  clone.querySelectorAll('script, style, nav, footer, header, svg, iframe, noscript').forEach(el => el.remove());
+  
+  let text = clone.innerText || clone.textContent || '';
+  text = text.replace(/\s+/g, ' ').trim();
+  if (text.length > 8000) {
+    text = text.substring(0, 8000) + '... [truncated]';
+  }
+  return text;
+}
+
+// ── Listen for messages from popup ──────────────────────────────────────────
+chrome.runtime?.onMessage?.addListener((request) => {
+  if (request?.action === 'SUMMARIZE_PAGE') {
+    const pageText = extractPageContent();
+    showAiSummaryModal(pageText, isContextValid(), true);
+  }
+});
+
 
 // ── Save highlight logic (reusable) ─────────────────────────────────────────
 function doSaveHighlight(text, feedbackEl, onSaved) {
@@ -400,8 +448,61 @@ function doSaveHighlight(text, feedbackEl, onSaved) {
   }
 }
 
+// ── Prompt Builder ───────────────────────────────────────────────────────────
+function buildPrompt(text, isPageSummary = false) {
+  if (isPageSummary) {
+    return {
+      title: `📄 Page Summary: "${document.title || 'Webpage'}"`,
+      prompt: `You are an expert reading assistant. Please provide a structured summary of this entire webpage.
+Structure your output into 3 clear sections:
+1. **Overview**: Executive summary of what this webpage is about (2-3 clear sentences).
+2. **Agenda & Main Topics**: Core sections, topics, or agenda points covered on this page.
+3. **Key Takeaways**: Crucial conclusions and actionable insights.
+
+Format your response cleanly using bold headings and bullet points.
+
+Webpage Content:
+"${text}"`
+    };
+  }
+
+  const trimmed = (text || '').trim();
+  const words = trimmed.split(/\s+/).filter(w => w.length > 0);
+  const wordCount = words.length;
+
+  if (wordCount <= 2) {
+    return {
+      title: `✦ Word Lookup: "${trimmed}"`,
+      prompt: `The user highlighted the word/phrase: "${trimmed}"
+Please provide:
+1. **Definition** – What does it mean?
+2. **Part of Speech** – (noun, verb, adjective, etc.)
+3. **Etymology** – Brief origin
+4. **Example Sentences** – 2 example sentences
+5. **Synonyms** – 3-5 synonyms
+Format using bold headings and bullet points.`
+    };
+  } else if (wordCount <= 10) {
+    return {
+      title: `✦ Phrase Explained`,
+      prompt: `The user highlighted this phrase: "${trimmed}"
+Please explain:
+1. **Meaning** – What does it mean?
+2. **Context** – Where is it used?
+3. **Example** – Example sentence
+Format using bold headings and bullet points.`
+    };
+  } else {
+    return {
+      title: `AI Highlight Summary`,
+      prompt: `Summarize this text highlighting the key points:\n\n"${trimmed}"`
+    };
+  }
+}
+
 // ── AI Summary In-Page Modal ─────────────────────────────────────────────────
-function showAiSummaryModal(text, contextValid) {
+function showAiSummaryModal(text, contextValid, isPageSummary = false) {
+
   // Remove any existing modal
   const existing = document.getElementById('hs-ai-modal-root');
   if (existing) existing.remove();
@@ -753,7 +854,7 @@ function showAiSummaryModal(text, contextValid) {
   const modal = document.createElement('div');
   modal.className = 'modal';
 
-  const { title: modalTitle } = buildPrompt(text);
+  const { title: modalTitle, prompt: groqPrompt } = buildPrompt(text, isPageSummary);
 
   // Header
   const header = document.createElement('div');
@@ -771,10 +872,10 @@ function showAiSummaryModal(text, contextValid) {
     <button class="close-modal-btn" id="hs-close-modal">&times;</button>
   `;
 
-  // Preview of selected text
+  // Preview of selected text / page title
   const preview = document.createElement('div');
   preview.className = 'selected-preview';
-  preview.innerHTML = `<div class="preview-label">Selected Text</div>${escapeHtml(text)}`;
+  preview.innerHTML = `<div class="preview-label">${isPageSummary ? 'Webpage Title' : 'Selected Text'}</div>${escapeHtml(isPageSummary ? (document.title || 'Webpage') : text)}`;
 
   // Body
   const body = document.createElement('div');
@@ -874,7 +975,6 @@ function showAiSummaryModal(text, contextValid) {
 
     // Call Groq
     try {
-      const { prompt } = buildPrompt(text);
       const response = await fetch(GROQ_API_URL, {
         method: 'POST',
         headers: {
@@ -888,12 +988,13 @@ function showAiSummaryModal(text, contextValid) {
               role: 'system',
               content: 'You are a professional reading assistant. Provide concise, clear, and structured explanations using bold headings and bullet points. Do not include introductory filler phrases.'
             },
-            { role: 'user', content: prompt }
+            { role: 'user', content: groqPrompt }
           ],
           temperature: 0.5,
-          max_tokens: 500
+          max_tokens: 800
         })
       });
+
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));

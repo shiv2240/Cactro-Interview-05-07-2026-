@@ -1,6 +1,23 @@
 /* popup.css - Premium Aesthetics & Theme Styles */
 
 :root {
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --border-color: #e2e8f0;
+  --border-focus: #6366f1;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --text-link: #4f46e5;
+  
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --success: #10b981;
+}
+
+[data-theme="dark"] {
   --bg-app: #0b0f19;
   --bg-card: rgba(22, 28, 45, 0.6);
   --bg-card-hover: rgba(30, 41, 59, 0.85);
@@ -9,13 +26,8 @@
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-link: #818cf8;
-  
-  --primary: #6366f1;
-  --primary-hover: #4f46e5;
-  --danger: #ef4444;
-  --danger-hover: #dc2626;
-  --success: #10b981;
 }
+
 
 * {
   box-sizing: border-box;

@@ -147,6 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const nextPageBtn       = document.getElementById('next-page-btn');
   const paginationInfo    = document.getElementById('pagination-info');
 
+  const themeToggleBtn    = document.getElementById('theme-toggle-btn');
+  const themeIconSun      = document.querySelector('.theme-icon-sun');
+  const themeIconMoon     = document.querySelector('.theme-icon-moon');
+  const summarizePageBtn  = document.getElementById('summarize-page-btn');
+
   let allHighlights = [];
   let currentFilteredHighlights = [];
   let currentToken  = null;
@@ -154,6 +159,41 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let currentPage = 1;
   const itemsPerPage = 10;
+
+  // ── Theme Switcher ────────────────────────────────────────────────────────
+  function applyTheme(theme) {
+    if (theme === 'dark') {
+      document.body.setAttribute('data-theme', 'dark');
+      themeIconSun?.classList.remove('hidden');
+      themeIconMoon?.classList.add('hidden');
+    } else {
+      document.body.removeAttribute('data-theme');
+      themeIconSun?.classList.add('hidden');
+      themeIconMoon?.classList.remove('hidden');
+    }
+  }
+
+  chrome.storage.local.get({ theme: 'light' }, (result) => {
+    applyTheme(result.theme);
+  });
+
+  themeToggleBtn?.addEventListener('click', () => {
+    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const nextTheme = isDark ? 'light' : 'dark';
+    applyTheme(nextTheme);
+    chrome.storage.local.set({ theme: nextTheme });
+  });
+
+  // ── Summarize Page Button Handler ─────────────────────────────────────────
+  summarizePageBtn?.addEventListener('click', () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { action: 'SUMMARIZE_PAGE' });
+        window.close();
+      }
+    });
+  });
+
 
 
   // ── Boot: check for existing session ─────────────────────────────────────
