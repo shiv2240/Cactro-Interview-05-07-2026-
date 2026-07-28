@@ -1,0 +1,84 @@
+================================================================================
+CHROME WEB STORE PRIVACY & PERMISSIONS COMPLIANCE FORM GUIDELINES
+================================================================================
+
+Copy and paste the exact text below into the corresponding form fields on the 
+Chrome Web Store Developer Console -> Privacy tab.
+
+--------------------------------------------------------------------------------
+1. SINGLE PURPOSE & DESCRIPTION
+--------------------------------------------------------------------------------
+
+[Single Purpose Description] (Max 1,000 characters)
+--------------------------------------------------------------------------------
+Website Highlight Saver has a single, focused purpose: to allow users to select text on web pages to receive real-time AI summaries and save highlights to a cloud-synced personal reading list.
+
+
+--------------------------------------------------------------------------------
+2. PERMISSION JUSTIFICATIONS
+--------------------------------------------------------------------------------
+
+[storage justification] (Max 1,000 characters)
+--------------------------------------------------------------------------------
+The 'storage' permission is required to store local user preferences, offline highlight backups, and the encrypted account authentication session token in chrome.storage.local for fast access across browser sessions.
+
+[clipboardWrite justification] (Max 1,000 characters)
+--------------------------------------------------------------------------------
+The 'clipboardWrite' permission is required solely to allow users to click the "Copy" and "Copy to Clipboard" buttons in the extension popup and in-page AI modal to copy AI summaries and highlight text directly to their device clipboard.
+
+[Host permission justification] (Max 1,000 characters)
+--------------------------------------------------------------------------------
+Host permissions (api.groq.com and convex.site/cloud) are required strictly to send user-selected text to the Groq API for AI text summarization and to communicate with the Convex cloud database for syncing saved highlights across user sessions.
+
+
+--------------------------------------------------------------------------------
+3. REMOTE CODE DISCLOSURE
+--------------------------------------------------------------------------------
+
+Are you using remote code?
+(*) Select: No, I am not using Remote code
+
+Justification:
+Not applicable (No remote code used. All JavaScript logic is bundled inside the extension package in full compliance with Manifest V3 policies).
+
+
+--------------------------------------------------------------------------------
+4. DATA USAGE DISCLOSURES (Checkboxes)
+--------------------------------------------------------------------------------
+
+Check ONLY the following 3 data types (leave all others unchecked):
+
+[X] Personally identifiable information
+    Reason: Email address is collected during user registration/login for account management.
+
+[X] Authentication information
+    Reason: User password and session authentication tokens are used strictly to authenticate users.
+
+[X] Website content
+    Reason: Text explicitly highlighted and selected by the user is captured to generate AI summaries and save to their personal dashboard.
+
+LEAVE UNCHECKED:
+[ ] Health information
+[ ] Financial and payment information
+[ ] Personal communications
+[ ] Location
+[ ] Web history
+[ ] User activity
+
+
+--------------------------------------------------------------------------------
+5. CERTIFICATIONS
+--------------------------------------------------------------------------------
+
+Check ALL THREE certifications:
+[X] I do not sell or transfer user data to third parties, apart from the approved use cases
+[X] I do not use or transfer user data for purposes that are unrelated to my item's single purpose
+[X] I do not use or transfer user data to determine creditworthiness or for lending purposes
+
+
+--------------------------------------------------------------------------------
+6. PRIVACY POLICY URL
+--------------------------------------------------------------------------------
+
+Paste your GitHub raw/blob Privacy Policy URL:
+https://github.com/shiv2240/Cactro-Interview-05-07-2026-/blob/main/PRIVACY_POLICY.md
