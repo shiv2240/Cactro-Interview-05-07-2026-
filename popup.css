@@ -4,11 +4,13 @@
   --bg-app: #f8fafc;
   --bg-card: #ffffff;
   --bg-card-hover: #f1f5f9;
-  --border-color: #e2e8f0;
+  --border-color: #cbd5e1;
   --border-focus: #6366f1;
   --text-main: #0f172a;
-  --text-muted: #64748b;
+  --text-muted: #475569;
   --text-link: #4f46e5;
+  --scrollbar-thumb: rgba(15, 23, 42, 0.25);
+  --scrollbar-thumb-hover: rgba(15, 23, 42, 0.45);
   
   --primary: #6366f1;
   --primary-hover: #4f46e5;
@@ -19,14 +21,17 @@
 
 [data-theme="dark"] {
   --bg-app: #0b0f19;
-  --bg-card: rgba(22, 28, 45, 0.6);
-  --bg-card-hover: rgba(30, 41, 59, 0.85);
+  --bg-card: rgba(22, 28, 45, 0.95);
+  --bg-card-hover: rgba(30, 41, 59, 0.95);
   --border-color: rgba(255, 255, 255, 0.08);
   --border-focus: #6366f1;
   --text-main: #f8fafc;
   --text-muted: #94a3b8;
   --text-link: #818cf8;
+  --scrollbar-thumb: rgba(255, 255, 255, 0.18);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.35);
 }
+
 
 
 * {
@@ -49,15 +54,16 @@ body {
   width: 6px;
 }
 .scrollable::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.02);
+  background: transparent;
 }
 .scrollable::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 .scrollable::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--scrollbar-thumb-hover);
 }
+
 
 .app-container {
   display: flex;
@@ -911,14 +917,14 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 8px 16px;
-  background: rgba(15, 23, 42, 0.7);
+  background: var(--bg-card);
   border-top: 1px solid var(--border-color);
   margin-top: auto;
   flex-shrink: 0;
 }
 .pagination-btn {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--bg-app);
+  border: 1px solid var(--border-color);
   color: var(--text-main);
   font-size: 11.5px;
   font-weight: 500;
@@ -928,9 +934,9 @@ body {
   transition: all 0.15s ease;
 }
 .pagination-btn:hover:not(:disabled) {
-  background: rgba(99, 102, 241, 0.2);
+  background: var(--primary);
   border-color: var(--primary);
-  color: #fff;
+  color: #ffffff;
 }
 .pagination-btn:disabled {
   opacity: 0.35;
@@ -941,4 +947,5 @@ body {
   color: var(--text-muted);
   font-weight: 500;
 }
+
 .api-key-hint a:hover { text-decoration: underline; }
