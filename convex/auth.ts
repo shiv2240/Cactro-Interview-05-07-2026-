@@ -84,6 +84,31 @@ export const logout = mutation({
   },
 });
 
+export const changePassword = mutation({
+  args: { token: v.string(), currentPassword: v.string(), newPassword: v.string() },
+  handler: async (ctx, { token, currentPassword, newPassword }) => {
+    const session = await ctx.db
+      .query("sessions")
+      .withIndex("by_token", (q) => q.eq("token", token))
+      .first();
+    if (!session || session.expiresAt < Date.now()) throw new Error("Unauthorized or session expired");
+
+    const user = await ctx.db.get(session.userId);
+    if (!user) throw new Error("User not found");
+
+    const currentHash = await hashPassword(currentPassword);
+    if (currentHash !== user.passwordHash) throw new Error("Incorrect current password");
+
+    if (newPassword.length < 6) throw new Error("New password must be at least 6 characters");
+
+    const newHash = await hashPassword(newPassword);
+    await ctx.db.patch(user._id, { passwordHash: newHash });
+
+    return { success: true };
+  },
+});
+
+
 // -- Queries ------------------------------------------------------------------
 
 export const validateSession = query({

@@ -34,7 +34,7 @@ async function getSession(
 
 // -- OPTIONS preflight --------------------------------------------------------
 
-for (const path of ["/auth/register", "/auth/login", "/auth/logout", "/highlights"]) {
+for (const path of ["/auth/register", "/auth/login", "/auth/logout", "/auth/change-password", "/highlights"]) {
   http.route({
     path,
     method: "OPTIONS",
@@ -96,6 +96,29 @@ http.route({
     }
   }),
 });
+
+// POST /auth/change-password
+http.route({
+  path: "/auth/change-password",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    try {
+      const { token, currentPassword, newPassword } = await request.json();
+      if (!token || !currentPassword || !newPassword) {
+        return json({ error: "Token, current password, and new password required" }, 400);
+      }
+      const result = await ctx.runMutation(api.auth.changePassword, {
+        token,
+        currentPassword,
+        newPassword,
+      });
+      return json(result);
+    } catch (err: any) {
+      return json({ error: err.message ?? "Failed to change password" }, 400);
+    }
+  }),
+});
+
 
 // -- Highlights routes (auth required) ----------------------------------------
 

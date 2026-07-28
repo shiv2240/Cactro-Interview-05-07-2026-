@@ -30,6 +30,9 @@
 | 🗑️ **Delete Highlights** | Remove individual highlights from the popup with a single click |
 | 🤖 **AI Summarization (Popup)** | Generate an AI summary of all your highlights using Groq (LLaMA 3.3 70B) |
 | 📋 **Copy to Clipboard** | Copy AI-generated summaries directly to clipboard |
+| 📅 **Date & Time Stamps** | Highlights record and display localized full date and time (e.g., `Jul 28, 2026, 6:59 PM`) |
+| 📄 **Dashboard Pagination** | Highlights list is paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
+| 🔑 **Change Password** | Secure password updates in settings using **Current Password Verification** as a safe, zero-cost OTP alternative |
 | 🛡️ **Shadow DOM Isolation** | Tooltip and AI dialog UI are fully isolated from host page CSS — works consistently on every website |
 
 ---

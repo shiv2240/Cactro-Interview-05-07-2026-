@@ -85,15 +85,35 @@
         </div>
       </header>
 
-      <!-- API Key Settings Banner -->
+      <!-- Settings Panel Banner -->
       <div id="api-key-banner" class="api-key-banner hidden">
-        <div class="api-key-banner-inner">
-          <svg viewBox="0 0 24 24" class="api-key-icon"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-          <input type="password" id="api-key-input" placeholder="Enter Groq API key (gsk_...)" autocomplete="off"/>
-          <button id="api-key-save-btn" class="btn btn-indigo btn-sm">Save</button>
+        <div class="settings-tabs">
+          <button id="tab-settings-key" class="settings-tab active">API Key</button>
+          <button id="tab-settings-pwd" class="settings-tab">Change Password</button>
           <button id="api-key-cancel-btn" class="close-text-btn">&times;</button>
         </div>
-        <p class="api-key-hint">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+
+        <!-- API Key Tab -->
+        <div id="settings-key-section" class="settings-section">
+          <div class="api-key-banner-inner">
+            <svg viewBox="0 0 24 24" class="api-key-icon"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
+            <input type="password" id="api-key-input" placeholder="Enter Groq API key (gsk_...)" autocomplete="off"/>
+            <button id="api-key-save-btn" class="btn btn-indigo btn-sm">Save</button>
+          </div>
+          <p class="api-key-hint">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+        </div>
+
+        <!-- Change Password Tab -->
+        <div id="settings-pwd-section" class="settings-section hidden">
+          <div id="pwd-change-error" class="auth-error hidden" style="margin-bottom:8px;"></div>
+          <div class="form-group-sm">
+            <input type="password" id="pwd-current" placeholder="Current Password" autocomplete="current-password"/>
+          </div>
+          <div class="form-group-sm">
+            <input type="password" id="pwd-new" placeholder="New Password (min 6 chars)" autocomplete="new-password"/>
+          </div>
+          <button id="pwd-save-btn" class="btn btn-indigo btn-sm btn-full" style="margin-top:6px;">Update Password</button>
+        </div>
       </div>
 
       <!-- Main View -->
@@ -107,6 +127,12 @@
 
         <div id="highlights-list" class="highlights-list scrollable"></div>
 
+        <div id="pagination-controls" class="pagination-controls hidden">
+          <button id="prev-page-btn" class="pagination-btn">&laquo; Prev</button>
+          <span id="pagination-info" class="pagination-info">Page 1 of 1</span>
+          <button id="next-page-btn" class="pagination-btn">Next &raquo;</button>
+        </div>
+
         <div id="empty-state" class="empty-state hidden">
           <div class="empty-icon">
             <svg viewBox="0 0 24 24">
@@ -117,6 +143,7 @@
           <p class="empty-text">Highlight text on any website and click "Save Highlight" to see them here.</p>
         </div>
       </main>
+
 
       <!-- AI Summary Overlay -->
       <section id="summary-overlay" class="summary-overlay hidden">

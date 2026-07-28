@@ -814,3 +814,86 @@ body {
   text-decoration: none;
 }
 .api-key-hint a:hover { text-decoration: underline; }
+
+/* ── Settings Tabs & Forms ── */
+.settings-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 6px;
+}
+.settings-tab {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.settings-tab.active {
+  color: var(--primary);
+  background: rgba(99, 102, 241, 0.15);
+  font-weight: 600;
+}
+.settings-section {
+  animation: fade-in 0.15s ease;
+}
+.form-group-sm {
+  margin-bottom: 6px;
+}
+.form-group-sm input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.25);
+  border-radius: 8px;
+  color: var(--text-main);
+  font-size: 12px;
+  padding: 6px 10px;
+  outline: none;
+}
+.form-group-sm input:focus {
+  border-color: var(--border-focus);
+}
+
+/* ── Pagination Controls ── */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: rgba(15, 23, 42, 0.7);
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.pagination-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--text-main);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pagination-btn:hover:not(:disabled) {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: var(--primary);
+  color: #fff;
+}
+.pagination-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.pagination-info {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.api-key-hint a:hover { text-decoration: underline; }

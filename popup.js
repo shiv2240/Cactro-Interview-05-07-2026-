@@ -127,9 +127,34 @@ document.addEventListener('DOMContentLoaded', async () => {
   const summaryText       = document.getElementById('summary-text');
   const copySummaryBtn    = document.getElementById('copy-summary-btn');
 
+  // ── Settings & Pagination elements
+  const settingsBtn       = document.getElementById('settings-btn');
+  const apiKeyBanner      = document.getElementById('api-key-banner');
+  const apiKeyCancelBtn   = document.getElementById('api-key-cancel-btn');
+  const apiKeyInput       = document.getElementById('api-key-input');
+  const apiKeySaveBtn     = document.getElementById('api-key-save-btn');
+  const tabSettingsKey    = document.getElementById('tab-settings-key');
+  const tabSettingsPwd    = document.getElementById('tab-settings-pwd');
+  const settingsKeySection= document.getElementById('settings-key-section');
+  const settingsPwdSection= document.getElementById('settings-pwd-section');
+  const pwdCurrent        = document.getElementById('pwd-current');
+  const pwdNew            = document.getElementById('pwd-new');
+  const pwdSaveBtn        = document.getElementById('pwd-save-btn');
+  const pwdChangeError    = document.getElementById('pwd-change-error');
+
+  const paginationControls= document.getElementById('pagination-controls');
+  const prevPageBtn       = document.getElementById('prev-page-btn');
+  const nextPageBtn       = document.getElementById('next-page-btn');
+  const paginationInfo    = document.getElementById('pagination-info');
+
   let allHighlights = [];
+  let currentFilteredHighlights = [];
   let currentToken  = null;
   let isLoginMode   = true;
+
+  let currentPage = 1;
+  const itemsPerPage = 10;
+
 
   // ── Boot: check for existing session ─────────────────────────────────────
   const { token, email } = await getSession();
@@ -249,12 +274,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   function renderHighlights(highlights) {
+    currentFilteredHighlights = highlights;
     highlightsList.innerHTML = '';
     highlightCount.textContent = `${highlights.length} saved`;
 
     if (highlights.length === 0) {
       emptyState.classList.remove('hidden');
       highlightsList.classList.add('hidden');
+      paginationControls.classList.add('hidden');
       summarizeAllBtn.style.opacity = '0.5';
       summarizeAllBtn.style.pointerEvents = 'none';
       return;
@@ -265,7 +292,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     summarizeAllBtn.style.opacity = '1';
     summarizeAllBtn.style.pointerEvents = 'auto';
 
-    highlights.forEach(hl => {
+    // Pagination calculations
+    const totalPages = Math.ceil(highlights.length / itemsPerPage) || 1;
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const pageItems = highlights.slice(startIndex, startIndex + itemsPerPage);
+
+    pageItems.forEach(hl => {
       const card = document.createElement('div');
       card.className = 'highlight-card';
       card.dataset.id = hl.id;
@@ -305,7 +340,118 @@ document.addEventListener('DOMContentLoaded', async () => {
 
       highlightsList.appendChild(card);
     });
+
+    // Render pagination controls
+    if (highlights.length > itemsPerPage) {
+      paginationControls.classList.remove('hidden');
+      paginationInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+      prevPageBtn.disabled = (currentPage <= 1);
+      nextPageBtn.disabled = (currentPage >= totalPages);
+    } else {
+      paginationControls.classList.add('hidden');
+    }
   }
+
+  // ── Pagination Controls Handlers ─────────────────────────────────────────
+  prevPageBtn.addEventListener('click', () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderHighlights(currentFilteredHighlights);
+      highlightsList.scrollTop = 0;
+    }
+  });
+
+  nextPageBtn.addEventListener('click', () => {
+    const totalPages = Math.ceil(currentFilteredHighlights.length / itemsPerPage);
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderHighlights(currentFilteredHighlights);
+      highlightsList.scrollTop = 0;
+    }
+  });
+
+  // ── Settings Panel & Password Change Handlers ─────────────────────────────
+  settingsBtn.addEventListener('click', () => {
+    apiKeyBanner.classList.toggle('hidden');
+  });
+
+  apiKeyCancelBtn.addEventListener('click', () => {
+    apiKeyBanner.classList.add('hidden');
+  });
+
+  tabSettingsKey.addEventListener('click', () => {
+    tabSettingsKey.classList.add('active');
+    tabSettingsPwd.classList.remove('active');
+    settingsKeySection.classList.remove('hidden');
+    settingsPwdSection.classList.add('hidden');
+  });
+
+  tabSettingsPwd.addEventListener('click', () => {
+    tabSettingsPwd.classList.add('active');
+    tabSettingsKey.classList.remove('active');
+    settingsPwdSection.classList.remove('hidden');
+    settingsKeySection.classList.add('hidden');
+  });
+
+  apiKeySaveBtn.addEventListener('click', () => {
+    const val = apiKeyInput.value.trim();
+    if (!val) return;
+    chrome.storage.local.set({ groq_api_key: val }, () => {
+      apiKeySaveBtn.textContent = 'Saved!';
+      setTimeout(() => {
+        apiKeySaveBtn.textContent = 'Save';
+        apiKeyBanner.classList.add('hidden');
+      }, 1000);
+    });
+  });
+
+  pwdSaveBtn.addEventListener('click', async () => {
+    const currentPassword = pwdCurrent.value.trim();
+    const newPassword     = pwdNew.value.trim();
+
+    pwdChangeError.classList.add('hidden');
+    pwdChangeError.style.color = '';
+    if (!currentPassword || !newPassword) {
+      pwdChangeError.textContent = 'Please enter both current and new password.';
+      pwdChangeError.classList.remove('hidden');
+      return;
+    }
+    if (newPassword.length < 6) {
+      pwdChangeError.textContent = 'New password must be at least 6 characters.';
+      pwdChangeError.classList.remove('hidden');
+      return;
+    }
+
+    pwdSaveBtn.disabled = true;
+    pwdSaveBtn.textContent = 'Updating…';
+
+    try {
+      const resp = await fetch(`${CONVEX_HTTP_URL}/auth/change-password`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: currentToken,
+          currentPassword,
+          newPassword
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Failed to update password');
+
+      pwdChangeError.textContent = '✓ Password updated successfully!';
+      pwdChangeError.style.color = 'var(--success)';
+      pwdChangeError.classList.remove('hidden');
+      pwdCurrent.value = '';
+      pwdNew.value = '';
+    } catch (err) {
+      pwdChangeError.textContent = err.message;
+      pwdChangeError.style.color = '';
+      pwdChangeError.classList.remove('hidden');
+    } finally {
+      pwdSaveBtn.disabled = false;
+      pwdSaveBtn.textContent = 'Update Password';
+    }
+  });
 
   async function deleteHighlight(id) {
     const card = highlightsList.querySelector(`[data-id="${id}"]`);
@@ -327,6 +473,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // ── Search ────────────────────────────────────────────────────────────────
   searchInput.addEventListener('input', (e) => {
+    currentPage = 1;
     const query = e.target.value.toLowerCase().trim();
     const filtered = allHighlights.filter(hl =>
       hl.text.toLowerCase().includes(query) ||
@@ -335,6 +482,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
     renderHighlights(filtered);
   });
+
 
   // ── Summary overlay ───────────────────────────────────────────────────────
   closeSummaryBtn.addEventListener('click', () => summaryOverlay.classList.add('hidden'));
@@ -477,15 +625,17 @@ Keep it concise, clear, and useful for someone who is learning.`;
 
   // ── Utility helpers ───────────────────────────────────────────────────────
   function formatTime(timestamp) {
-    const diff = Date.now() - timestamp;
-    const mins  = Math.floor(diff / 60000);
-    const hours = Math.floor(mins / 60);
-    const days  = Math.floor(hours / 24);
-    if (mins < 1) return 'just now';
-    if (mins < 60) return `${mins}m ago`;
-    if (hours < 24) return `${hours}h ago`;
-    return `${days}d ago`;
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    return date.toLocaleString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
   }
+
 
   function getDomain(url) {
     try { return new URL(url).hostname.replace('www.', ''); } catch { return url; }
