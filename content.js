@@ -860,10 +860,11 @@ function showAiSummaryModal(text, contextValid) {
     }
 
     if (!apiKey) {
-      showError(body, 'Groq API key not configured. Please set it in config.js or in extension popup settings.');
+      showError(body, 'AI service is currently unavailable. Please try again later.');
       copyBtn.disabled = false;
       return;
     }
+
 
     // Persist valid key to chrome.storage.local for future consistency
     chrome.storage.local.set({ groq_api_key: apiKey });

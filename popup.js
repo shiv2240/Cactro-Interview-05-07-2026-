@@ -379,22 +379,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     apiKeyBanner.classList.add('hidden');
   });
 
-  tabSettingsKey.addEventListener('click', () => {
+  tabSettingsKey?.addEventListener('click', () => {
     tabSettingsKey.classList.add('active');
-    tabSettingsPwd.classList.remove('active');
-    settingsKeySection.classList.remove('hidden');
-    settingsPwdSection.classList.add('hidden');
+    tabSettingsPwd?.classList.remove('active');
+    settingsKeySection?.classList.remove('hidden');
+    settingsPwdSection?.classList.add('hidden');
   });
 
-  tabSettingsPwd.addEventListener('click', () => {
+  tabSettingsPwd?.addEventListener('click', () => {
     tabSettingsPwd.classList.add('active');
-    tabSettingsKey.classList.remove('active');
-    settingsPwdSection.classList.remove('hidden');
-    settingsKeySection.classList.add('hidden');
+    tabSettingsKey?.classList.remove('active');
+    settingsPwdSection?.classList.remove('hidden');
+    settingsKeySection?.classList.add('hidden');
   });
 
-  apiKeySaveBtn.addEventListener('click', () => {
-    const val = apiKeyInput.value.trim();
+  apiKeySaveBtn?.addEventListener('click', () => {
+    const val = apiKeyInput?.value.trim();
     if (!val) return;
     chrome.storage.local.set({ groq_api_key: val }, () => {
       apiKeySaveBtn.textContent = 'Saved!';
@@ -404,6 +404,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }, 1000);
     });
   });
+
 
   pwdSaveBtn.addEventListener('click', async () => {
     const currentPassword = pwdCurrent.value.trim();
@@ -565,9 +566,10 @@ Keep it concise, clear, and useful for someone who is learning.`;
     const apiKey = stored.groq_api_key || '';
 
     if (!apiKey || apiKey === 'REPLACE_WITH_YOUR_GROQ_API_KEY') {
-      renderSummaryError('Groq API key not set. Please sign out and sign back in, or configure the key in extension settings.');
+      renderSummaryError('AI service is currently unavailable. Please try again later.');
       return;
     }
+
 
     try {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
