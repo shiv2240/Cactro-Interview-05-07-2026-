@@ -2,71 +2,82 @@
 WEBSITE HIGHLIGHT SAVER — CHROME WEB STORE DESCRIPTION
 ================================================================================
 
-Website Highlight Saver is your ultimate AI-powered reading companion and knowledge capture tool for Google Chrome. Seamlessly highlight, organize, and summarize text on any webpage with zero workflow interruption.
+Website Highlight Saver is your AI-powered reading companion for Google Chrome. Highlight text, capture insights, and get instant AI explanations on any webpage — without leaving the tab.
 
-Whether you are a student conducting research, a professional analyzing reports, a writer collecting insights, or a lifelong learner reading articles, Website Highlight Saver transforms how you capture and digest information online.
+Whether you are a student researching, a professional reviewing reports, a writer collecting ideas, or a lifelong learner browsing articles, Website Highlight Saver helps you capture and understand what matters online.
 
 --------------------------------------------------------------------------------
 KEY FEATURES
 --------------------------------------------------------------------------------
 
-★ IN-PAGE SMART TOOLTIP & AI SUMMARY
-• Highlight text on any webpage to trigger an instant interactive tooltip.
-• Save highlights with a single click or tap "AI Summary" for immediate real-time explanations.
-• Smart AI Mode:
-  - 1–2 Words: Performs a rich word lookup (definitions, part of speech, etymology, example sentences, synonyms, and usage tips).
-  - Short Phrases: Provides context, real-world usage examples, and related terms.
-  - Paragraphs & Long Text: Delivers key takeaways, bullet points, and core summaries instantly in an in-page modal dialog.
+★ IN-PAGE SELECTION TOOLTIP
+• Select text on any webpage to open a floating tooltip.
+• Save — store the highlight in your dashboard (synced to the cloud).
+• AI Summary — get an instant explanation of the selected text in an in-page modal.
+• Summarize Page — generate a structured page summary (Overview, Agenda, Key Takeaways).
 
-★ CLOUD & LOCAL SYNCHRONIZATION
-• Cloud Backed: Automatically syncs your highlights to a secure, serverless database (powered by Convex).
-• Cross-Device Persistence: Access your saved highlights across browsers and sessions.
-• Offline Fallback: Local storage keeps your data available even when offline.
+★ KEYWORD INSIGHTS (AUTO HIGHLIGHTS)
+• A movable Keywords tile appears on the page and analyzes important terms automatically.
+• Key words are highlighted in soft sticky-note colors so they stand out without clutter.
+• Click the tile to see all detected words; click a word for a sectioned AI summary:
+  Meaning · On this page · Why it matters · Quick tip
+• From the explanation popup: Copy to clipboard or Save to your dashboard for later.
+• Press Esc to close explanation popups. Drag the tile anywhere — it remembers its place.
 
-★ FEATURE-RICH POPUP DASHBOARD
-• Searchable Highlight Vault: Instantly filter through saved highlights by title, URL, or content using real-time search.
-• Full Date & Time Tracking: Every highlight records localized timestamps so you know exactly when and where you found key insights.
-• 10-Item Paginated View: Clean, scrollable list with fast pagination controls (Prev/Next) for seamless navigation.
-• Quick Actions: Expand long text cards, jump to original source URLs, or delete unwanted entries with one click.
-• AI Digest: Generate a combined AI summary across all your saved highlights in one click.
+★ SMART AI MODES (SELECTION SUMMARY)
+• Short selections: word/phrase explanations with clear, useful context.
+• Longer selections: concise key takeaways and structured insights.
+• Page summaries: Overview, main topics, and actionable takeaways.
 
-★ PRIVACY & ISOLATION BY DESIGN
-• Shadow DOM Insulated: All in-page tooltips and AI dialogs run inside a Shadow DOM. Host webpage CSS cannot mess up your interface.
-• Secure Authentication: Private user accounts via encrypted password sessions.
-• Your Data Belongs to You: Export, copy, or manage your stored reading lists whenever you need them.
+★ CLOUD & LOCAL SYNC
+• Highlights sync to a secure Convex backend when you are signed in.
+• Local storage keeps your data available as a reliable fallback.
+• Access your reading list across sessions from the extension popup.
+
+★ POPUP DASHBOARD
+• Browse saved highlights with domain favicons and pagination.
+• Search, expand, open the source URL, or delete entries quickly.
+• Light/Dark theme switcher and account password updates.
+• AI Digest: summarize all saved highlights in one click.
+
+★ PRIVACY & CLEAN UI
+• Tooltips, modals, and the keywords tile use Shadow DOM so host-page CSS cannot break the UI.
+• Email/password authentication keeps your highlights tied to your account.
+• Copy, save, and manage your notes whenever you need them.
 
 --------------------------------------------------------------------------------
 HOW TO USE
 --------------------------------------------------------------------------------
 
 1. INSTALL & SIGN IN
-   Click "Add to Chrome" and open the extension popup from your toolbar to sign in or create an account.
+   Add the extension, open the popup from the toolbar, and create an account or sign in.
 
-2. HIGHLIGHT & CAPTURE
-   Select any text on Wikipedia, blogs, news sites, or documentation. A floating tooltip will appear above your selection.
+2. CAPTURE TEXT
+   Select any text on a webpage. Use Save, AI Summary, or Summarize Page from the tooltip.
 
-3. INSIGHTS AT A GLANCE
-   Click "Save Highlight" to add it to your dashboard, or click "AI Summary" to read an instant AI breakdown right inside your current tab.
+3. EXPLORE KEYWORDS
+   Use the Keywords tile to browse auto-detected terms. Click a word for a sectioned summary,
+   then Copy or Save it to your dashboard.
 
-4. REVIEW YOUR DASHBOARD
-   Click the extension icon anytime to browse, search, paginate, or summarize your collected highlights in one place.
+4. REVIEW LATER
+   Open the extension popup anytime to search, organize, theme, or generate an AI digest
+   of everything you have saved.
 
 --------------------------------------------------------------------------------
 WHO IS THIS FOR?
 --------------------------------------------------------------------------------
 
-• Students & Researchers: Collect quotes, citations, and terminology definitions while reading academic papers.
-• Content Creators & Writers: Gather reference materials, industry insights, and story ideas across web sources.
-• Developers & Engineers: Save code snippets, API notes, and technical documentation references.
-• Avid Readers: Instantly look up difficult vocabulary and save favorite book quotes or news highlights.
+• Students & Researchers — collect quotes, definitions, and citations while reading.
+• Writers & Creators — gather references and ideas across articles and docs.
+• Developers — save notes from documentation and technical write-ups.
+• Avid Readers — look up terms quickly and keep favorite passages in one place.
 
 --------------------------------------------------------------------------------
 SUPPORT & CONTACT
 --------------------------------------------------------------------------------
 
-Built with passion to elevate web reading and note-taking.
-For bug reports, suggestions, or updates, feel free to reach out directly on LinkedIn:
+Built to make web reading and note-taking clearer and faster.
+For bug reports, suggestions, or updates, reach out on LinkedIn:
 https://www.linkedin.com/in/shivsahnimern/
 
 Start saving smarter today with Website Highlight Saver!
-

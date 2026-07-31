@@ -12,14 +12,122 @@
 <body>
   <div class="app-container">
 
+    <!-- Themed SVG skies (day clouds / night) -->
+    <div class="sky-layer" aria-hidden="true">
+      <svg class="sky-svg sky-day" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="daySky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#9ec9ef"/>
+            <stop offset="42%" stop-color="#c7e4f7"/>
+            <stop offset="100%" stop-color="#eef5fb"/>
+          </linearGradient>
+          <linearGradient id="daySunGlow" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#fff6d6" stop-opacity="0.95"/>
+            <stop offset="100%" stop-color="#ffe08a" stop-opacity="0.15"/>
+          </linearGradient>
+          <filter id="cloudSoft" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="4"/>
+          </filter>
+        </defs>
+        <rect width="380" height="520" fill="url(#daySky)"/>
+        <circle cx="302" cy="68" r="42" fill="url(#daySunGlow)"/>
+        <circle cx="302" cy="68" r="18" fill="#fff4c4" opacity="0.9"/>
+        <!-- Soft cloud bank -->
+        <g filter="url(#cloudSoft)" fill="#ffffff" opacity="0.78">
+          <ellipse cx="70" cy="118" rx="58" ry="22"/>
+          <ellipse cx="108" cy="108" rx="36" ry="18"/>
+          <ellipse cx="40" cy="112" rx="30" ry="14"/>
+          <ellipse cx="220" cy="150" rx="72" ry="24"/>
+          <ellipse cx="260" cy="140" rx="40" ry="18"/>
+          <ellipse cx="185" cy="144" rx="34" ry="16"/>
+          <ellipse cx="320" cy="210" rx="54" ry="20"/>
+          <ellipse cx="350" cy="202" rx="28" ry="14"/>
+          <ellipse cx="90" cy="250" rx="80" ry="26"/>
+          <ellipse cx="140" cy="238" rx="44" ry="18"/>
+          <ellipse cx="50" cy="244" rx="36" ry="16"/>
+          <ellipse cx="250" cy="320" rx="70" ry="22"/>
+          <ellipse cx="290" cy="312" rx="38" ry="16"/>
+          <ellipse cx="60" cy="400" rx="90" ry="28"/>
+          <ellipse cx="120" cy="390" rx="50" ry="20"/>
+          <ellipse cx="300" cy="450" rx="85" ry="26"/>
+          <ellipse cx="340" cy="442" rx="40" ry="16"/>
+        </g>
+        <!-- Sharper cloud edges -->
+        <g fill="#ffffff" opacity="0.55">
+          <ellipse cx="70" cy="118" rx="50" ry="16"/>
+          <ellipse cx="220" cy="150" rx="60" ry="16"/>
+          <ellipse cx="90" cy="250" rx="68" ry="18"/>
+        </g>
+      </svg>
+
+      <svg class="sky-svg sky-night" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0b1224"/>
+            <stop offset="45%" stop-color="#152038"/>
+            <stop offset="100%" stop-color="#1a2740"/>
+          </linearGradient>
+          <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e8eef8" stop-opacity="0.95"/>
+            <stop offset="55%" stop-color="#c5d4ef" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#c5d4ef" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="nightCloudBlur" x="-20%" y="-40%" width="140%" height="180%">
+            <feGaussianBlur stdDeviation="5"/>
+          </filter>
+        </defs>
+        <rect width="380" height="520" fill="url(#nightSky)"/>
+        <!-- Stars -->
+        <g fill="#dce7ff">
+          <circle cx="40" cy="40" r="1.2" opacity="0.9"/>
+          <circle cx="90" cy="70" r="0.9" opacity="0.7"/>
+          <circle cx="140" cy="35" r="1.1" opacity="0.85"/>
+          <circle cx="180" cy="90" r="0.8" opacity="0.6"/>
+          <circle cx="230" cy="48" r="1.3" opacity="0.95"/>
+          <circle cx="270" cy="110" r="0.7" opacity="0.55"/>
+          <circle cx="330" cy="30" r="1" opacity="0.8"/>
+          <circle cx="350" cy="160" r="0.9" opacity="0.7"/>
+          <circle cx="60" cy="180" r="0.8" opacity="0.65"/>
+          <circle cx="120" cy="210" r="1.1" opacity="0.85"/>
+          <circle cx="200" cy="170" r="0.7" opacity="0.5"/>
+          <circle cx="310" cy="200" r="1" opacity="0.75"/>
+          <circle cx="25" cy="260" r="0.9" opacity="0.7"/>
+          <circle cx="160" cy="280" r="0.8" opacity="0.6"/>
+          <circle cx="280" cy="260" r="1.2" opacity="0.9"/>
+          <circle cx="340" cy="300" r="0.7" opacity="0.55"/>
+          <circle cx="80" cy="330" r="1" opacity="0.8"/>
+          <circle cx="220" cy="350" r="0.9" opacity="0.7"/>
+          <circle cx="360" cy="380" r="0.8" opacity="0.65"/>
+          <circle cx="50" cy="420" r="1.1" opacity="0.85"/>
+          <circle cx="170" cy="450" r="0.7" opacity="0.5"/>
+          <circle cx="300" cy="430" r="1" opacity="0.8"/>
+        </g>
+        <!-- Moon -->
+        <circle cx="300" cy="78" r="36" fill="url(#moonGlow)"/>
+        <circle cx="300" cy="78" r="16" fill="#eef3fb"/>
+        <circle cx="307" cy="72" r="14" fill="#152038" opacity="0.35"/>
+        <!-- Night clouds -->
+        <g filter="url(#nightCloudBlur)" fill="#3a4a6a" opacity="0.45">
+          <ellipse cx="80" cy="160" rx="70" ry="22"/>
+          <ellipse cx="120" cy="150" rx="40" ry="16"/>
+          <ellipse cx="240" cy="220" rx="80" ry="24"/>
+          <ellipse cx="280" cy="210" rx="42" ry="16"/>
+          <ellipse cx="100" cy="340" rx="90" ry="26"/>
+          <ellipse cx="150" cy="330" rx="48" ry="18"/>
+          <ellipse cx="290" cy="420" rx="85" ry="24"/>
+          <ellipse cx="330" cy="412" rx="40" ry="16"/>
+        </g>
+      </svg>
+    </div>
+
     <!-- AUTH SCREEN (shown when logged out) -->
     <div id="auth-screen" class="auth-screen hidden">
       <div class="auth-logo">
         <svg viewBox="0 0 24 24" width="32" height="32">
           <defs>
             <linearGradient id="authGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#6366f1"/>
-              <stop offset="100%" style="stop-color:#8b5cf6"/>
+              <stop offset="0%" style="stop-color:#6aa3c7"/>
+              <stop offset="100%" style="stop-color:#4f86ad"/>
             </linearGradient>
           </defs>
           <path fill="url(#authGrad)" d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>

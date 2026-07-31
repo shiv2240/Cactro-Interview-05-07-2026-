@@ -150,39 +150,77 @@ document.addEventListener('DOMContentLoaded', async () => {
   const themeToggleBtn    = document.getElementById('theme-toggle-btn');
   const themeIconSun      = document.querySelector('.theme-icon-sun');
   const themeIconMoon     = document.querySelector('.theme-icon-moon');
+  const themeIconSystem   = document.querySelector('.theme-icon-system');
   const summarizePageBtn  = document.getElementById('summarize-page-btn');
 
   let allHighlights = [];
   let currentFilteredHighlights = [];
   let currentToken  = null;
   let isLoginMode   = true;
+  let themePreference = 'light'; // light | dark | system
 
   let currentPage = 1;
   const itemsPerPage = 10;
 
-  // ── Theme Switcher ────────────────────────────────────────────────────────
-  function applyTheme(theme) {
-    if (theme === 'dark') {
-      document.body.setAttribute('data-theme', 'dark');
-      themeIconSun?.classList.remove('hidden');
-      themeIconMoon?.classList.add('hidden');
-    } else {
-      document.body.removeAttribute('data-theme');
-      themeIconSun?.classList.add('hidden');
-      themeIconMoon?.classList.remove('hidden');
+  // ── Theme Switcher (Light → Dark → System) ────────────────────────────────
+  function getSystemTheme() {
+    try {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    } catch (_) {
+      return 'light';
     }
   }
 
+  function resolveTheme(pref) {
+    if (pref === 'dark') return 'dark';
+    if (pref === 'system') return getSystemTheme();
+    return 'light';
+  }
+
+  function updateThemeIcons(pref) {
+    themeIconSun?.classList.add('hidden');
+    themeIconMoon?.classList.add('hidden');
+    themeIconSystem?.classList.add('hidden');
+    if (pref === 'dark') {
+      themeIconMoon?.classList.remove('hidden');
+      if (themeToggleBtn) themeToggleBtn.title = 'Theme: Dark (click for System)';
+    } else if (pref === 'system') {
+      themeIconSystem?.classList.remove('hidden');
+      if (themeToggleBtn) themeToggleBtn.title = 'Theme: System (click for Light)';
+    } else {
+      themeIconSun?.classList.remove('hidden');
+      if (themeToggleBtn) themeToggleBtn.title = 'Theme: Light (click for Dark)';
+    }
+  }
+
+  function applyTheme(pref) {
+    themePreference = pref === 'dark' || pref === 'system' ? pref : 'light';
+    const resolved = resolveTheme(themePreference);
+    if (resolved === 'dark') document.body.setAttribute('data-theme', 'dark');
+    else document.body.removeAttribute('data-theme');
+    updateThemeIcons(themePreference);
+  }
+
   chrome.storage.local.get({ theme: 'light' }, (result) => {
-    applyTheme(result.theme);
+    applyTheme(result.theme || 'light');
   });
 
   themeToggleBtn?.addEventListener('click', () => {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
-    const nextTheme = isDark ? 'light' : 'dark';
+    const order = ['light', 'dark', 'system'];
+    const idx = order.indexOf(themePreference);
+    const nextTheme = order[(idx + 1) % order.length];
     applyTheme(nextTheme);
     chrome.storage.local.set({ theme: nextTheme });
   });
+
+  try {
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onSystemChange = () => {
+      if (themePreference === 'system') applyTheme('system');
+    };
+    if (typeof mql.addEventListener === 'function') mql.addEventListener('change', onSystemChange);
+    else if (typeof mql.addListener === 'function') mql.addListener(onSystemChange);
+  } catch (_) { /* ignore */ }
 
   // ── Summarize Page Button Handler ─────────────────────────────────────────
   summarizePageBtn?.addEventListener('click', () => {
@@ -616,43 +654,75 @@ Keep it concise, clear, and useful for someone who is learning.`;
   });
 
   // ── Groq API call (reads key from chrome.storage.local) ─────────────────
+  const GROQ_MODEL = 'llama-3.1-8b-instant';
+  const GROQ_COOLDOWN_KEY = 'hs_groq_cooldown_until';
+
+  function isRateLimitError(msg, status) {
+    if (status === 429) return true;
+    return /rate limit|too many requests|quota|tpm|rpm|429/i.test(String(msg || ''));
+  }
+
+  function friendlyAiMessage(msg, status) {
+    if (isRateLimitError(msg, status) || /rate|limit|quota/i.test(String(msg || ''))) {
+      return 'AI is busy right now. Try again in a minute.';
+    }
+    if (/unavailable|network|failed to fetch|HTTP 5/i.test(String(msg || ''))) {
+      return 'AI is temporarily unavailable. Try again shortly.';
+    }
+    return String(msg || 'Something went wrong.').slice(0, 120);
+  }
+
   async function requestGroqSummary(prompt) {
-    // Read the Groq key stored during login (or set manually)
     const stored = await new Promise(resolve =>
-      chrome.storage.local.get(['groq_api_key'], resolve)
+      chrome.storage.local.get(['groq_api_key', GROQ_COOLDOWN_KEY], resolve)
     );
     const apiKey = stored.groq_api_key || '';
+    const cooldownUntil = Number(stored[GROQ_COOLDOWN_KEY] || 0);
 
     if (!apiKey || apiKey === 'REPLACE_WITH_YOUR_GROQ_API_KEY') {
       renderSummaryError('AI service is currently unavailable. Please try again later.');
       return;
     }
 
+    if (Date.now() < cooldownUntil) {
+      renderSummaryError('AI is busy right now. Try again in a minute.');
+      return;
+    }
 
     try {
+      const shortPrompt = prompt.length > 6000 ? prompt.slice(0, 6000) + '…' : prompt;
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
         body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
+          model: GROQ_MODEL,
           messages: [
             { role: 'system', content: 'You are a professional reading assistant. Provide concise, clear, and structured summaries using simple paragraphs and bullet points. Do not include introductory filler.' },
-            { role: 'user', content: prompt }
+            { role: 'user', content: shortPrompt }
           ],
-          temperature: 0.5,
-          max_tokens: 400
+          temperature: 0.4,
+          max_tokens: 350
         })
       });
 
       if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+        const errData = await response.json().catch(() => ({}));
+        const apiMsg = errData.error?.message || `HTTP ${response.status}`;
+        if (isRateLimitError(apiMsg, response.status)) {
+          const retryAfter = Number(response.headers.get('retry-after'));
+          const waitMs = Number.isFinite(retryAfter) && retryAfter > 0
+            ? Math.min(Math.max(retryAfter * 1000, 45000), 180000)
+            : 90000;
+          chrome.storage.local.set({ [GROQ_COOLDOWN_KEY]: Date.now() + waitMs });
+          throw new Error('RATE_LIMITED');
+        }
+        throw new Error(apiMsg);
       }
 
       const data = await response.json();
       renderSummaryText(data.choices[0].message.content.trim());
     } catch (error) {
-      renderSummaryError(error.message);
+      renderSummaryError(friendlyAiMessage(error.message, error.status));
     }
   }
 

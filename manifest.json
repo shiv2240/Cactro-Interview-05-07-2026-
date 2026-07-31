@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Website Highlight Saver",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Select text on any website to save it locally, view highlights, and generate summaries using AI.",
   "permissions": [
     "storage",
