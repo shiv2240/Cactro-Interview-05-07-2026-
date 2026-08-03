@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Backend-Convex-8b5cf6?style=flat-square" alt="Convex"/>
   <img src="https://img.shields.io/badge/AI-Groq%20%2F%20LLaMA3-10b981?style=flat-square" alt="AI"/>
   <img src="https://img.shields.io/badge/Auth-Convex%20Auth-f59e0b?style=flat-square" alt="Auth"/>
-  <img src="https://img.shields.io/badge/Version-1.0.0-0ea5e9?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-1.0.1-0ea5e9?style=flat-square" alt="Version"/>
 </p>
 
 ---
@@ -23,11 +23,13 @@
 | Feature | Description |
 |---|---|
 | 🖱️ **In-Page Tooltip** | Select any text — a floating tooltip appears with three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** |
-| 🎨 **Lumina Slate Glassmorphic UI** | Premium glassmorphism design system with left-edge gradient accent strips, command search bar (`⌘K`), and Modern Violet themes |
+| 🎨 **Lumina Slate & Sky Theme UI** | Premium glassmorphism & cloudy day/night theme with dynamic background animations, left-edge accent strips, and command search (`⌘K`) |
 | 📄 **Full Webpage Summarization** | Click "Summarize Page" to extract webpage content and generate structured sections: **Overview**, **Agenda & Main Topics**, and **Key Takeaways** |
-| ☀️ **Light / Dark Theme** | Modern Light Mode by default with a live theme switcher (☀️/🌙) in the popup header to toggle between light and dark aesthetics |
+| 🌓 **Light / Dark / System Theme** | Seamless theme switcher (Light/Dark/System) with live synchronization between popup dashboard and in-page Shadow DOM tooltip |
+| 🏷️ **Keyword Insights** | Automated keyword highlighting and sectioned AI breakdown for fast scanning of saved text snippets |
 | 🌐 **Website Favicon Icons** | Displays original site favicons alongside saved highlights for easy visual website recognition |
 | ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with instant AI explanations — no popup required |
+| ⚡ **SPA Navigation Handling** | Hardened SPA single-page application navigation detection and dynamic DOM re-injection |
 | 🔐 **User Authentication** | Sign up / Sign in with email & password via Convex Auth — highlights are tied to your account |
 | ☁️ **Cloud Storage** | Highlights synced to Convex backend — persist across devices and browser sessions |
 | 🔍 **Search & Filter** | Full-text search across all saved highlights in the popup dashboard |
@@ -103,9 +105,11 @@ website-highlight-saver/
 │
 ├── manifest.json                     # Chrome Extension MV3 config
 ├── popup.html                        # Popup dashboard layout
-├── popup.css                         # Glassmorphism dark-mode styles
-├── popup.js                          # Popup logic — auth, CRUD, AI summary
+├── popup.css                         # Glassmorphism dark & sky theme styles
+├── popup.js                          # Popup logic — auth, CRUD, AI summary, theme sync
 ├── content.js                        # In-page tooltip, AI summary modal & highlight capture
+├── config.js                         # Deployment runtime configuration
+├── config.example.js                 # Runtime configuration template
 ├── generate_icons_from_logo.js       # Resize logo → icon PNGs (requires sharp)
 └── .env.local                        # API keys & Convex URL (not committed)
 ```
@@ -278,10 +282,11 @@ chrome.storage.local.get({ highlights: [] }, (result) => {
 | File | Role |
 |---|---|
 | [`manifest.json`](manifest.json) | Extension MV3 config — permissions, icons, content scripts |
-| [`content.js`](content.js) | In-page tooltip with **Save** + **AI Summary** buttons, Shadow DOM modal, highlight save & Convex sync |
-| [`popup.html`](popup.html) | Popup layout — auth screen, dashboard, AI summary overlay |
-| [`popup.css`](popup.css) | Glassmorphism dark styles, card animations, skeleton loaders |
-| [`popup.js`](popup.js) | Auth logic, CRUD operations, Groq AI API calls, search |
+| [`content.js`](content.js) | In-page tooltip (**Save**, **AI Summary**, **Summarize Page**), Shadow DOM modal, SPA navigation handling, theme sync |
+| [`popup.html`](popup.html) | Popup layout — auth screen, sky-themed dashboard, AI summary overlay |
+| [`popup.css`](popup.css) | Glassmorphism dark & sky themes, cloudy ambient backgrounds, card animations |
+| [`popup.js`](popup.js) | Auth logic, CRUD operations, Groq AI API calls, search, theme switcher (Light/Dark/System) |
+| [`config.js`](config.js) | Environment configuration for Convex deployment URL and Groq API key |
 | [`generate_icons_from_logo.js`](generate_icons_from_logo.js) | Resizes `logo.png` into `icon16/48/128.png` via `sharp` |
 | [`convex/auth.ts`](convex/auth.ts) | Convex Auth provider configuration |
 

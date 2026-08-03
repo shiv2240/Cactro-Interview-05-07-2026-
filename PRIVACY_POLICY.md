@@ -1,6 +1,6 @@
 # Privacy Policy — Website Highlight Saver
 
-**Last Updated:** July 28, 2026
+**Last Updated:** August 3, 2026
 
 **Website Highlight Saver** ("we", "our", or "the extension") is committed to protecting user privacy. This Privacy Policy outlines how our Chrome Extension collects, uses, and safeguards information when you use our service.
 
@@ -12,10 +12,10 @@ We collect only the minimum data necessary to fulfill the single purpose of the 
 
 1. **Account & Authentication Information**:
    - **Email Address**: Used to create your user account, identify your saved highlights, and manage sessions.
-   - **Authentication Credentials**: Encrypted password hashes and session tokens stored in `chrome.storage.local`.
+   - **Authentication Credentials & Preferences**: Encrypted password hashes, session tokens, and theme settings (Light/Dark/System) stored in `chrome.storage.local`.
 
 2. **User-Selected Website Content**:
-   - **Text Highlights**: Text that you explicitly select on web pages and choose to save or summarize.
+   - **Text Highlights & Page Summaries**: Text snippets or webpage content that you explicitly select on web pages and choose to save, analyze, or summarize.
    - **Page Context**: Page title and URL associated with your saved highlights.
 
 We **DO NOT** collect your browsing history, background web activity, personal communications, financial information, or location data.
@@ -26,7 +26,7 @@ We **DO NOT** collect your browsing history, background web activity, personal c
 
 Your data is used strictly for the following purposes:
 - To save, organize, and display your text highlights in your private dashboard.
-- To generate real-time AI summaries and word definitions requested by you via the Groq API.
+- To generate real-time AI summaries, sectioned key takeaways, and keyword insights requested by you via the Groq API.
 - To synchronize your saved highlights across devices using the Convex cloud database.
 
 ---
