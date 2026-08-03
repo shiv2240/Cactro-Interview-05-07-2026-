@@ -20,10 +20,10 @@ Convex agent skills for common tasks can be installed by running
 
 **Website Highlight Saver** (v1.0.1) is a Chrome Extension (Manifest V3) that:
 - Injects a floating tooltip on any webpage when text is selected (content script)
-- Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page**
+- Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** (customizable via feature toggles in settings)
 - **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal calling the Groq API directly (formatting summaries into Overview, Agenda/Main Topics, and Key Takeaways)
-- Features automated keyword highlighting and sectioned AI breakdown for saved text snippets
-- Popup dashboard features a cloudy day/night Sky Theme aesthetic, pagination (10 items/page), instant search/delete, theme switcher (Light / Dark / System sync), password updates, and total highlights AI summary
+- Features automated keyword highlighting, sectioned AI breakdown, and configurable keywords tile / sticky notes
+- Popup dashboard features a mist-and-ink palette & sky theme aesthetic, pagination (10 items/page), instant search/delete, theme switcher (Light / Dark / System sync), feature toggles, password updates, and total highlights AI summary
 - Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local`
 
 
@@ -31,9 +31,9 @@ Convex agent skills for common tasks can be installed by running
 
 | File | Purpose |
 |---|---|
-| `content.js` | Tooltip + in-page AI modal (Shadow DOM, Groq API, Convex sync, theme sync, SPA handling) |
-| `popup.js` | Extension popup — auth, CRUD, AI summary of all highlights, theme switcher |
-| `popup.html` / `popup.css` | Popup UI — glassmorphism sky & dark themes, animations |
+| `content.js` | Tooltip + in-page AI modal + keywords tile & sticky notes (Shadow DOM, Groq API, Convex sync, theme & feature prefs sync, SPA handling) |
+| `popup.js` | Extension popup — auth, CRUD, AI summary of all highlights, theme switcher, feature toggles sync |
+| `popup.html` / `popup.css` | Popup UI — glassmorphism sky, dark, & mist-and-ink quiet themes, settings panel, animations |
 | `config.js` | Environment configuration for Convex deployment URL and Groq API key |
 | `convex/` | Backend — auth, highlights schema, mutations, queries |
 | `manifest.json` | MV3 config — permissions, host permissions, content scripts |
@@ -44,6 +44,7 @@ Convex agent skills for common tasks can be installed by running
 - **Popup** (`popup.js`) uses the Convex HTTP REST API and `chrome.storage.local` for the session token.
 - **Session token** is stored in `chrome.storage.local` as `session_token` by the popup after login, and read by `content.js` for Convex sync.
 - **Theme preference** (`light`, `dark`, `system`) is stored in `chrome.storage.local` and synchronized between popup UI and the in-page tooltip context.
+- **Feature preferences** (`hs_feature_prefs`) are stored in `chrome.storage.local` and control visibility for on-page keywords tile, sticky notes, and individual tooltip action buttons across popup UI and content scripts.
 - **Shadow DOM** is used for all injected UI to prevent CSS bleed from host pages.
 - **API keys** live in `config.js` / `.env.local` (gitignored).
 

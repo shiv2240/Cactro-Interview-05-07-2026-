@@ -12,7 +12,7 @@ We collect only the minimum data necessary to fulfill the single purpose of the 
 
 1. **Account & Authentication Information**:
    - **Email Address**: Used to create your user account, identify your saved highlights, and manage sessions.
-   - **Authentication Credentials & Preferences**: Encrypted password hashes, session tokens, and theme settings (Light/Dark/System) stored in `chrome.storage.local`.
+   - **Authentication Credentials & Preferences**: Encrypted password hashes, session tokens, theme settings (Light/Dark/System), and feature toggle preferences (`hs_feature_prefs`) stored in `chrome.storage.local`.
 
 2. **User-Selected Website Content**:
    - **Text Highlights & Page Summaries**: Text snippets or webpage content that you explicitly select on web pages and choose to save, analyze, or summarize.
