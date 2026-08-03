@@ -153,6 +153,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   const themeIconSystem   = document.querySelector('.theme-icon-system');
   const summarizePageBtn  = document.getElementById('summarize-page-btn');
 
+  const prefTileEnabled   = document.getElementById('pref-tile-enabled');
+  const prefStickyNotes   = document.getElementById('pref-sticky-notes');
+  const prefTooltipSave   = document.getElementById('pref-tooltip-save');
+  const prefTooltipAi     = document.getElementById('pref-tooltip-ai');
+  const prefTooltipPage   = document.getElementById('pref-tooltip-page');
+
+  const HS_PREFS_KEY = 'hs_feature_prefs';
+  const HS_PREFS_DEFAULTS = {
+    tileEnabled: true,
+    stickyNotesEnabled: true,
+    tooltipSave: true,
+    tooltipAiSummary: true,
+    tooltipSummarizePage: true
+  };
+
+  function normalizeFeaturePrefs(raw) {
+    const src = raw && typeof raw === 'object' ? raw : {};
+    return {
+      tileEnabled: src.tileEnabled !== false,
+      stickyNotesEnabled: src.stickyNotesEnabled !== false,
+      tooltipSave: src.tooltipSave !== false,
+      tooltipAiSummary: src.tooltipAiSummary !== false,
+      tooltipSummarizePage: src.tooltipSummarizePage !== false
+    };
+  }
+
+  function syncFeaturePrefsUi(prefs) {
+    const p = normalizeFeaturePrefs(prefs);
+    if (prefTileEnabled) prefTileEnabled.checked = p.tileEnabled;
+    if (prefStickyNotes) prefStickyNotes.checked = p.stickyNotesEnabled;
+    if (prefTooltipSave) prefTooltipSave.checked = p.tooltipSave;
+    if (prefTooltipAi) prefTooltipAi.checked = p.tooltipAiSummary;
+    if (prefTooltipPage) prefTooltipPage.checked = p.tooltipSummarizePage;
+  }
+
+  function loadFeaturePrefs() {
+    chrome.storage.local.get({ [HS_PREFS_KEY]: HS_PREFS_DEFAULTS }, (result) => {
+      try {
+        if (chrome.runtime?.lastError) {
+          syncFeaturePrefsUi(HS_PREFS_DEFAULTS);
+          return;
+        }
+        syncFeaturePrefsUi(result?.[HS_PREFS_KEY]);
+      } catch (_) {
+        syncFeaturePrefsUi(HS_PREFS_DEFAULTS);
+      }
+    });
+  }
+
+  function saveFeaturePrefsPartial(partial) {
+    chrome.storage.local.get({ [HS_PREFS_KEY]: HS_PREFS_DEFAULTS }, (result) => {
+      try {
+        const current = normalizeFeaturePrefs(result?.[HS_PREFS_KEY]);
+        const next = normalizeFeaturePrefs({ ...current, ...partial });
+        chrome.storage.local.set({ [HS_PREFS_KEY]: next }, () => {
+          try { void chrome.runtime?.lastError; } catch (_) { /* ignore */ }
+          syncFeaturePrefsUi(next);
+        });
+      } catch (_) { /* ignore */ }
+    });
+  }
+
+  loadFeaturePrefs();
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area !== 'local' || !changes[HS_PREFS_KEY]) return;
+      syncFeaturePrefsUi(changes[HS_PREFS_KEY].newValue);
+    });
+  } catch (_) { /* ignore */ }
+
   let allHighlights = [];
   let currentFilteredHighlights = [];
   let currentToken  = null;
@@ -469,11 +539,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── Settings Panel & Password Change Handlers ─────────────────────────────
   settingsBtn.addEventListener('click', () => {
     apiKeyBanner.classList.toggle('hidden');
+    if (!apiKeyBanner.classList.contains('hidden')) loadFeaturePrefs();
   });
 
   apiKeyCancelBtn.addEventListener('click', () => {
     apiKeyBanner.classList.add('hidden');
   });
+
+  const bindFeaturePrefToggle = (el, key) => {
+    if (!el) return;
+    el.addEventListener('change', () => {
+      saveFeaturePrefsPartial({ [key]: el.checked });
+    });
+  };
+  bindFeaturePrefToggle(prefTileEnabled, 'tileEnabled');
+  bindFeaturePrefToggle(prefStickyNotes, 'stickyNotesEnabled');
+  bindFeaturePrefToggle(prefTooltipSave, 'tooltipSave');
+  bindFeaturePrefToggle(prefTooltipAi, 'tooltipAiSummary');
+  bindFeaturePrefToggle(prefTooltipPage, 'tooltipSummarizePage');
 
   tabSettingsKey?.addEventListener('click', () => {
     tabSettingsKey.classList.add('active');

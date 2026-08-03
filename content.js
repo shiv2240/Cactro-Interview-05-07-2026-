@@ -64,6 +64,8 @@ document.addEventListener('mouseup', (e) => {
     if (existing && eventPath.includes(existing)) return;
     if (existing) existing.remove();
 
+    if (!hsPrefs.tooltipSave && !hsPrefs.tooltipAiSummary && !hsPrefs.tooltipSummarizePage) return;
+
     const contextValid = isContextValid();
     showTooltip(selection, text, contextValid);
   }, 10);
@@ -230,6 +232,110 @@ try {
   else if (typeof mql.addListener === 'function') mql.addListener(onSystemChange);
 } catch (_) { /* ignore */ }
 
+// ── Feature preferences (tile, sticky notes, tooltip actions) ────────────────
+const HS_PREFS_KEY = 'hs_feature_prefs';
+const HS_PREFS_DEFAULTS = {
+  tileEnabled: true,
+  stickyNotesEnabled: true,
+  tooltipSave: true,
+  tooltipAiSummary: true,
+  tooltipSummarizePage: true
+};
+
+/** @type {typeof HS_PREFS_DEFAULTS} */
+let hsPrefs = { ...HS_PREFS_DEFAULTS };
+
+function normalizeHsPrefs(raw) {
+  const src = raw && typeof raw === 'object' ? raw : {};
+  return {
+    tileEnabled: src.tileEnabled !== false,
+    stickyNotesEnabled: src.stickyNotesEnabled !== false,
+    tooltipSave: src.tooltipSave !== false,
+    tooltipAiSummary: src.tooltipAiSummary !== false,
+    tooltipSummarizePage: src.tooltipSummarizePage !== false
+  };
+}
+
+function saveHsPrefs(partial, cb) {
+  hsPrefs = normalizeHsPrefs({ ...hsPrefs, ...partial });
+  if (!isContextValid()) {
+    if (cb) cb(hsPrefs);
+    return;
+  }
+  try {
+    chrome.storage.local.set({ [HS_PREFS_KEY]: hsPrefs }, () => {
+      try { void chrome.runtime?.lastError; } catch (_) { /* ignore */ }
+      if (cb) cb(hsPrefs);
+    });
+  } catch (_) {
+    if (cb) cb(hsPrefs);
+  }
+}
+
+function loadHsPrefs(cb) {
+  if (!isContextValid()) {
+    hsPrefs = { ...HS_PREFS_DEFAULTS };
+    if (cb) cb(hsPrefs);
+    return;
+  }
+  try {
+    chrome.storage.local.get({ [HS_PREFS_KEY]: HS_PREFS_DEFAULTS }, (result) => {
+      try {
+        if (chrome.runtime?.lastError) hsPrefs = { ...HS_PREFS_DEFAULTS };
+        else hsPrefs = normalizeHsPrefs(result?.[HS_PREFS_KEY]);
+      } catch (_) {
+        hsPrefs = { ...HS_PREFS_DEFAULTS };
+      }
+      if (cb) cb(hsPrefs);
+    });
+  } catch (_) {
+    hsPrefs = { ...HS_PREFS_DEFAULTS };
+    if (cb) cb(hsPrefs);
+  }
+}
+
+function clearKeywordMarksOnly() {
+  document.querySelectorAll('mark.hs-kw-mark').forEach((el) => {
+    const parent = el.parentNode;
+    if (!parent) return;
+    parent.replaceChild(document.createTextNode(el.textContent || ''), el);
+    parent.normalize();
+  });
+  keywordMarksActive = false;
+}
+
+function applyFeaturePrefsToPage() {
+  // Tile visibility
+  const tileHost = document.getElementById('hs-keyword-tile-root');
+  if (hsPrefs.tileEnabled) {
+    if (!tileHost) ensureKeywordTile();
+    else {
+      tileHost.style.display = '';
+      if (typeof tileHost._hsSyncPrefsUi === 'function') tileHost._hsSyncPrefsUi();
+    }
+  } else if (tileHost) {
+    tileHost.style.display = 'none';
+    closeKeywordPopup();
+  }
+
+  // Sticky note marks
+  if (!hsPrefs.stickyNotesEnabled) {
+    clearKeywordMarksOnly();
+  } else if (keywordStore.size > 0 && !document.querySelector('mark.hs-kw-mark')) {
+    const applied = applyKeywordHighlights();
+    keywordMarksActive = applied > 0;
+  }
+}
+
+loadHsPrefs(() => applyFeaturePrefsToPage());
+try {
+  chrome.storage?.onChanged?.addListener((changes, area) => {
+    if (area !== 'local' || !changes[HS_PREFS_KEY]) return;
+    hsPrefs = normalizeHsPrefs(changes[HS_PREFS_KEY].newValue);
+    applyFeaturePrefsToPage();
+  });
+} catch (_) { /* ignore */ }
+
 function getTooltipStyles() {
   return `
     :host { all: initial; }
@@ -329,6 +435,11 @@ function getTooltipStyles() {
 function showTooltip(selection, text, contextValid) {
   try {
     if (selection.rangeCount === 0) return;
+    const showSave = hsPrefs.tooltipSave;
+    const showAi = hsPrefs.tooltipAiSummary;
+    const showPage = hsPrefs.tooltipSummarizePage;
+    if (!showSave && !showAi && !showPage) return;
+
     const range = selection.getRangeAt(0);
     const rect = range.getBoundingClientRect();
 
@@ -348,52 +459,62 @@ function showTooltip(selection, text, contextValid) {
     tooltip.className = 'tooltip-container';
     tooltip.setAttribute('data-theme', getHsTheme());
 
-    const saveBtn = document.createElement('button');
-    if (contextValid) {
-      saveBtn.className = 'btn btn-save';
-      saveBtn.innerHTML = `
-        <svg class="icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
-        Save
-      `;
-    } else {
-      saveBtn.className = 'btn btn-save warning';
-      saveBtn.title = 'Click to refresh and re-enable';
-      saveBtn.innerHTML = `
-        <svg class="icon" viewBox="0 0 24 24" style="fill:#e11d48"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
-        Refresh
-      `;
+    const appendDivider = () => {
+      if (!tooltip.children.length) return;
+      const d = document.createElement('div');
+      d.className = 'divider';
+      tooltip.appendChild(d);
+    };
+
+    let saveBtn = null;
+    if (showSave) {
+      saveBtn = document.createElement('button');
+      if (contextValid) {
+        saveBtn.className = 'btn btn-save';
+        saveBtn.innerHTML = `
+          <svg class="icon" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+          Save
+        `;
+      } else {
+        saveBtn.className = 'btn btn-save warning';
+        saveBtn.title = 'Click to refresh and re-enable';
+        saveBtn.innerHTML = `
+          <svg class="icon" viewBox="0 0 24 24" style="fill:#e11d48"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Refresh
+        `;
+      }
+      appendDivider();
+      tooltip.appendChild(saveBtn);
     }
 
-    const divider = document.createElement('div');
-    divider.className = 'divider';
+    let aiBtn = null;
+    if (showAi) {
+      aiBtn = document.createElement('button');
+      aiBtn.className = 'btn btn-ai';
+      aiBtn.innerHTML = `
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
+        AI Summary
+      `;
+      appendDivider();
+      tooltip.appendChild(aiBtn);
+    }
 
-    const aiBtn = document.createElement('button');
-    aiBtn.className = 'btn btn-ai';
-    aiBtn.innerHTML = `
-      <svg class="icon" viewBox="0 0 24 24"><path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7z"/></svg>
-      AI Summary
-    `;
-
-    const divider2 = document.createElement('div');
-    divider2.className = 'divider';
-
-    const pageBtn = document.createElement('button');
-    pageBtn.className = 'btn btn-page';
-    pageBtn.innerHTML = `
-      <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
-      Summarize Page
-    `;
+    let pageBtn = null;
+    if (showPage) {
+      pageBtn = document.createElement('button');
+      pageBtn.className = 'btn btn-page';
+      pageBtn.innerHTML = `
+        <svg class="icon" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        Summarize Page
+      `;
+      appendDivider();
+      tooltip.appendChild(pageBtn);
+    }
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close-btn';
     closeBtn.innerHTML = '&times;';
     closeBtn.title = 'Dismiss';
-
-    tooltip.appendChild(saveBtn);
-    tooltip.appendChild(divider);
-    tooltip.appendChild(aiBtn);
-    tooltip.appendChild(divider2);
-    tooltip.appendChild(pageBtn);
     tooltip.appendChild(closeBtn);
     shadow.appendChild(tooltip);
     document.body.appendChild(container);
@@ -413,31 +534,37 @@ function showTooltip(selection, text, contextValid) {
     container.style.top = `${top}px`;
     container.style.left = `${left}px`;
 
-    saveBtn.addEventListener('click', () => {
-      if (!contextValid) { window.location.reload(); return; }
-      doSaveHighlight(text, saveBtn, () => {
-        setTimeout(() => {
-          container.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
-          container.style.opacity = '0';
-          container.style.transform = 'translateY(-4px) scale(0.95)';
-          window.getSelection()?.removeAllRanges();
-          setTimeout(() => container.remove(), 250);
-        }, 900);
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        if (!contextValid) { window.location.reload(); return; }
+        doSaveHighlight(text, saveBtn, () => {
+          setTimeout(() => {
+            container.style.transition = 'opacity 0.25s ease, transform 0.25s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'translateY(-4px) scale(0.95)';
+            window.getSelection()?.removeAllRanges();
+            setTimeout(() => container.remove(), 250);
+          }, 900);
+        });
       });
-    });
+    }
 
-    aiBtn.addEventListener('click', () => {
-      container.remove();
-      window.getSelection()?.removeAllRanges();
-      showAiSummaryModal(text, contextValid, false);
-    });
+    if (aiBtn) {
+      aiBtn.addEventListener('click', () => {
+        container.remove();
+        window.getSelection()?.removeAllRanges();
+        showAiSummaryModal(text, contextValid, false);
+      });
+    }
 
-    pageBtn.addEventListener('click', () => {
-      container.remove();
-      window.getSelection()?.removeAllRanges();
-      const pageText = extractPageContent();
-      showAiSummaryModal(pageText, contextValid, true);
-    });
+    if (pageBtn) {
+      pageBtn.addEventListener('click', () => {
+        container.remove();
+        window.getSelection()?.removeAllRanges();
+        const pageText = extractPageContent();
+        showAiSummaryModal(pageText, contextValid, true);
+      });
+    }
 
     closeBtn.addEventListener('click', () => {
       window.getSelection()?.removeAllRanges();
@@ -1344,16 +1471,22 @@ function applyKeywordItems(items, tileHost, sourceLabel) {
     });
   });
 
-  const applied = applyKeywordHighlights();
+  const applied = hsPrefs.stickyNotesEnabled ? applyKeywordHighlights() : 0;
   keywordMarksActive = applied > 0;
   tileHost._hsRefreshLegend();
-  tileHost._hsSetStatus(
-    applied > 0
-      ? `${keywordStore.size} words${sourceLabel ? ' · ' + sourceLabel : ''} — click tile`
-      : 'None matched page text',
-    applied > 0 ? 'ok' : 'error'
-  );
-  if (applied > 0 && typeof tileHost._hsSetListOpen === 'function') {
+  const found = keywordStore.size > 0;
+  let statusText;
+  if (!found) {
+    statusText = 'None matched page text';
+  } else if (!hsPrefs.stickyNotesEnabled) {
+    statusText = `${keywordStore.size} words${sourceLabel ? ' · ' + sourceLabel : ''} · sticky notes off`;
+  } else if (applied > 0) {
+    statusText = `${keywordStore.size} words${sourceLabel ? ' · ' + sourceLabel : ''} — click tile`;
+  } else {
+    statusText = 'None matched page text';
+  }
+  tileHost._hsSetStatus(statusText, found ? 'ok' : 'error');
+  if (found && typeof tileHost._hsSetListOpen === 'function') {
     tileHost._hsSetListOpen(false);
   }
   return applied;
@@ -1533,6 +1666,14 @@ function enableKeywordTileDrag(host, headerEl, clearBtn) {
   headerEl.addEventListener('pointerdown', (e) => {
     if (e.button !== 0) return;
     if (e.target === clearBtn || clearBtn.contains(e.target)) return;
+    if (e.target.closest && (
+      e.target.closest('.gear-btn') ||
+      e.target.closest('.clear-btn') ||
+      e.target.closest('.prefs-panel') ||
+      e.target.closest('button') ||
+      e.target.closest('input') ||
+      e.target.closest('label')
+    )) return;
     // Allow chips/buttons in panel — only drag from header
     dragging = true;
     moved = false;
@@ -1659,6 +1800,98 @@ function ensureKeywordTile() {
     }
     .clear-btn:hover:not(:disabled) { background: #efece3; }
     .clear-btn:disabled { opacity: 0.4; cursor: default; }
+    .header-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+    .gear-btn {
+      border: 1px solid #e0dccf;
+      background: #f7f5ee;
+      color: #5c5548;
+      border-radius: 6px;
+      width: 26px;
+      height: 26px;
+      padding: 0;
+      font-size: 13px;
+      cursor: pointer;
+      outline: none;
+      touch-action: auto;
+      line-height: 1;
+    }
+    .gear-btn:hover { background: #efece3; }
+    .gear-btn.active {
+      background: #ebe6da;
+      border-color: #cfc8b6;
+    }
+    .prefs-panel {
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      padding: 8px 10px 10px;
+      border-top: 1px solid #ebe6da;
+      touch-action: auto;
+    }
+    .tile.prefs-open .prefs-panel { display: flex; }
+    .tile.prefs-open .word-panel { display: none !important; }
+    .prefs-heading {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #8a8272;
+      margin: 2px 0 0;
+    }
+    .pref-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 11.5px;
+      font-weight: 550;
+      color: #3d3420;
+    }
+    .pref-row span { line-height: 1.3; }
+    .switch {
+      position: relative;
+      width: 34px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .switch-slider {
+      position: absolute;
+      inset: 0;
+      background: #d5cfbf;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .switch-slider::before {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      left: 2px;
+      top: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.15s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    .switch input:checked + .switch-slider {
+      background: #5b8f3a;
+    }
+    .switch input:checked + .switch-slider::before {
+      transform: translateX(16px);
+    }
     .spin {
       width: 10px; height: 10px; border-radius: 50%;
       border: 2px solid #ddd6c6;
@@ -1718,12 +1951,23 @@ function ensureKeywordTile() {
     .tile[data-theme="dark"] .status.busy { color: #9db0c8; }
     .tile[data-theme="dark"] .drag-hint { color: #7a8fa8; }
     .tile[data-theme="dark"] .chevron { color: #9db0c8; }
-    .tile[data-theme="dark"] .clear-btn {
+    .tile[data-theme="dark"] .clear-btn,
+    .tile[data-theme="dark"] .gear-btn {
       border-color: rgba(160, 190, 230, 0.18);
       background: rgba(30, 42, 68, 0.9);
       color: #c5d4ef;
     }
-    .tile[data-theme="dark"] .clear-btn:hover:not(:disabled) { background: rgba(40, 56, 86, 0.95); }
+    .tile[data-theme="dark"] .clear-btn:hover:not(:disabled),
+    .tile[data-theme="dark"] .gear-btn:hover { background: rgba(40, 56, 86, 0.95); }
+    .tile[data-theme="dark"] .gear-btn.active {
+      background: rgba(50, 70, 105, 0.95);
+      border-color: rgba(160, 190, 230, 0.3);
+    }
+    .tile[data-theme="dark"] .prefs-panel { border-top-color: rgba(160, 190, 230, 0.14); }
+    .tile[data-theme="dark"] .prefs-heading { color: #7a8fa8; }
+    .tile[data-theme="dark"] .pref-row { color: #e6eef8; }
+    .tile[data-theme="dark"] .switch-slider { background: #3a4a62; }
+    .tile[data-theme="dark"] .switch input:checked + .switch-slider { background: #4ade80; }
     .tile[data-theme="dark"] .word-panel { border-top-color: rgba(160, 190, 230, 0.14); }
     .tile[data-theme="dark"] .hint { color: #9db0c8; }
     .tile[data-theme="dark"] .header:hover { background: rgba(30, 42, 68, 0.55); }
@@ -1746,7 +1990,42 @@ function ensureKeywordTile() {
         </div>
         <div class="status busy" id="hs-tile-status"><span class="spin"></span>Analyzing page…</div>
       </div>
-      <button class="clear-btn" id="hs-tile-clear" disabled title="Clear highlights">Clear</button>
+      <div class="header-actions">
+        <button class="gear-btn" id="hs-tile-gear" title="Feature settings" type="button">⚙</button>
+        <button class="clear-btn" id="hs-tile-clear" disabled title="Clear highlights">Clear</button>
+      </div>
+    </div>
+    <div class="prefs-panel" id="hs-tile-prefs">
+      <div class="prefs-heading">Page highlights</div>
+      <label class="pref-row">
+        <span>Sticky notes</span>
+        <span class="switch">
+          <input type="checkbox" id="hs-pref-sticky" />
+          <span class="switch-slider"></span>
+        </span>
+      </label>
+      <div class="prefs-heading">Selection tooltip</div>
+      <label class="pref-row">
+        <span>Save Highlight</span>
+        <span class="switch">
+          <input type="checkbox" id="hs-pref-save" />
+          <span class="switch-slider"></span>
+        </span>
+      </label>
+      <label class="pref-row">
+        <span>AI Summary</span>
+        <span class="switch">
+          <input type="checkbox" id="hs-pref-ai" />
+          <span class="switch-slider"></span>
+        </span>
+      </label>
+      <label class="pref-row">
+        <span>Summarize Page</span>
+        <span class="switch">
+          <input type="checkbox" id="hs-pref-page" />
+          <span class="switch-slider"></span>
+        </span>
+      </label>
     </div>
     <div class="word-panel" id="hs-tile-words">
       <div class="hint">Click a word for AI summary</div>
@@ -1764,8 +2043,54 @@ function ensureKeywordTile() {
   const clearBtn = shadow.getElementById('hs-tile-clear');
   const wordsEl = shadow.getElementById('hs-tile-words');
   const headerEl = shadow.getElementById('hs-tile-header');
+  const gearBtn = shadow.getElementById('hs-tile-gear');
+  const prefSticky = shadow.getElementById('hs-pref-sticky');
+  const prefSave = shadow.getElementById('hs-pref-save');
+  const prefAi = shadow.getElementById('hs-pref-ai');
+  const prefPage = shadow.getElementById('hs-pref-page');
 
   enableKeywordTileDrag(host, headerEl, clearBtn);
+
+  let prefsOpen = false;
+  const syncPrefsUi = () => {
+    prefSticky.checked = !!hsPrefs.stickyNotesEnabled;
+    prefSave.checked = !!hsPrefs.tooltipSave;
+    prefAi.checked = !!hsPrefs.tooltipAiSummary;
+    prefPage.checked = !!hsPrefs.tooltipSummarizePage;
+    gearBtn.classList.toggle('active', prefsOpen);
+    tile.classList.toggle('prefs-open', prefsOpen);
+  };
+  host._hsSyncPrefsUi = syncPrefsUi;
+  syncPrefsUi();
+
+  gearBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    prefsOpen = !prefsOpen;
+    if (prefsOpen) host._hsSetListOpen(false);
+    syncPrefsUi();
+  });
+
+  const bindPrefToggle = (el, key) => {
+    el.addEventListener('change', (e) => {
+      e.stopPropagation();
+      saveHsPrefs({ [key]: el.checked }, () => {
+        applyFeaturePrefsToPage();
+        if (key === 'stickyNotesEnabled' && keywordStore.size > 0 && typeof host._hsSetStatus === 'function') {
+          const found = keywordStore.size;
+          if (!hsPrefs.stickyNotesEnabled) {
+            host._hsSetStatus(`${found} words · sticky notes off`, 'ok');
+          } else if (keywordMarksActive) {
+            host._hsSetStatus(`${found} words — click tile`, 'ok');
+          }
+        }
+      });
+    });
+    el.addEventListener('click', (e) => e.stopPropagation());
+  };
+  bindPrefToggle(prefSticky, 'stickyNotesEnabled');
+  bindPrefToggle(prefSave, 'tooltipSave');
+  bindPrefToggle(prefAi, 'tooltipAiSummary');
+  bindPrefToggle(prefPage, 'tooltipSummarizePage');
 
   host._hsSetStatus = (text, kind = '') => {
     statusEl.className = 'status' + (kind ? ' ' + kind : '');
@@ -1816,13 +2141,21 @@ function ensureKeywordTile() {
 
   host._hsSetListOpen = (open) => {
     listOpen = !!open && keywordStore.size > 0;
+    if (listOpen) {
+      prefsOpen = false;
+      syncPrefsUi();
+    }
     tile.classList.toggle('open', listOpen);
   };
 
   headerEl.addEventListener('click', (e) => {
     if (host._hsSkipNextHeaderClick) return;
     if (e.target === clearBtn || clearBtn.contains(e.target)) return;
+    if (e.target === gearBtn || gearBtn.contains(e.target)) return;
+    if (shadow.getElementById('hs-tile-prefs')?.contains(e.target)) return;
     if (!keywordStore.size) return;
+    prefsOpen = false;
+    syncPrefsUi();
     host._hsSetListOpen(!listOpen);
   });
 
@@ -2169,6 +2502,7 @@ function isSkippableHighlightRoot(node) {
 }
 
 function applyKeywordHighlights() {
+  if (!hsPrefs.stickyNotesEnabled) return 0;
   const terms = [...keywordStore.values()]
     .map((v) => v.term)
     .filter(Boolean)
@@ -2600,6 +2934,5 @@ function showKeywordPopup(item, anchorEl) {
   };
 }
 
-// Boot floating tile
-ensureKeywordTile();
+// Boot floating tile after prefs load (see loadHsPrefs → applyFeaturePrefsToPage)
 

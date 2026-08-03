@@ -17,105 +17,76 @@
       <svg class="sky-svg sky-day" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="daySky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#9ec9ef"/>
-            <stop offset="42%" stop-color="#c7e4f7"/>
-            <stop offset="100%" stop-color="#eef5fb"/>
+            <stop offset="0%" stop-color="#e4e9ed"/>
+            <stop offset="48%" stop-color="#eef1f3"/>
+            <stop offset="100%" stop-color="#f7f8f9"/>
           </linearGradient>
           <linearGradient id="daySunGlow" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#fff6d6" stop-opacity="0.95"/>
-            <stop offset="100%" stop-color="#ffe08a" stop-opacity="0.15"/>
+            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.7"/>
+            <stop offset="100%" stop-color="#d7e0e4" stop-opacity="0.1"/>
           </linearGradient>
           <filter id="cloudSoft" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="4"/>
+            <feGaussianBlur stdDeviation="5"/>
           </filter>
         </defs>
         <rect width="380" height="520" fill="url(#daySky)"/>
-        <circle cx="302" cy="68" r="42" fill="url(#daySunGlow)"/>
-        <circle cx="302" cy="68" r="18" fill="#fff4c4" opacity="0.9"/>
-        <!-- Soft cloud bank -->
-        <g filter="url(#cloudSoft)" fill="#ffffff" opacity="0.78">
-          <ellipse cx="70" cy="118" rx="58" ry="22"/>
-          <ellipse cx="108" cy="108" rx="36" ry="18"/>
-          <ellipse cx="40" cy="112" rx="30" ry="14"/>
-          <ellipse cx="220" cy="150" rx="72" ry="24"/>
-          <ellipse cx="260" cy="140" rx="40" ry="18"/>
-          <ellipse cx="185" cy="144" rx="34" ry="16"/>
-          <ellipse cx="320" cy="210" rx="54" ry="20"/>
-          <ellipse cx="350" cy="202" rx="28" ry="14"/>
-          <ellipse cx="90" cy="250" rx="80" ry="26"/>
-          <ellipse cx="140" cy="238" rx="44" ry="18"/>
-          <ellipse cx="50" cy="244" rx="36" ry="16"/>
-          <ellipse cx="250" cy="320" rx="70" ry="22"/>
-          <ellipse cx="290" cy="312" rx="38" ry="16"/>
-          <ellipse cx="60" cy="400" rx="90" ry="28"/>
-          <ellipse cx="120" cy="390" rx="50" ry="20"/>
-          <ellipse cx="300" cy="450" rx="85" ry="26"/>
-          <ellipse cx="340" cy="442" rx="40" ry="16"/>
-        </g>
-        <!-- Sharper cloud edges -->
-        <g fill="#ffffff" opacity="0.55">
-          <ellipse cx="70" cy="118" rx="50" ry="16"/>
-          <ellipse cx="220" cy="150" rx="60" ry="16"/>
-          <ellipse cx="90" cy="250" rx="68" ry="18"/>
+        <circle cx="308" cy="72" r="36" fill="url(#daySunGlow)"/>
+        <!-- Soft mist bands -->
+        <g filter="url(#cloudSoft)" fill="#ffffff" opacity="0.55">
+          <ellipse cx="70" cy="130" rx="70" ry="26"/>
+          <ellipse cx="118" cy="118" rx="40" ry="18"/>
+          <ellipse cx="230" cy="170" rx="80" ry="28"/>
+          <ellipse cx="275" cy="158" rx="44" ry="18"/>
+          <ellipse cx="90" cy="280" rx="90" ry="30"/>
+          <ellipse cx="150" cy="268" rx="48" ry="18"/>
+          <ellipse cx="270" cy="360" rx="78" ry="26"/>
+          <ellipse cx="70" cy="440" rx="95" ry="30"/>
+          <ellipse cx="300" cy="470" rx="80" ry="24"/>
         </g>
       </svg>
 
       <svg class="sky-svg sky-night" viewBox="0 0 380 520" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="nightSky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0b1224"/>
-            <stop offset="45%" stop-color="#152038"/>
-            <stop offset="100%" stop-color="#1a2740"/>
+            <stop offset="0%" stop-color="#12151a"/>
+            <stop offset="50%" stop-color="#171b21"/>
+            <stop offset="100%" stop-color="#1c2128"/>
           </linearGradient>
           <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#e8eef8" stop-opacity="0.95"/>
-            <stop offset="55%" stop-color="#c5d4ef" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#c5d4ef" stop-opacity="0"/>
+            <stop offset="0%" stop-color="#e8ecef" stop-opacity="0.85"/>
+            <stop offset="55%" stop-color="#a8b4bc" stop-opacity="0.2"/>
+            <stop offset="100%" stop-color="#a8b4bc" stop-opacity="0"/>
           </radialGradient>
           <filter id="nightCloudBlur" x="-20%" y="-40%" width="140%" height="180%">
-            <feGaussianBlur stdDeviation="5"/>
+            <feGaussianBlur stdDeviation="6"/>
           </filter>
         </defs>
         <rect width="380" height="520" fill="url(#nightSky)"/>
-        <!-- Stars -->
-        <g fill="#dce7ff">
-          <circle cx="40" cy="40" r="1.2" opacity="0.9"/>
-          <circle cx="90" cy="70" r="0.9" opacity="0.7"/>
-          <circle cx="140" cy="35" r="1.1" opacity="0.85"/>
-          <circle cx="180" cy="90" r="0.8" opacity="0.6"/>
-          <circle cx="230" cy="48" r="1.3" opacity="0.95"/>
-          <circle cx="270" cy="110" r="0.7" opacity="0.55"/>
-          <circle cx="330" cy="30" r="1" opacity="0.8"/>
-          <circle cx="350" cy="160" r="0.9" opacity="0.7"/>
-          <circle cx="60" cy="180" r="0.8" opacity="0.65"/>
-          <circle cx="120" cy="210" r="1.1" opacity="0.85"/>
-          <circle cx="200" cy="170" r="0.7" opacity="0.5"/>
-          <circle cx="310" cy="200" r="1" opacity="0.75"/>
-          <circle cx="25" cy="260" r="0.9" opacity="0.7"/>
-          <circle cx="160" cy="280" r="0.8" opacity="0.6"/>
-          <circle cx="280" cy="260" r="1.2" opacity="0.9"/>
-          <circle cx="340" cy="300" r="0.7" opacity="0.55"/>
-          <circle cx="80" cy="330" r="1" opacity="0.8"/>
-          <circle cx="220" cy="350" r="0.9" opacity="0.7"/>
-          <circle cx="360" cy="380" r="0.8" opacity="0.65"/>
-          <circle cx="50" cy="420" r="1.1" opacity="0.85"/>
-          <circle cx="170" cy="450" r="0.7" opacity="0.5"/>
-          <circle cx="300" cy="430" r="1" opacity="0.8"/>
+        <!-- Soft stars -->
+        <g fill="#d7dde2">
+          <circle cx="42" cy="44" r="1" opacity="0.55"/>
+          <circle cx="96" cy="72" r="0.8" opacity="0.4"/>
+          <circle cx="150" cy="38" r="1" opacity="0.5"/>
+          <circle cx="232" cy="56" r="1.1" opacity="0.6"/>
+          <circle cx="320" cy="34" r="0.8" opacity="0.45"/>
+          <circle cx="70" cy="190" r="0.7" opacity="0.35"/>
+          <circle cx="180" cy="160" r="0.9" opacity="0.45"/>
+          <circle cx="300" cy="210" r="0.8" opacity="0.4"/>
+          <circle cx="120" cy="300" r="0.9" opacity="0.4"/>
+          <circle cx="260" cy="340" r="0.7" opacity="0.35"/>
+          <circle cx="48" cy="420" r="0.8" opacity="0.4"/>
+          <circle cx="310" cy="450" r="0.9" opacity="0.45"/>
         </g>
         <!-- Moon -->
-        <circle cx="300" cy="78" r="36" fill="url(#moonGlow)"/>
-        <circle cx="300" cy="78" r="16" fill="#eef3fb"/>
-        <circle cx="307" cy="72" r="14" fill="#152038" opacity="0.35"/>
-        <!-- Night clouds -->
-        <g filter="url(#nightCloudBlur)" fill="#3a4a6a" opacity="0.45">
-          <ellipse cx="80" cy="160" rx="70" ry="22"/>
-          <ellipse cx="120" cy="150" rx="40" ry="16"/>
-          <ellipse cx="240" cy="220" rx="80" ry="24"/>
-          <ellipse cx="280" cy="210" rx="42" ry="16"/>
-          <ellipse cx="100" cy="340" rx="90" ry="26"/>
-          <ellipse cx="150" cy="330" rx="48" ry="18"/>
-          <ellipse cx="290" cy="420" rx="85" ry="24"/>
-          <ellipse cx="330" cy="412" rx="40" ry="16"/>
+        <circle cx="300" cy="78" r="30" fill="url(#moonGlow)"/>
+        <circle cx="300" cy="78" r="14" fill="#e8ecef"/>
+        <circle cx="306" cy="73" r="12" fill="#171b21" opacity="0.35"/>
+        <!-- Soft night mist -->
+        <g filter="url(#nightCloudBlur)" fill="#2a3138" opacity="0.5">
+          <ellipse cx="80" cy="170" rx="75" ry="24"/>
+          <ellipse cx="240" cy="230" rx="85" ry="26"/>
+          <ellipse cx="110" cy="360" rx="95" ry="28"/>
+          <ellipse cx="290" cy="430" rx="88" ry="26"/>
         </g>
       </svg>
     </div>
@@ -126,8 +97,8 @@
         <svg viewBox="0 0 24 24" width="32" height="32">
           <defs>
             <linearGradient id="authGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color:#6aa3c7"/>
-              <stop offset="100%" style="stop-color:#4f86ad"/>
+              <stop offset="0%" style="stop-color:#3d6b64"/>
+              <stop offset="100%" style="stop-color:#2f5f58"/>
             </linearGradient>
           </defs>
           <path fill="url(#authGrad)" d="M12 2L2 22h20L12 2zm0 3.99L19.53 19H4.47L12 5.99zM13 16h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
@@ -216,26 +187,66 @@
       <!-- Settings Panel Banner -->
       <div id="api-key-banner" class="api-key-banner hidden">
         <div class="settings-tabs">
-          <span class="settings-title" style="font-size:12px;font-weight:600;color:var(--text-main);">Change Password</span>
-          <!-- <button id="tab-settings-key" class="settings-tab">API Key</button> -->
-          <!-- <button id="tab-settings-pwd" class="settings-tab active">Change Password</button> -->
+          <span class="settings-title" style="font-size:12px;font-weight:600;color:var(--text-main);">Settings</span>
           <button id="api-key-cancel-btn" class="close-text-btn">&times;</button>
         </div>
 
-        <!-- API Key Tab (Hidden for end users)
-        <div id="settings-key-section" class="settings-section hidden">
-          <div class="api-key-banner-inner">
-            <svg viewBox="0 0 24 24" class="api-key-icon"><path d="M12.65 10C11.83 7.67 9.61 6 7 6c-3.31 0-6 2.69-6 6s2.69 6 6 6c2.61 0 4.83-1.67 5.65-4H17v4h4v-4h2v-4H12.65zM7 14c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/></svg>
-            <input type="password" id="api-key-input" placeholder="Enter Groq API key (gsk_...)" autocomplete="off"/>
-            <button id="api-key-save-btn" class="btn btn-indigo btn-sm">Save</button>
-          </div>
-          <p class="api-key-hint">Get your free key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></p>
+        <div class="settings-section" id="settings-features-section">
+          <div class="settings-group-label">On-page features</div>
+          <label class="settings-toggle-row">
+            <span class="settings-toggle-text">
+              <span class="settings-toggle-title">Keywords tile</span>
+              <span class="settings-toggle-desc">Show the floating keywords panel on pages</span>
+            </span>
+            <span class="settings-switch">
+              <input type="checkbox" id="pref-tile-enabled" checked />
+              <span class="settings-switch-slider"></span>
+            </span>
+          </label>
+          <label class="settings-toggle-row">
+            <span class="settings-toggle-text">
+              <span class="settings-toggle-title">Sticky notes</span>
+              <span class="settings-toggle-desc">Highlight keywords on the page</span>
+            </span>
+            <span class="settings-switch">
+              <input type="checkbox" id="pref-sticky-notes" checked />
+              <span class="settings-switch-slider"></span>
+            </span>
+          </label>
+
+          <div class="settings-group-label">Selection tooltip</div>
+          <label class="settings-toggle-row">
+            <span class="settings-toggle-text">
+              <span class="settings-toggle-title">Save Highlight</span>
+            </span>
+            <span class="settings-switch">
+              <input type="checkbox" id="pref-tooltip-save" checked />
+              <span class="settings-switch-slider"></span>
+            </span>
+          </label>
+          <label class="settings-toggle-row">
+            <span class="settings-toggle-text">
+              <span class="settings-toggle-title">AI Summary</span>
+            </span>
+            <span class="settings-switch">
+              <input type="checkbox" id="pref-tooltip-ai" checked />
+              <span class="settings-switch-slider"></span>
+            </span>
+          </label>
+          <label class="settings-toggle-row">
+            <span class="settings-toggle-text">
+              <span class="settings-toggle-title">Summarize Page</span>
+            </span>
+            <span class="settings-switch">
+              <input type="checkbox" id="pref-tooltip-page" checked />
+              <span class="settings-switch-slider"></span>
+            </span>
+          </label>
         </div>
-        -->
 
         <!-- Change Password Section -->
-        <div id="settings-pwd-section" class="settings-section">
-
+        <div id="settings-pwd-section" class="settings-section settings-pwd-block">
+          <div class="settings-group-label">Account</div>
           <div id="pwd-change-error" class="auth-error hidden" style="margin-bottom:8px;"></div>
           <div class="form-group-sm">
             <input type="password" id="pwd-current" placeholder="Current Password" autocomplete="current-password"/>
