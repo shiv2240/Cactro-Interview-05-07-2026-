@@ -142,6 +142,8 @@ export const messageSchemas = {
     type: z.literal(MessageType.AI_GENERATE),
     action: aiActionSchema,
     text: z.string().min(1).max(100_000),
+    selectedText: z.string().max(8_000).optional(),
+    pageContext: z.string().max(12_000).optional(),
     pageTitle: z.string().max(1_000).optional(),
     url: z.string().max(4_000).optional(),
   }),
@@ -150,6 +152,8 @@ export const messageSchemas = {
     requestId: z.string().min(1),
     action: aiActionSchema,
     text: z.string().min(1).max(100_000),
+    selectedText: z.string().max(8_000).optional(),
+    pageContext: z.string().max(12_000).optional(),
     pageTitle: z.string().max(1_000).optional(),
     url: z.string().max(4_000).optional(),
   }),
@@ -249,6 +253,8 @@ export type ExtensionRequest =
       type: "AI_GENERATE";
       action: AIAction;
       text: string;
+      selectedText?: string;
+      pageContext?: string;
       pageTitle?: string;
       url?: string;
     }
@@ -257,6 +263,8 @@ export type ExtensionRequest =
       requestId: string;
       action: AIAction;
       text: string;
+      selectedText?: string;
+      pageContext?: string;
       pageTitle?: string;
       url?: string;
     }
@@ -350,6 +358,8 @@ export function streamAIRequest(
   opts: {
     action: AIAction;
     text: string;
+    selectedText?: string;
+    pageContext?: string;
     pageTitle?: string;
     url?: string;
   },
@@ -383,6 +393,8 @@ export function streamAIRequest(
     requestId,
     action: opts.action,
     text: opts.text,
+    selectedText: opts.selectedText,
+    pageContext: opts.pageContext,
     pageTitle: opts.pageTitle,
     url: opts.url,
   }).catch((e) => {

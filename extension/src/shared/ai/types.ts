@@ -28,6 +28,10 @@ export interface AIProvider {
 export interface AIRequestContext {
   action: AIAction;
   text: string;
+  /** Exact user selection or keyword term — primary subject for summarize/explain. */
+  selectedText?: string;
+  /** Cleaned article excerpt (nav/chrome stripped); secondary context only. */
+  pageContext?: string;
   pageTitle?: string;
   url?: string;
   workspaceLabel?: string;

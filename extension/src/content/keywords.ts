@@ -1,5 +1,14 @@
+import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { FeaturePrefs } from "../shared/types";
+import {
+  extractPageContent,
+  extractPageContextForTerm,
+  findCleanSnippetForTerm,
+  isChromeText,
+  offlineKeywordSummary,
+  UI_CHROME_TERMS,
+} from "./pageText";
 
 /** Classic sticky-note pastels — flat/matte paper */
 const KW_COLORS = [
@@ -79,36 +88,43 @@ export function extractKeywordsOffline(pageText: string, limit = 8): KeywordMeta
   const words = String(pageText || "").match(/[A-Za-z][A-Za-z0-9+.#-]{2,}/g) || [];
   for (const w of words) {
     const lower = w.toLowerCase();
-    if (STOP.has(lower) || lower.length < 4 || lower.length > 40) continue;
+    if (STOP.has(lower) || UI_CHROME_TERMS.has(lower)) continue;
+    if (lower.length < 4 || lower.length > 40) continue;
     freq.set(lower, (freq.get(lower) ?? 0) + 1);
   }
   for (const t of String(document.title || "")
     .toLowerCase()
     .split(/[^a-z0-9+.#-]+/)
     .filter(Boolean)) {
-    if (t.length >= 4 && !STOP.has(t)) freq.set(t, (freq.get(t) ?? 0) + 3);
+    if (t.length >= 4 && !STOP.has(t) && !UI_CHROME_TERMS.has(t)) {
+      freq.set(t, (freq.get(t) ?? 0) + 3);
+    }
   }
 
   const ranked = [...freq.entries()]
     .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
-    .slice(0, limit * 2);
+    .slice(0, limit * 3);
 
   const items: KeywordMeta[] = [];
   const seen = new Set<string>();
-  const sentences = String(pageText || "").split(/(?<=[.!?])\s+/);
 
   for (let idx = 0; idx < ranked.length; idx++) {
     const term = ranked[idx]![0];
     if (items.length >= limit) break;
-    if (seen.has(term)) continue;
+    if (seen.has(term) || UI_CHROME_TERMS.has(term)) continue;
     const re = new RegExp(`\\b(${escapeRegExp(term)})\\b`, "i");
     const m = String(pageText || "").match(re);
     const display = m?.[1] ?? term;
+    if (UI_CHROME_TERMS.has(display.toLowerCase())) continue;
     seen.add(term);
-    const sentence = sentences.find((s) => re.test(s)) || "";
+
+    // NEVER dump nearby page chrome as the summary body.
+    const clean = findCleanSnippetForTerm(display, pageText, 180);
     const snippet =
-      sentence.trim().slice(0, 180) ||
-      `Appears on “${document.title || "this page"}”.`;
+      clean && !isChromeText(clean)
+        ? clean
+        : offlineKeywordSummary(display);
+
     items.push({
       term: display,
       summary: snippet,
@@ -264,8 +280,8 @@ function closeKeywordPopup(): void {
   document.getElementById(POPUP_ID)?.remove();
 }
 
-function buildKeywordPlainText(meta: KeywordMeta): string {
-  return `${meta.term}\n\n${meta.summary}`.trim();
+function buildKeywordPlainText(term: string, summary: string): string {
+  return `${term}\n\n${summary}`.trim();
 }
 
 function positionKeywordPopupAbsolute(
@@ -331,7 +347,12 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
     "position:absolute;z-index:2147483647;opacity:0;transform:translateY(6px) scale(0.97);";
   const shadow = popupHost.attachShadow({ mode: "open" });
   const color = KW_COLORS[meta.colorIndex % KW_COLORS.length]!;
-  const plainText = buildKeywordPlainText(meta);
+  const safeOffline =
+    meta.summary && !isChromeText(meta.summary)
+      ? meta.summary
+      : offlineKeywordSummary(meta.term);
+  let liveSummary = safeOffline;
+  const getPlainText = () => buildKeywordPlainText(meta.term, liveSummary);
   const key = meta.term.toLowerCase();
   let liveAnchor =
     anchor && document.contains(anchor) ? anchor : null;
@@ -341,6 +362,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
     ) as HTMLElement | null;
   }
 
+  const requestId = crypto.randomUUID();
   shadow.innerHTML = `
     <style>
       .card {
@@ -354,12 +376,18 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         display: flex; align-items: flex-start; justify-content: space-between;
         gap: 10px; padding: 12px 14px 8px;
       }
-      .term { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: #2c2416; }
+      .term {
+        font-size: 16px; font-weight: 780; letter-spacing: -0.02em; color: #2c2416;
+        line-height: 1.25; word-break: break-word;
+      }
       .badge {
         display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 650;
         letter-spacing: 0.03em; text-transform: uppercase; padding: 3px 8px;
         border-radius: 4px; background: ${color.bg}; border: 1px solid ${color.border};
         color: ${color.text};
+      }
+      .status {
+        margin: 0 14px 6px; font-size: 11px; color: #8a8272;
       }
       .close {
         border: 1px solid #e0dccf; background: #f7f5ee; color: #5c5548;
@@ -368,7 +396,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
       .close:hover { background: #efece3; color: #9a3412; }
       .body {
         padding: 2px 14px 10px; max-height: min(360px, 58vh); overflow: auto;
-        font-size: 13px; line-height: 1.55; color: #4a4336;
+        font-size: 13px; line-height: 1.55; color: #4a4336; white-space: pre-wrap;
       }
       .actions {
         display: flex; align-items: center; gap: 8px;
@@ -395,12 +423,13 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
       <div class="accent"></div>
       <div class="head">
         <div>
-          <div class="term">${escapeHtml(meta.term)}</div>
+          <div class="term" id="term">${escapeHtml(meta.term)}</div>
           <span class="badge">Keyword summary</span>
         </div>
         <button class="close" type="button" title="Close (Esc)" id="close">&times;</button>
       </div>
-      <div class="body">${escapeHtml(meta.summary)}</div>
+      <div class="status" id="status">Generating insight…</div>
+      <div class="body" id="body">Explaining “${escapeHtml(meta.term)}”…</div>
       <div class="actions">
         <button class="abtn abtn-save" type="button" id="save">Save</button>
         <button class="abtn" type="button" id="copy">Copy</button>
@@ -408,6 +437,9 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
       </div>
     </div>
   `;
+
+  const bodyEl = shadow.getElementById("body")!;
+  const statusEl = shadow.getElementById("status")!;
 
   shadow.getElementById("close")?.addEventListener("click", closeKeywordPopup);
 
@@ -423,9 +455,10 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         copyBtn.innerHTML = orig;
       }, 1400);
     };
+    const payload = getPlainText();
     const fallback = () => {
       const ta = document.createElement("textarea");
-      ta.value = plainText;
+      ta.value = payload;
       document.body.appendChild(ta);
       ta.select();
       try {
@@ -437,7 +470,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
       ta.remove();
     };
     if (navigator.clipboard?.writeText) {
-      void navigator.clipboard.writeText(plainText).then(flash).catch(fallback);
+      void navigator.clipboard.writeText(payload).then(flash).catch(fallback);
     } else {
       fallback();
     }
@@ -450,7 +483,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
     }
     void (async () => {
       try {
-        await hooks.onSaveHighlight(plainText);
+        await hooks.onSaveHighlight(getPlainText());
         if (saveBtn) {
           saveBtn.disabled = true;
           saveBtn.textContent = "Saved!";
@@ -499,9 +532,73 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
   };
   setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
 
+  // Stream AI insight centered on this keyword term (cleaned page context only).
+  let streamed = "";
+  const applySafeFallback = (reason: string) => {
+    liveSummary = safeOffline;
+    bodyEl.textContent = safeOffline;
+    statusEl.textContent = reason;
+  };
+  const onChunk = (msg: {
+    type?: string;
+    requestId?: string;
+    chunk?: string;
+    envelope?: { latencyMs?: number };
+    error?: string;
+  }) => {
+    if (msg.requestId !== requestId) return;
+    if (msg.type === MessageType.AI_STREAM_CHUNK && msg.chunk) {
+      streamed += msg.chunk;
+      // Reject chrome dumps mid-stream / at end
+      if (isChromeText(streamed) && streamed.length > 80) {
+        applySafeFallback("Filtered page chrome — retry");
+        return;
+      }
+      liveSummary = streamed;
+      bodyEl.textContent = streamed;
+      statusEl.textContent = "Streaming…";
+      place();
+    }
+    if (msg.type === MessageType.AI_STREAM_DONE) {
+      chrome.runtime.onMessage.removeListener(onChunk as never);
+      if (msg.error) {
+        applySafeFallback(msg.error);
+      } else if (!streamed.trim() || isChromeText(streamed)) {
+        applySafeFallback("Done");
+      } else {
+        liveSummary = streamed;
+        bodyEl.textContent = streamed;
+        statusEl.textContent = msg.envelope?.latencyMs
+          ? `${msg.envelope.latencyMs}ms`
+          : "Done";
+      }
+      place();
+    }
+  };
+  chrome.runtime.onMessage.addListener(onChunk as never);
+
+  // Prefer cleaned context; omit entirely if scrub leaves chrome.
+  let pageContext = extractPageContextForTerm(meta.term, 2_500);
+  if (pageContext && isChromeText(pageContext)) pageContext = "";
+
+  void sendMessage({
+    type: MessageType.AI_STREAM,
+    requestId,
+    action: "explain",
+    text: meta.term,
+    selectedText: meta.term,
+    pageContext: pageContext || undefined,
+    pageTitle: document.title,
+    url: location.href,
+  }).catch((e) => {
+    applySafeFallback(e instanceof Error ? e.message : "AI failed");
+    chrome.runtime.onMessage.removeListener(onChunk as never);
+  });
+
   popupCleanup = () => {
     window.removeEventListener("resize", onResize);
     document.removeEventListener("mousedown", onDocDown, true);
+    chrome.runtime.onMessage.removeListener(onChunk as never);
   };
 }
 
@@ -972,7 +1069,7 @@ export function refreshKeywords(feature: FeaturePrefs): void {
 
   if (!feature.keywordsTile && !feature.stickyNotes) return;
 
-  const pageText = (document.body?.innerText ?? "").slice(0, 40_000);
+  const pageText = extractPageContent(40_000);
   const items = extractKeywordsOffline(pageText, 8);
   items.forEach((item) => {
     keywordStore.set(item.term.toLowerCase(), item);

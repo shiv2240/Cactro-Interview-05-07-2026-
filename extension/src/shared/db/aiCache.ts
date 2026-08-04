@@ -5,13 +5,15 @@ const MAX_CACHE = 80;
 /** Short TTL for summarize hot-path — identical requests hit in <50ms. */
 const DEFAULT_TTL_MS = 1000 * 60 * 10; // 10 min
 const MEMORY_MAX = 40;
+/** Bump to invalidate junk keyword/selection summaries cached with page chrome. */
+const CACHE_VERSION = "v2-nochrome";
 
 type MemEntry = AICacheEntry;
 
 const memory = new Map<string, MemEntry>();
 
 function hashKey(parts: string[]): string {
-  const raw = parts.join("::");
+  const raw = [CACHE_VERSION, ...parts].join("::");
   let h = 0;
   for (let i = 0; i < raw.length; i++) {
     h = (Math.imul(31, h) + raw.charCodeAt(i)) | 0;

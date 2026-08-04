@@ -126,6 +126,8 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
       return generateAI({
         action: message.action,
         text: message.text,
+        selectedText: message.selectedText,
+        pageContext: message.pageContext,
         pageTitle: message.pageTitle,
         url: message.url,
       });
@@ -257,6 +259,8 @@ chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
             for await (const part of streamAI({
               action: message.action,
               text: message.text,
+              selectedText: message.selectedText,
+              pageContext: message.pageContext,
               pageTitle: message.pageTitle,
               url: message.url,
             })) {

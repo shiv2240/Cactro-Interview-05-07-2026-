@@ -1,6 +1,6 @@
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
-import type { FeaturePrefs, UserPrefs } from "../shared/types";
+import type { AIAction, FeaturePrefs, UserPrefs } from "../shared/types";
 import { DEFAULT_FEATURE_PREFS } from "../shared/types";
 import {
   isKeywordUiTarget,
@@ -9,6 +9,12 @@ import {
   setKeywordHooks,
   teardownKeywords,
 } from "./keywords";
+import {
+  extractPageContent,
+  extractPageContextForTerm,
+  isChromeText,
+  truncateLabel,
+} from "./pageText";
 
 const HOST_ID = "aka-root";
 
@@ -163,21 +169,43 @@ async function onAction(action: string, text: string) {
   }
 
   if (action === "summarize") {
-    openModal("AI Summary", text, "summarize");
+    // Short selections → explain (Meaning / On this page / Why it matters).
+    // Longer passages → summarize, still centered on the exact selection.
+    const wordCount = text.trim().split(/\s+/).filter(Boolean).length;
+    const aiAction: AIAction = wordCount <= 12 ? "explain" : "summarize";
+    let pageContext = extractPageContextForTerm(text, 2_500);
+    if (pageContext && isChromeText(pageContext)) pageContext = "";
+    openModal({
+      title: truncateLabel(text, 56),
+      focusLabel: text,
+      text,
+      selectedText: text,
+      pageContext: pageContext || undefined,
+      action: aiAction,
+    });
     return;
   }
 
   if (action === "page") {
-    const pageText = document.body?.innerText?.slice(0, 40_000) ?? text;
-    openModal("Page Summary", pageText, "page_summary");
+    const pageText = extractPageContent(40_000) || text;
+    openModal({
+      title: "Page Summary",
+      focusLabel: document.title || "This page",
+      text: pageText,
+      action: "page_summary",
+    });
   }
 }
 
-function openModal(
-  title: string,
-  text: string,
-  action: "summarize" | "page_summary"
-) {
+function openModal(opts: {
+  title: string;
+  focusLabel: string;
+  text: string;
+  selectedText?: string;
+  pageContext?: string;
+  action: "summarize" | "explain" | "page_summary";
+}) {
+  const { title, focusLabel, text, selectedText, pageContext, action } = opts;
   closeModal();
   modalHost = document.createElement("div");
   modalHost.style.all = "initial";
@@ -188,6 +216,8 @@ function openModal(
   document.documentElement.appendChild(modalHost);
 
   const requestId = crypto.randomUUID();
+  const showFocus =
+    action === "summarize" || action === "explain" || action === "page_summary";
   shadow.innerHTML = `
     <style>
       .backdrop {
@@ -202,18 +232,15 @@ function openModal(
         box-shadow: 0 20px 50px rgba(15,23,42,0.25);
       }
       .card.dark { background: #1e293b; color: #e2e8f0; }
-      h2 { margin: 0 0 8px; font-size: 18px; }
-      .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .badge {
-        display: inline-block; font-size: 11px; font-weight: 700;
-        padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em;
-        background: #e2e8f0; color: #0f172a;
+      h2 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; word-break: break-word; }
+      .focus {
+        display: ${showFocus ? "block" : "none"};
+        margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
+        background: #e2e8f0; color: #0f172a; font-size: 13px; font-weight: 600;
+        line-height: 1.4; white-space: pre-wrap; word-break: break-word;
       }
-      .badge.nano { background: #dbeafe; color: #1d4ed8; }
-      .badge.groq { background: #fef3c7; color: #b45309; }
-      .card.dark .badge { background: #334155; color: #e2e8f0; }
-      .card.dark .badge.nano { background: #1e3a5f; color: #93c5fd; }
-      .card.dark .badge.groq { background: #422006; color: #fcd34d; }
+      .card.dark .focus { background: #334155; color: #e2e8f0; }
+      .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
       .body { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
       .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
       button {
@@ -221,6 +248,7 @@ function openModal(
         font-weight: 600; cursor: pointer; background: #e2e8f0; color: #0f172a;
       }
       button.primary { background: #3b82f6; color: white; }
+      button.save { background: #fbbf24; color: #0f172a; }
       button.accept { background: #059669; color: white; }
       button.reject { background: #64748b; color: white; }
       button:disabled { opacity: 0.5; cursor: default; }
@@ -232,6 +260,7 @@ function openModal(
     <div class="backdrop">
       <div class="card ${document.documentElement.dataset.akaTheme === "dark" ? "dark" : ""}">
         <h2>${escapeHtml(title)}</h2>
+        <div class="focus" id="focus">${escapeHtml(focusLabel)}</div>
         <div class="meta" id="meta">Generating…</div>
         <div class="body" id="body"></div>
         <div class="feedback" id="feedback">
@@ -240,6 +269,7 @@ function openModal(
           <span class="feedback-note" id="feedback-note">Feedback saved</span>
         </div>
         <div class="actions">
+          <button class="save" id="save">Save</button>
           <button class="primary" id="copy">Copy</button>
           <button id="close">Close</button>
         </div>
@@ -253,15 +283,50 @@ function openModal(
   const feedbackNote = shadow.getElementById("feedback-note")!;
   const acceptBtn = shadow.getElementById("accept") as HTMLButtonElement;
   const rejectBtn = shadow.getElementById("reject") as HTMLButtonElement;
+  const saveBtn = shadow.getElementById("save") as HTMLButtonElement;
   let voted = false;
+  let saved = false;
+
+  const copyPayload = () => {
+    const body = (bodyEl.textContent ?? "").trim();
+    const head = (selectedText || focusLabel || "").trim();
+    if (head && body) return `${head}\n\n${body}`;
+    return body || head;
+  };
 
   shadow.getElementById("close")?.addEventListener("click", closeModal);
   shadow.querySelector(".backdrop")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeModal();
   });
   shadow.getElementById("copy")?.addEventListener("click", () => {
-    void navigator.clipboard.writeText(bodyEl.textContent ?? "");
+    void navigator.clipboard.writeText(copyPayload());
     toast("Copied");
+  });
+
+  saveBtn.addEventListener("click", () => {
+    if (saved) return;
+    const payload = copyPayload().trim();
+    if (!payload) {
+      toast("Nothing to save yet");
+      return;
+    }
+    void (async () => {
+      saveBtn.disabled = true;
+      try {
+        await sendMessage({
+          type: MessageType.SAVE_HIGHLIGHT,
+          text: payload,
+          url: location.href,
+          title: document.title,
+        });
+        saved = true;
+        saveBtn.textContent = "Saved!";
+        toast("Highlight saved");
+      } catch (e) {
+        saveBtn.disabled = false;
+        toast(e instanceof Error ? e.message : "Save failed");
+      }
+    })();
   });
 
   async function vote(accepted: boolean) {
@@ -303,13 +368,20 @@ function openModal(
       if (!(bodyEl.textContent ?? "").length) {
         metaEl.textContent = "Streaming…";
       }
-      bodyEl.textContent = (bodyEl.textContent ?? "") + msg.chunk;
+      const next = (bodyEl.textContent ?? "") + msg.chunk;
+      // Drop Wikipedia chrome dumps if the model echoes nav soup
+      if (isChromeText(next) && next.length > 120) {
+        bodyEl.textContent =
+          "Could not produce a clean summary for this selection. Try again.";
+        metaEl.textContent = "Filtered page chrome";
+        return;
+      }
+      bodyEl.textContent = next;
     }
     if (msg.type === MessageType.AI_STREAM_DONE) {
       if (msg.error) {
         metaEl.textContent = msg.error;
       } else if (msg.envelope) {
-        // Hide Nano/Groq provider badges from end users — show latency only.
         metaEl.textContent = `${msg.envelope.latencyMs ?? 0}ms`;
         feedbackEl.classList.add("visible");
       } else {
@@ -326,6 +398,8 @@ function openModal(
     requestId,
     action,
     text,
+    selectedText,
+    pageContext,
     pageTitle: document.title,
     url: location.href,
   }).catch((e) => {
@@ -399,6 +473,21 @@ function refreshPageFeatures() {
 
 async function boot() {
   if (!isContextValid()) return;
+  // Drop legacy keyword caches that may store Wikipedia chrome snippets.
+  try {
+    chrome.storage.local.remove(
+      ["hs_keyword_cache_v1", "aka_keyword_cache_v1"],
+      () => {
+        try {
+          void chrome.runtime?.lastError;
+        } catch {
+          /* ignore */
+        }
+      }
+    );
+  } catch {
+    /* ignore */
+  }
   try {
     await loadPrefs();
   } catch {
