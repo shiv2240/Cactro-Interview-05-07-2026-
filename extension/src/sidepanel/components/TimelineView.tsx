@@ -1,4 +1,3 @@
-import { providerBadge } from "../../shared/ai/providerLabel";
 import type { AITimelineEvent, PersonalizationProfile } from "../../shared/types";
 
 export function TimelineView(props: {
@@ -14,6 +13,10 @@ export function TimelineView(props: {
             Tone {props.profile.tone} · Style {props.profile.summaryStyle} ·
             Accepted {props.profile.acceptedActions} · Rejected{" "}
             {props.profile.rejectedActions}
+          </p>
+          <p className="mt-1 text-[11px] text-[var(--aka-muted)]">
+            Tap Accept or Reject on AI summaries (Highlights, Notes, or in-page)
+            to update these counts and refine tone/style.
           </p>
           {props.profile.interests.length > 0 && (
             <p className="mt-2 text-xs">
@@ -36,8 +39,8 @@ export function TimelineView(props: {
                   {e.action}
                 </span>
                 <span>
-                  {providerBadge(e.provider)} · {e.latencyMs}ms ·{" "}
-                  {new Date(e.createdAt).toLocaleString()}
+                  {/* Provider brand names hidden from end users */}
+                  {e.latencyMs}ms · {new Date(e.createdAt).toLocaleString()}
                 </span>
               </div>
               <p className="mt-2 line-clamp-4 whitespace-pre-wrap text-xs">

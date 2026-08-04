@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { providerBadge } from "../shared/ai/providerLabel";
+import { aiMetaLine } from "../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import type {
   AIResponseEnvelope,
@@ -148,9 +148,8 @@ export default function App() {
         action: "highlights_summary",
         text,
       });
-      setStatus(
-        `${providerBadge(envelope.provider, { cached: envelope.cached })} · ${envelope.latencyMs}ms\n\n${envelope.text}`
-      );
+      const meta = aiMetaLine(envelope.latencyMs, { cached: envelope.cached });
+      setStatus(meta ? `${meta}\n\n${envelope.text}` : envelope.text);
       await refresh();
     } catch (e) {
       setStatus(e instanceof Error ? e.message : "AI failed");

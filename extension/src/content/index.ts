@@ -1,4 +1,3 @@
-import { providerBadge } from "../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { FeaturePrefs, UserPrefs } from "../shared/types";
@@ -262,16 +261,8 @@ function openModal(
       if (msg.error) {
         metaEl.textContent = msg.error;
       } else if (msg.envelope) {
-        const badge = providerBadge(msg.envelope.provider, {
-          cached: msg.envelope.cached,
-        });
-        const kind =
-          msg.envelope.provider === "gemini-nano"
-            ? "nano"
-            : msg.envelope.provider === "groq"
-              ? "groq"
-              : "";
-        metaEl.innerHTML = `<span class="badge ${kind}">${escapeHtml(badge)}</span><span>${msg.envelope.latencyMs ?? 0}ms</span>`;
+        // Hide Nano/Groq provider badges from end users — show latency only.
+        metaEl.textContent = `${msg.envelope.latencyMs ?? 0}ms`;
       } else {
         metaEl.textContent = "Done";
       }

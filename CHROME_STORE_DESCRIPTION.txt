@@ -3,9 +3,10 @@ AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION
 ================================================================================
 
 AI Knowledge Assistant is a local-first Chrome extension for capturing highlights,
-taking notes, and getting AI help without leaving the page. Gemini Nano runs on
-device when available; Groq is an automatic cloud fallback. Optional Convex sync
-keeps your account in sync when you choose Sync or Cloud AI privacy modes.
+taking notes, and getting AI help without leaving the page. Multiple AI models
+power summaries with automatic failover when one is slow — no API keys or flags
+to configure. Optional Convex sync keeps your account in sync when you choose
+Sync or Cloud AI privacy modes.
 
 --------------------------------------------------------------------------------
 KEY FEATURES
@@ -17,15 +18,16 @@ KEY FEATURES
   touch content scripts.
 
 ★ SIDE PANEL DASHBOARD
-• Highlights list with search, delete, and pagination.
-• Notes with markdown body, tags, pin/favorite, and AI actions.
+• Highlights list with search, delete, and pagination (10 per page).
+• Notes with markdown body, tags, pin/favorite, AI actions, and pagination.
 • Workspaces: Work, Personal, Coding, Research, Study.
 • Theme: Light / Dark / System. Feature toggles for keywords tile & sticky notes.
 
 ★ AI ENGINE
-• Gemini Nano (Chrome Prompt API) first; Groq fallback when needed.
-• Streaming responses, provider + latency metadata, local LRU cache.
+• Multi-model AI with automatic switch when a model is slow.
+• Streaming responses, latency metadata, local LRU cache.
 • AI Timeline: searchable history of what you asked the assistant.
+• No user API key paste and no chrome://flags setup required.
 
 ★ LOCAL-FIRST + PRIVACY MODES
 • IndexedDB is the primary store — highlights work offline.
@@ -43,7 +45,7 @@ HOW TO USE
 
 1. Install the extension and open the side panel from the toolbar icon.
 2. (Optional) Sign in under Settings and set privacy mode to Sync.
-3. Select text on any page → Save or run AI actions (Gemini Nano on-device, Groq cloud fallback when needed — no API key to paste).
+3. Select text on any page → Save or run AI actions (no API key to paste).
 4. Capture longer thoughts in Notes; browse AI Timeline for recent work.
 
 --------------------------------------------------------------------------------
@@ -51,7 +53,7 @@ PRIVACY
 --------------------------------------------------------------------------------
 
 • Private mode never syncs content to Convex.
-• Groq requests (when used) send only the prompt text needed for the action.
+• Cloud AI requests (when used) send only the prompt text needed for the action.
 • See PRIVACY_POLICY.md for details.
 
 Version 2.0.0

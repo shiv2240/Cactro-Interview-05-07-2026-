@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { providerBadge } from "../../shared/ai/providerLabel";
+import { aiMetaLine } from "../../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../../shared/messaging/protocol";
 import type { AIResponseEnvelope, Highlight } from "../../shared/types";
 
@@ -76,13 +76,15 @@ export function HighlightsView(props: {
   const [page, setPage] = useState(0);
   const [summarizingId, setSummarizingId] = useState<string | null>(null);
   const [cardSummaries, setCardSummaries] = useState<
-    Record<string, { text: string; badge: string }>
+    Record<string, { text: string; meta?: string }>
   >({});
+  // Search in App filters the full list; paginate that filtered result set.
   const pages = Math.max(1, Math.ceil(props.highlights.length / PAGE_SIZE));
+  const safePage = Math.min(page, pages - 1);
   const slice = useMemo(() => {
-    const start = page * PAGE_SIZE;
+    const start = safePage * PAGE_SIZE;
     return props.highlights.slice(start, start + PAGE_SIZE);
-  }, [props.highlights, page]);
+  }, [props.highlights, safePage]);
 
   async function summarizeOne(h: Highlight) {
     setSummarizingId(h.id);
@@ -95,14 +97,12 @@ export function HighlightsView(props: {
         pageTitle: h.title,
         url: h.url,
       });
-      const badge = `${providerBadge(envelope.provider, {
-        cached: envelope.cached,
-      })} · ${envelope.latencyMs}ms`;
+      const meta = aiMetaLine(envelope.latencyMs, { cached: envelope.cached });
       setCardSummaries((prev) => ({
         ...prev,
-        [h.id]: { text: envelope.text, badge },
+        [h.id]: { text: envelope.text, meta },
       }));
-      props.setStatus(`${badge}\n\n${envelope.text}`);
+      props.setStatus(meta ? `${meta}\n\n${envelope.text}` : envelope.text);
     } catch (e) {
       props.setStatus(e instanceof Error ? e.message : "AI failed");
     } finally {
@@ -134,7 +134,9 @@ export function HighlightsView(props: {
 
       {slice.length === 0 ? (
         <p className="glass rounded-xl p-4 text-sm text-[var(--aka-muted)]">
-          No highlights yet. Select text on any page and tap Save Highlight.
+          {props.search.trim()
+            ? "No highlights match your search."
+            : "No highlights yet. Select text on any page and tap Save Highlight."}
         </p>
       ) : (
         <ul className="space-y-2">
@@ -201,9 +203,11 @@ export function HighlightsView(props: {
                         Dismiss
                       </button>
                     </div>
-                    <p className="mb-1 text-[10px] text-[var(--aka-muted)]">
-                      {summary.badge}
-                    </p>
+                    {summary.meta ? (
+                      <p className="mb-1 text-[10px] text-[var(--aka-muted)]">
+                        {summary.meta}
+                      </p>
+                    ) : null}
                     <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
                       {summary.text}
                     </pre>
@@ -220,18 +224,21 @@ export function HighlightsView(props: {
           <button
             type="button"
             className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
-            disabled={page === 0}
+            disabled={safePage === 0}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
           >
             Prev
           </button>
           <span>
-            {page + 1} / {pages}
+            {safePage + 1} / {pages}
+            <span className="ml-1 text-[var(--aka-muted)]">
+              ({props.highlights.length})
+            </span>
           </span>
           <button
             type="button"
             className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
-            disabled={page >= pages - 1}
+            disabled={safePage >= pages - 1}
             onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
           >
             Next

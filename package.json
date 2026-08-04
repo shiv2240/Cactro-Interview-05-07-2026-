@@ -1,7 +1,7 @@
 {
   "name": "ai-knowledge-assistant",
   "version": "2.0.0",
-  "description": "Local-first AI Knowledge Assistant Chrome extension (highlights, notes, Gemini Nano → Groq, Convex sync).",
+  "description": "Local-first AI Knowledge Assistant Chrome extension (highlights, notes, multi-model AI, Convex sync).",
   "scripts": {
     "dev": "vite --config extension/vite.config.ts",
     "build": "vite build --config extension/vite.config.ts && node scripts/fix-extension-html-paths.mjs",

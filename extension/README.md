@@ -41,13 +41,14 @@ Copy `extension/.env.example` → `extension/.env` (gitignored), **or** keep a
 real key in gitignored root `config.js` (`window.HS_CONFIG.GROQ_API_KEY`).
 
 - `VITE_CONVEX_HTTP_URL` — Convex HTTP actions base URL
-- `VITE_GROQ_API_KEY` / `GROQ_API_KEY` — **developer** Groq fallback baked into
+- `VITE_GROQ_API_KEY` / `GROQ_API_KEY` — **developer-only** cloud AI key baked into
   the service worker at build time (also read from root `config.js` when present)
 
-AI order: **Gemini Nano → Groq**. End users do not paste a Groq key; Settings
-has an optional override only. Rebuild after changing the key.
+**End users never paste an API key or enable chrome://flags.** The extension uses
+a fast primary AI model with an automatic backup if that model fails. Rebuild
+after changing a developer key.
 
-**Never import `swConfig` / Groq keys from content scripts.**
+**Never import `swConfig` / cloud AI keys from content scripts.**
 
 ## Sync model
 
@@ -57,7 +58,7 @@ has an optional override only. Rebuild after changing the key.
 | Notes | Always | Yes |
 | Auth session | chrome.storage | Convex auth HTTP |
 | Prefs / theme / feature toggles | IndexedDB + chrome.storage mirror | Optional preferences route |
-| AI timeline, vectors, personalization, Groq key | Local only | No |
+| AI timeline, vectors, personalization | Local only | No |
 
 **Private** mode disables highlight/note sync. Default privacy mode is **Sync**.
 
