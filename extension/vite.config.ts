@@ -8,6 +8,9 @@ import manifest from "./manifest.json";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
+  // Relative base so side panel HTML can load assets under chrome-extension://
+  // (absolute `/assets/...` breaks the dashboard in the side panel).
+  base: "./",
   root: __dirname,
   envDir: __dirname,
   plugins: [react(), crx({ manifest: manifest as never })],

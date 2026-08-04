@@ -1,22 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "AI Knowledge Assistant",
-  "version": "2.0.0",
-  "description": "Load the unpacked build from extension/dist after npm run build. This root file documents the product version; Chrome should load extension/dist/manifest.json.",
-  "permissions": [
-    "storage",
-    "sidePanel",
-    "offscreen",
-    "clipboardWrite",
-    "alarms"
-  ],
-  "host_permissions": [
-    "https://api.groq.com/*",
-    "https://*.convex.cloud/*",
-    "https://*.convex.site/*"
-  ],
+  "name": "WRONG FOLDER — Load extension/dist",
+  "version": "0.0.0",
+  "description": "You loaded the repo root. Unload this extension, run npm run build, then Load unpacked → extension/dist.",
   "action": {
-    "default_title": "AI Knowledge Assistant — load extension/dist",
+    "default_title": "Wrong folder — use extension/dist",
+    "default_popup": "wrong-folder.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

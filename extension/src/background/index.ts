@@ -30,11 +30,41 @@ import {
 } from "../shared/sync/engine";
 import { indexDocument, semanticSearch } from "../shared/vector/engine";
 
+async function ensureSidePanelOpensOnAction(): Promise<void> {
+  try {
+    if (chrome.sidePanel?.setPanelBehavior) {
+      await chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+    }
+  } catch {
+    /* sidePanel API unavailable in this context */
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   void hydratePrefsFromChromeStorage();
-  if (chrome.sidePanel?.setPanelBehavior) {
-    void chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
-  }
+  void ensureSidePanelOpensOnAction();
+});
+
+chrome.runtime.onStartup.addListener(() => {
+  void ensureSidePanelOpensOnAction();
+});
+
+// Re-apply on every service worker wake (onInstalled alone is not enough after updates).
+void ensureSidePanelOpensOnAction();
+void hydratePrefsFromChromeStorage();
+
+// Fallback when openPanelOnActionClick is not active (onClicked does not fire when it is).
+chrome.action?.onClicked?.addListener((tab) => {
+  void (async () => {
+    await ensureSidePanelOpensOnAction();
+    if (tab.id != null && chrome.sidePanel?.open) {
+      try {
+        await chrome.sidePanel.open({ tabId: tab.id });
+      } catch {
+        /* ignore — panel may already be open */
+      }
+    }
+  })();
 });
 
 chrome.alarms.create("sync-tick", { periodInMinutes: 5 });
@@ -242,5 +272,3 @@ chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
   })();
   return true;
 });
-
-void hydratePrefsFromChromeStorage();

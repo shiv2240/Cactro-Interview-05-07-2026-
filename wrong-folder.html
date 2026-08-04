@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Wrong folder</title>
+    <style>
+      body {
+        font-family: Segoe UI, system-ui, sans-serif;
+        margin: 0;
+        padding: 16px;
+        width: 320px;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      h1 {
+        font-size: 15px;
+        margin: 0 0 8px;
+      }
+      p {
+        font-size: 13px;
+        line-height: 1.45;
+        margin: 0 0 8px;
+        color: #334155;
+      }
+      code {
+        font-size: 12px;
+        background: #e2e8f0;
+        padding: 1px 5px;
+        border-radius: 4px;
+      }
+      ol {
+        margin: 8px 0 0;
+        padding-left: 18px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Wrong folder loaded</h1>
+    <p>
+      You loaded the <strong>repo root</strong>. The AI Knowledge Assistant build
+      lives in <code>extension/dist</code>.
+    </p>
+    <ol>
+      <li>Run <code>npm run build</code></li>
+      <li>Chrome → Extensions → Remove this entry</li>
+      <li>Load unpacked → select <code>extension/dist</code></li>
+      <li>Click the toolbar icon to open the side panel</li>
+    </ol>
+  </body>
+</html>

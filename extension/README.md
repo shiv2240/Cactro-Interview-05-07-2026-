@@ -11,7 +11,15 @@ npm install
 npm run build
 ```
 
-Load unpacked in Chrome: **`extension/dist`**
+### Load unpacked (required)
+
+In Chrome → `chrome://extensions` → Developer mode → **Load unpacked**:
+
+**Select `extension/dist` only** — not the repo root, not `extension/`.
+
+- Repo root has a stub manifest that opens a “wrong folder” popup on purpose.
+- `extension/` source manifests point at TypeScript; Chrome cannot run those.
+- Toolbar click opens the **side panel** dashboard (`sidePanel` + `openPanelOnActionClick`).
 
 Dev (HMR):
 
