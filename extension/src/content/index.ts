@@ -215,18 +215,30 @@ function openModal(
       .card.dark .badge.nano { background: #1e3a5f; color: #93c5fd; }
       .card.dark .badge.groq { background: #422006; color: #fcd34d; }
       .body { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
-      .actions { display: flex; gap: 8px; margin-top: 16px; }
+      .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
       button {
         border: 0; border-radius: 8px; padding: 8px 12px;
         font-weight: 600; cursor: pointer; background: #e2e8f0; color: #0f172a;
       }
       button.primary { background: #3b82f6; color: white; }
+      button.accept { background: #059669; color: white; }
+      button.reject { background: #64748b; color: white; }
+      button:disabled { opacity: 0.5; cursor: default; }
+      .feedback { display: none; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
+      .feedback.visible { display: flex; }
+      .feedback-note { font-size: 12px; opacity: 0.7; display: none; }
+      .feedback-note.visible { display: inline; }
     </style>
     <div class="backdrop">
       <div class="card ${document.documentElement.dataset.akaTheme === "dark" ? "dark" : ""}">
         <h2>${escapeHtml(title)}</h2>
         <div class="meta" id="meta">Generating…</div>
         <div class="body" id="body"></div>
+        <div class="feedback" id="feedback">
+          <button class="accept" id="accept">Accept</button>
+          <button class="reject" id="reject">Reject</button>
+          <span class="feedback-note" id="feedback-note">Feedback saved</span>
+        </div>
         <div class="actions">
           <button class="primary" id="copy">Copy</button>
           <button id="close">Close</button>
@@ -237,6 +249,12 @@ function openModal(
 
   const bodyEl = shadow.getElementById("body")!;
   const metaEl = shadow.getElementById("meta")!;
+  const feedbackEl = shadow.getElementById("feedback")!;
+  const feedbackNote = shadow.getElementById("feedback-note")!;
+  const acceptBtn = shadow.getElementById("accept") as HTMLButtonElement;
+  const rejectBtn = shadow.getElementById("reject") as HTMLButtonElement;
+  let voted = false;
+
   shadow.getElementById("close")?.addEventListener("click", closeModal);
   shadow.querySelector(".backdrop")?.addEventListener("click", (e) => {
     if (e.target === e.currentTarget) closeModal();
@@ -245,6 +263,33 @@ function openModal(
     void navigator.clipboard.writeText(bodyEl.textContent ?? "");
     toast("Copied");
   });
+
+  async function vote(accepted: boolean) {
+    if (voted) return;
+    const preview = (bodyEl.textContent ?? "").slice(0, 200);
+    if (!preview.trim()) return;
+    voted = true;
+    acceptBtn.disabled = true;
+    rejectBtn.disabled = true;
+    try {
+      await sendMessage({
+        type: MessageType.PERSONALIZATION_FEEDBACK,
+        accepted,
+        action,
+        textPreview: preview,
+      });
+      feedbackNote.classList.add("visible");
+      toast(accepted ? "Accepted" : "Rejected");
+    } catch (e) {
+      voted = false;
+      acceptBtn.disabled = false;
+      rejectBtn.disabled = false;
+      toast(e instanceof Error ? e.message : "Feedback failed");
+    }
+  }
+
+  acceptBtn.addEventListener("click", () => void vote(true));
+  rejectBtn.addEventListener("click", () => void vote(false));
 
   const onChunk = (msg: {
     type?: string;
@@ -255,6 +300,9 @@ function openModal(
   }) => {
     if (msg.requestId !== requestId) return;
     if (msg.type === MessageType.AI_STREAM_CHUNK && msg.chunk) {
+      if (!(bodyEl.textContent ?? "").length) {
+        metaEl.textContent = "Streaming…";
+      }
       bodyEl.textContent = (bodyEl.textContent ?? "") + msg.chunk;
     }
     if (msg.type === MessageType.AI_STREAM_DONE) {
@@ -263,8 +311,10 @@ function openModal(
       } else if (msg.envelope) {
         // Hide Nano/Groq provider badges from end users — show latency only.
         metaEl.textContent = `${msg.envelope.latencyMs ?? 0}ms`;
+        feedbackEl.classList.add("visible");
       } else {
         metaEl.textContent = "Done";
+        feedbackEl.classList.add("visible");
       }
       chrome.runtime.onMessage.removeListener(onChunk as never);
     }

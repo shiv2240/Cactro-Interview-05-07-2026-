@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { aiMetaLine } from "../shared/ai/providerLabel";
-import { MessageType, sendMessage } from "../shared/messaging/protocol";
+import {
+  MessageType,
+  sendMessage,
+  streamAIRequest,
+} from "../shared/messaging/protocol";
 import type {
-  AIResponseEnvelope,
   AITimelineEvent,
   Highlight,
   Note,
@@ -42,6 +45,11 @@ export default function App() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("");
   const [aiBusy, setAiBusy] = useState(false);
+  const [pendingBatchAI, setPendingBatchAI] = useState<{
+    text: string;
+    meta?: string;
+    voted: boolean;
+  } | null>(null);
   const [, startTransition] = useTransition();
 
   const theme = useMemo(() => resolveTheme(prefs.theme), [prefs.theme]);
@@ -75,6 +83,8 @@ export default function App() {
     void refresh().catch((e) =>
       setStatus(e instanceof Error ? e.message : "Failed to load")
     );
+    // Warm Groq TLS/connection — non-blocking.
+    void sendMessage({ type: MessageType.AI_WARMUP }).catch(() => undefined);
   }, []);
 
   // Live refresh when SW/content mutates IDB (save/delete/sync) while panel is open.
@@ -138,23 +148,58 @@ export default function App() {
     }
     setAiBusy(true);
     setStatus("Summarizing highlights…");
+    setPendingBatchAI({ text: "", meta: "Streaming…", voted: false });
+    const text = highlights
+      .slice(0, 40)
+      .map((h) => `- (${h.title}) ${h.text}`)
+      .join("\n");
+    streamAIRequest(
+      { action: "highlights_summary", text },
+      {
+        onChunk: (chunk) => {
+          setPendingBatchAI((prev) => ({
+            text: (prev?.text ?? "") + chunk,
+            meta: "Streaming…",
+            voted: false,
+          }));
+        },
+        onDone: (envelope) => {
+          const meta = envelope
+            ? aiMetaLine(envelope.latencyMs, { cached: envelope.cached })
+            : undefined;
+          setPendingBatchAI((prev) => ({
+            text: envelope?.text ?? prev?.text ?? "",
+            meta: meta || undefined,
+            voted: false,
+          }));
+          setStatus("");
+          setAiBusy(false);
+          void refresh();
+        },
+        onError: (error) => {
+          setStatus(error);
+          setAiBusy(false);
+        },
+      }
+    );
+  }
+
+  async function voteBatchAI(accepted: boolean) {
+    if (!pendingBatchAI || pendingBatchAI.voted) return;
     try {
-      const text = highlights
-        .slice(0, 40)
-        .map((h) => `- (${h.title}) ${h.text}`)
-        .join("\n");
-      const envelope = await sendMessage<AIResponseEnvelope>({
-        type: MessageType.AI_GENERATE,
+      await sendMessage({
+        type: MessageType.PERSONALIZATION_FEEDBACK,
+        accepted,
         action: "highlights_summary",
-        text,
+        textPreview: pendingBatchAI.text.slice(0, 200),
       });
-      const meta = aiMetaLine(envelope.latencyMs, { cached: envelope.cached });
-      setStatus(meta ? `${meta}\n\n${envelope.text}` : envelope.text);
+      setPendingBatchAI({ ...pendingBatchAI, voted: true });
+      setStatus(
+        accepted ? "Accepted — personalization updated" : "Rejected — preference noted"
+      );
       await refresh();
     } catch (e) {
-      setStatus(e instanceof Error ? e.message : "AI failed");
-    } finally {
-      setAiBusy(false);
+      setStatus(e instanceof Error ? e.message : "Feedback failed");
     }
   }
 
@@ -235,6 +280,7 @@ export default function App() {
             onSummarizeAll={() => void summarizeAll()}
             aiBusy={aiBusy}
             setStatus={setStatus}
+            onRefresh={() => void refresh()}
           />
         )}
 
@@ -281,6 +327,46 @@ export default function App() {
                 await refresh();
               }}
             />
+          </div>
+        )}
+
+        {pendingBatchAI && (
+          <div className="glass mt-3 rounded-xl p-3 text-xs leading-relaxed">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-accent">
+                AI Summary · all highlights
+              </p>
+              {pendingBatchAI.meta ? (
+                <span className="text-[10px] text-[var(--aka-muted)]">
+                  {pendingBatchAI.meta}
+                </span>
+              ) : null}
+            </div>
+            <pre className="whitespace-pre-wrap font-sans">{pendingBatchAI.text}</pre>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {pendingBatchAI.voted ? (
+                <span className="text-[11px] text-[var(--aka-muted)]">
+                  Feedback saved
+                </span>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
+                    onClick={() => void voteBatchAI(true)}
+                  >
+                    Accept
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-md bg-slate-500/90 px-2 py-1 text-xs font-semibold text-white"
+                    onClick={() => void voteBatchAI(false)}
+                  >
+                    Reject
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
 

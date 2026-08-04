@@ -26,6 +26,7 @@ export const MessageType = {
   AI_STREAM_CHUNK: "AI_STREAM_CHUNK",
   AI_STREAM_DONE: "AI_STREAM_DONE",
   AI_HEALTH: "AI_HEALTH",
+  AI_WARMUP: "AI_WARMUP",
   AUTH_LOGIN: "AUTH_LOGIN",
   AUTH_REGISTER: "AUTH_REGISTER",
   AUTH_LOGOUT: "AUTH_LOGOUT",
@@ -156,6 +157,9 @@ export const messageSchemas = {
     type: z.literal(MessageType.AI_HEALTH),
     recheck: z.boolean().optional(),
   }),
+  [MessageType.AI_WARMUP]: z.object({
+    type: z.literal(MessageType.AI_WARMUP),
+  }),
   [MessageType.AUTH_LOGIN]: z.object({
     type: z.literal(MessageType.AUTH_LOGIN),
     email: z.string().email().max(320),
@@ -257,6 +261,7 @@ export type ExtensionRequest =
       url?: string;
     }
   | { type: "AI_HEALTH"; recheck?: boolean }
+  | { type: "AI_WARMUP" }
   | { type: "AUTH_LOGIN"; email: string; password: string }
   | { type: "AUTH_REGISTER"; email: string; password: string }
   | { type: "AUTH_LOGOUT" }
@@ -338,6 +343,56 @@ export function sendMessage<T = unknown>(
       reject(e instanceof Error ? e : new Error(String(e)));
     }
   });
+}
+
+/** Stream AI tokens into the UI as they arrive (side panel / content). */
+export function streamAIRequest(
+  opts: {
+    action: AIAction;
+    text: string;
+    pageTitle?: string;
+    url?: string;
+  },
+  handlers: {
+    onChunk: (chunk: string) => void;
+    onDone: (envelope: AIResponseEnvelope | undefined) => void;
+    onError: (error: string) => void;
+  }
+): { requestId: string; cancel: () => void } {
+  const requestId = crypto.randomUUID();
+  const onMessage = (msg: {
+    type?: string;
+    requestId?: string;
+    chunk?: string;
+    envelope?: AIResponseEnvelope;
+    error?: string;
+  }) => {
+    if (msg.requestId !== requestId) return;
+    if (msg.type === MessageType.AI_STREAM_CHUNK && msg.chunk) {
+      handlers.onChunk(msg.chunk);
+    }
+    if (msg.type === MessageType.AI_STREAM_DONE) {
+      chrome.runtime.onMessage.removeListener(onMessage as never);
+      if (msg.error) handlers.onError(msg.error);
+      else handlers.onDone(msg.envelope);
+    }
+  };
+  chrome.runtime.onMessage.addListener(onMessage as never);
+  void sendMessage({
+    type: MessageType.AI_STREAM,
+    requestId,
+    action: opts.action,
+    text: opts.text,
+    pageTitle: opts.pageTitle,
+    url: opts.url,
+  }).catch((e) => {
+    chrome.runtime.onMessage.removeListener(onMessage as never);
+    handlers.onError(e instanceof Error ? e.message : "AI failed");
+  });
+  return {
+    requestId,
+    cancel: () => chrome.runtime.onMessage.removeListener(onMessage as never),
+  };
 }
 
 export type {

@@ -1,56 +1,75 @@
-import type { AIRequestContext } from "../types";
+import type { AIAction, AIRequestContext } from "../types";
 
 const ACTION_INSTRUCTIONS: Record<string, string> = {
-  summarize: `Summarize the text into three sections:
+  summarize: `Summarize in markdown:
 ## Overview
 ## Main Topics
 ## Key Takeaways
-Keep it clear and useful.`,
-  explain: `Explain the selected text in plain language. Cover what it means, why it matters, and any jargon.`,
-  rewrite: `Rewrite the text to improve clarity while preserving meaning. Return only the rewritten text.`,
-  flashcards: `Create 5 flashcards from the text as markdown:
+Be brief.`,
+  explain: `Explain plainly: meaning, why it matters, jargon. Be brief.`,
+  rewrite: `Rewrite for clarity. Return only the rewritten text.`,
+  flashcards: `Create up to 5 flashcards:
 ### Q: ...
 A: ...`,
-  page_summary: `Summarize this page content into:
+  page_summary: `Page summary:
 ## Overview
-## Agenda / Main Topics
+## Main Topics
 ## Key Takeaways`,
-  highlights_summary: `Summarize these saved highlights into themes and actionable takeaways:
+  highlights_summary: `Themes + takeaways from highlights:
 ## Overview
 ## Themes
 ## Key Takeaways`,
 };
 
+/** Token budgets tuned for TTFT / short interactive summaries. */
+export function maxTokensForAction(action: AIAction, textLen: number): number {
+  // Word / short phrase meaning → keep tiny
+  if (textLen < 80 && (action === "summarize" || action === "explain")) {
+    return 150;
+  }
+  if (action === "summarize" || action === "explain") return 280;
+  if (action === "rewrite") return 500;
+  if (action === "flashcards") return 600;
+  if (action === "page_summary" || action === "highlights_summary") return 450;
+  return 300;
+}
+
 export function buildPrompt(ctx: AIRequestContext): {
   system: string;
   prompt: string;
+  maxTokens: number;
+  temperature: number;
 } {
   const style = ctx.summaryStyle ?? "concise";
-  const tone = ctx.tone ?? "neutral";
-  const workspace = ctx.workspaceLabel ?? "Personal";
-
-  const system = [
-    "You are an AI knowledge assistant embedded in a Chrome extension.",
-    `Tone: ${tone}. Summary style: ${style}.`,
-    `Current workspace: ${workspace}.`,
-    "Do not invent facts. Prefer structured markdown.",
-  ].join(" ");
-
   const instruction =
     ACTION_INSTRUCTIONS[ctx.action] ?? ACTION_INSTRUCTIONS.summarize;
 
+  // Lean system — skip workspace/tone fluff when not needed for speed.
+  const system = `Concise knowledge assistant. Style: ${style}. No invented facts. Markdown OK.`;
+
   const meta = [
-    ctx.pageTitle ? `Page title: ${ctx.pageTitle}` : null,
+    ctx.pageTitle ? `Title: ${ctx.pageTitle}` : null,
     ctx.url ? `URL: ${ctx.url}` : null,
   ]
     .filter(Boolean)
     .join("\n");
 
+  // Cap input for interactive latency (still enough for page summaries).
+  const textCap =
+    ctx.action === "page_summary" || ctx.action === "highlights_summary"
+      ? 24_000
+      : 8_000;
+
   const prompt = `${instruction}
 
 ${meta ? meta + "\n\n" : ""}---
-${ctx.text.slice(0, 80_000)}
+${ctx.text.slice(0, textCap)}
 ---`;
 
-  return { system, prompt };
+  return {
+    system,
+    prompt,
+    maxTokens: maxTokensForAction(ctx.action, ctx.text.length),
+    temperature: 0.2,
+  };
 }

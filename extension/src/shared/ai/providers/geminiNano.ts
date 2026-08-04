@@ -164,9 +164,9 @@ export class GeminiNanoProvider implements AIProvider {
       /* ignore destroy races */
     }
     this.session = null;
-    // Keep ready=true so Nano stays preferred; ensureSession will recreate.
+    // Keep ready=true so Nano remains usable as backup; ensureSession will recreate.
     this.lastDetail =
-      "Available: Gemini Nano (last request timed out — fell back to Groq)";
+      "Available: Gemini Nano (last request timed out)";
   }
 
   private async ensureSession(): Promise<ChromeAISession> {

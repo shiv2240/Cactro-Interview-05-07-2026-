@@ -1,4 +1,4 @@
-import { aiHealth, generateAI, streamAI } from "../shared/ai/AIService";
+import { aiHealth, generateAI, streamAI, warmupAI } from "../shared/ai/AIService";
 import { seedGroqKeyFromBundle, setGroqApiKey } from "../shared/ai/swConfig";
 import {
   deleteHighlight,
@@ -44,19 +44,19 @@ async function ensureSidePanelOpensOnAction(): Promise<void> {
 
 chrome.runtime.onInstalled.addListener(() => {
   void hydratePrefsFromChromeStorage();
-  void seedGroqKeyFromBundle();
+  void seedGroqKeyFromBundle().then(() => void warmupAI());
   void ensureSidePanelOpensOnAction();
 });
 
 chrome.runtime.onStartup.addListener(() => {
-  void seedGroqKeyFromBundle();
+  void seedGroqKeyFromBundle().then(() => void warmupAI());
   void ensureSidePanelOpensOnAction();
 });
 
 // Re-apply on every service worker wake (onInstalled alone is not enough after updates).
 void ensureSidePanelOpensOnAction();
 void hydratePrefsFromChromeStorage();
-void seedGroqKeyFromBundle();
+void seedGroqKeyFromBundle().then(() => void warmupAI());
 
 // Fallback when openPanelOnActionClick is not active (onClicked does not fire when it is).
 chrome.action?.onClicked?.addListener((tab) => {
@@ -137,6 +137,9 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 
     case MessageType.AI_HEALTH:
       return aiHealth({ recheck: message.recheck });
+
+    case MessageType.AI_WARMUP:
+      return warmupAI();
 
     case MessageType.AUTH_LOGIN:
       return login(message.email, message.password);

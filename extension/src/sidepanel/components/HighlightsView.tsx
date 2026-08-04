@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { aiMetaLine } from "../../shared/ai/providerLabel";
-import { MessageType, sendMessage } from "../../shared/messaging/protocol";
-import type { AIResponseEnvelope, Highlight } from "../../shared/types";
+import {
+  MessageType,
+  sendMessage,
+  streamAIRequest,
+} from "../../shared/messaging/protocol";
+import type { Highlight } from "../../shared/types";
 
 const PAGE_SIZE = 10;
 
@@ -72,11 +76,12 @@ export function HighlightsView(props: {
   onSummarizeAll: () => void;
   aiBusy: boolean;
   setStatus: (s: string) => void;
+  onRefresh?: () => void;
 }) {
   const [page, setPage] = useState(0);
   const [summarizingId, setSummarizingId] = useState<string | null>(null);
   const [cardSummaries, setCardSummaries] = useState<
-    Record<string, { text: string; meta?: string }>
+    Record<string, { text: string; meta?: string; voted: boolean }>
   >({});
   // Search in App filters the full list; paginate that filtered result set.
   const pages = Math.max(1, Math.ceil(props.highlights.length / PAGE_SIZE));
@@ -86,27 +91,80 @@ export function HighlightsView(props: {
     return props.highlights.slice(start, start + PAGE_SIZE);
   }, [props.highlights, safePage]);
 
-  async function summarizeOne(h: Highlight) {
+  function summarizeOne(h: Highlight) {
     setSummarizingId(h.id);
     props.setStatus("Summarizing highlight…");
-    try {
-      const envelope = await sendMessage<AIResponseEnvelope>({
-        type: MessageType.AI_GENERATE,
+    setCardSummaries((prev) => ({
+      ...prev,
+      [h.id]: { text: "", meta: "Streaming…", voted: false },
+    }));
+    streamAIRequest(
+      {
         action: "summarize",
         text: h.text,
         pageTitle: h.title,
         url: h.url,
+      },
+      {
+        onChunk: (chunk) => {
+          setCardSummaries((prev) => {
+            const cur = prev[h.id];
+            return {
+              ...prev,
+              [h.id]: {
+                text: (cur?.text ?? "") + chunk,
+                meta: "Streaming…",
+                voted: false,
+              },
+            };
+          });
+        },
+        onDone: (envelope) => {
+          const meta = envelope
+            ? aiMetaLine(envelope.latencyMs, { cached: envelope.cached })
+            : undefined;
+          setCardSummaries((prev) => {
+            const cur = prev[h.id];
+            return {
+              ...prev,
+              [h.id]: {
+                text: envelope?.text ?? cur?.text ?? "",
+                meta,
+                voted: false,
+              },
+            };
+          });
+          props.setStatus("");
+          setSummarizingId(null);
+        },
+        onError: (error) => {
+          props.setStatus(error);
+          setSummarizingId(null);
+        },
+      }
+    );
+  }
+
+  async function voteSummary(h: Highlight, accepted: boolean) {
+    const summary = cardSummaries[h.id];
+    if (!summary || summary.voted) return;
+    try {
+      await sendMessage({
+        type: MessageType.PERSONALIZATION_FEEDBACK,
+        accepted,
+        action: "summarize",
+        textPreview: summary.text.slice(0, 200),
       });
-      const meta = aiMetaLine(envelope.latencyMs, { cached: envelope.cached });
       setCardSummaries((prev) => ({
         ...prev,
-        [h.id]: { text: envelope.text, meta },
+        [h.id]: { ...summary, voted: true },
       }));
-      props.setStatus(meta ? `${meta}\n\n${envelope.text}` : envelope.text);
+      props.setStatus(
+        accepted ? "Accepted — personalization updated" : "Rejected — preference noted"
+      );
+      props.onRefresh?.();
     } catch (e) {
-      props.setStatus(e instanceof Error ? e.message : "AI failed");
-    } finally {
-      setSummarizingId(null);
+      props.setStatus(e instanceof Error ? e.message : "Feedback failed");
     }
   }
 
@@ -211,6 +269,30 @@ export function HighlightsView(props: {
                     <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
                       {summary.text}
                     </pre>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {summary.voted ? (
+                        <span className="text-[11px] text-[var(--aka-muted)]">
+                          Feedback saved
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
+                            onClick={() => void voteSummary(h, true)}
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            className="rounded-md bg-slate-500/90 px-2 py-1 text-xs font-semibold text-white"
+                            onClick={() => void voteSummary(h, false)}
+                          >
+                            Reject
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 )}
               </li>

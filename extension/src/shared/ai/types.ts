@@ -35,4 +35,4 @@ export interface AIRequestContext {
   tone?: string;
 }
 
-export type { AIResponseEnvelope };
+export type { AIResponseEnvelope, AIAction };
