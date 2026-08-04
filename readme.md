@@ -23,24 +23,27 @@
 | Feature | Description |
 |---|---|
 | 🖱️ **In-Page Tooltip** | Select any text — a floating tooltip appears with customizable actions: **Save Highlight**, **AI Summary**, and **Summarize Page** |
-| 🎨 **Mist-and-Ink & Sky Theme UI** | Premium glassmorphism, mist-and-ink palette, and cloudy day/night theme with dynamic background animations, left-edge accent strips, and command search (`⌘K`) |
-| 🎛️ **Feature Toggles** | Customize extension behavior in popup settings — toggle on-page features (Keywords tile, Sticky notes) and individual selection tooltip action buttons |
+| ⚡ **Fast Streaming AI** | Real-time streaming AI responses for summaries, rewrites, and flashcards with instant first-paint results |
+| 🎯 **Context Cleaning** | Selection & keyword AI automatically strips webpage navigation chrome (e.g. Wikipedia headers) to focus purely on relevant content |
+| 🎛️ **Personalization & Style Controls** | Train AI via **Accept / Reject** feedback and set custom **AI Tone & Style** preferences (e.g. concise, technical, academic) |
+| 🎨 **Mist-and-Ink & Sky Theme UI** | Premium glassmorphism, mist-and-ink palette, and cloudy day/night theme with dynamic background animations and dark mode contrast |
+| 🎛️ **Feature Toggles** | Customize extension behavior in popup/sidepanel settings — toggle on-page features (Keywords tile, Sticky notes) and tooltip action buttons |
 | 📄 **Full Webpage Summarization** | Click "Summarize Page" to extract webpage content and generate structured sections: **Overview**, **Agenda & Main Topics**, and **Key Takeaways** |
-| 🌓 **Light / Dark / System Theme** | Seamless theme switcher (Light/Dark/System) with live synchronization between popup dashboard and in-page Shadow DOM tooltip |
-| 🏷️ **Keyword Insights** | Automated keyword highlighting and sectioned AI breakdown for fast scanning of saved text snippets |
+| 🌓 **Light / Dark / System Theme** | Seamless theme switcher (Light/Dark/System) with live synchronization between popup dashboard, side panel, and in-page Shadow DOM tooltip |
+| 🏷️ **Draggable Keyword Insights** | Automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`) and pastel sticky-note marks |
 | 🌐 **Website Favicon Icons** | Displays original site favicons alongside saved highlights for easy visual website recognition |
-| ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with instant AI explanations — no popup required |
+| ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with instant AI explanations & accessible header close controls |
 | ⚡ **SPA Navigation Handling** | Hardened SPA single-page application navigation detection and dynamic DOM re-injection |
 | 🔐 **User Authentication** | Sign up / Sign in with email & password via Convex Auth — highlights are tied to your account |
-| ☁️ **Cloud Storage** | Highlights synced to Convex backend — persist across devices and browser sessions |
-| 🔍 **Search & Filter** | Full-text search across all saved highlights in the popup dashboard |
-| 🗑️ **Delete Highlights** | Remove individual highlights from the popup with a single click |
-| 🤖 **AI Summarization (Popup)** | Generate an AI summary of all your highlights (multi-model AI with automatic failover) |
-| 📋 **Copy to Clipboard** | Copy AI-generated summaries directly to clipboard |
-| 📅 **Date & Time Stamps** | Highlights record and display localized full date and time (e.g., `Jul 28, 2026, 6:59 PM`) |
-| 📄 **Dashboard Pagination** | Highlights list is paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
+| ☁️ **Cloud Storage & Sync** | Highlights and notes synced to Convex backend — persist across devices and browser sessions |
+| 🔍 **Search & Filter** | Full-text search across all saved highlights and notes in the dashboard |
+| 🗑️ **Delete Highlights & Notes** | Remove individual items from the dashboard with instant live UI updates |
+| 🤖 **AI Summarization (Dashboard)** | Generate an AI summary of all your highlights (Groq-first multi-model AI with automatic failover) |
+| 📋 **Copy to Clipboard** | Copy AI-generated summaries directly to clipboard with a single click |
+| 📅 **Date & Time Stamps** | Highlights record and display localized 12-hour full date and time (e.g., `Jul 28, 2026, 6:59 PM`) |
+| 📄 **Dashboard Pagination** | Highlights and notes lists are paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
 | 🔑 **Change Password** | Secure password updates in settings using **Current Password Verification** |
-| 🛡️ **Shadow DOM Isolation** | Tooltip and AI dialog UI are fully isolated from host page CSS |
+| 🛡️ **Shadow DOM Isolation** | Tooltip, sticky notes, and AI dialog UI are fully isolated from host page CSS |
 
 
 
@@ -48,29 +51,26 @@
 
 ## 🏗️ Architecture
 
-The extension follows the Chrome MV3 multi-process model with a Convex cloud backend:
+The extension follows the Chrome MV3 multi-process model rebuilt as a React single-page app (Side Panel) with a local-first IndexedDB layer, background AI routing, and Convex cloud sync:
 
 ```mermaid
 graph TD
-    A[Webpage DOM] <-->|Text Selection Events| B[content.js — Content Script]
-    B -->|Shadow DOM Tooltip UI| A
-    B -->|Saves highlight via Convex REST| C[(Convex Backend)]
-    D[popup.html — Popup UI] <-->|Event Binding| E[popup.js — Popup Script]
-    E -->|Reads / Deletes highlights| C
-    E -->|Auth: Sign In / Sign Up| C
-    E -->|Summarize highlights| F[Groq LLaMA 3 API]
-    C -->|Persists per-user data| G[(Convex Database)]
+    A[Webpage DOM] <-->|Message Passing| B[src/content/ - Content Script]
+    B -->|Shadow DOM UI| A
+    B <-->|Message Bus| C[src/background/ - Service Worker]
+    D[src/sidepanel/ - React Dashboard] <-->|Message Bus| C
+    D <-->|IndexedDB + Convex sync| E[(Convex Backend)]
+    C <-->|AI Tasks| F[Groq / Gemini Nano Fallback]
 ```
 
 ### Context Isolation Model
 
-| Context | File | Access |
+| Context | Directory | Access |
 |---|---|---|
-| **Content Script** | `content.js` | Page DOM, Shadow DOM, Convex REST API |
-| **Popup** | `popup.html` / `popup.js` | Convex Auth, Convex queries/mutations, Groq API |
-| **Convex Backend** | `convex/` | Database, Auth validation, Mutations & Queries |
-
-> **Why this matters**: Content scripts and the popup run in completely separate JS environments. They cannot call each other's functions directly. All shared state flows through the Convex backend.
+| **Content Script** | `extension/src/content/` | Page DOM, Shadow DOM, message passing to background |
+| **Side Panel** | `extension/src/sidepanel/` | React, IndexedDB, Convex Auth, mutations & queries |
+| **Service Worker** | `extension/src/background/` | Multi-model AI routing, offline sync manager, cross-context messaging |
+| **Convex Backend** | `convex/` | Database, Auth validation, server actions |
 
 ---
 
@@ -78,13 +78,13 @@ graph TD
 
 | Layer | Technology |
 |---|---|
-| Extension Format | Chrome Manifest V3 |
-| Frontend | Vanilla HTML, CSS (Glassmorphism), JavaScript |
+| Extension Format | Chrome Manifest V3 (Side Panel API) |
+| Frontend | React, TypeScript, Vite, Tailwind CSS (Glassmorphism) |
+| Storage | IndexedDB (local-first) + `chrome.storage.local` |
 | Backend | [Convex](https://convex.dev) — serverless, real-time database |
 | Auth | Convex Auth (email/password) |
-| AI | [Groq](https://groq.com) — `llama-3.3-70b-versatile` |
+| AI | [Groq](https://groq.com) primary, Gemini Nano on-device fallback |
 | Typography | Inter + Outfit (Google Fonts) |
-| Icon Tooling | Node.js + `sharp` |
 
 ---
 
@@ -92,27 +92,22 @@ graph TD
 
 ```
 website-highlight-saver/
-├── icons/
-│   ├── logo.png                      # Master logo with dark bg (used for extension icons)
-│   ├── logo_transparent.png          # Transparent-bg logo (used in README)
-│   ├── icon16.png                    # Toolbar icon
-│   ├── icon48.png                    # Extensions page icon
-│   └── icon128.png                   # Chrome Web Store icon
+├── extension/
+│   ├── src/
+│   │   ├── background/               # Service worker (AI routing, sync, message bus)
+│   │   ├── content/                  # In-page tooltip, keyword tile, Shadow DOM modals
+│   │   ├── sidepanel/                # React dashboard (highlights, notes, settings)
+│   │   └── shared/                   # Messaging, IndexedDB, vectors, personalization
+│   ├── dist/                         # Compiled MV3 extension output (Load unpacked this!)
+│   ├── manifest.json                 # Chrome Extension MV3 config for Vite build
+│   └── .env                          # API keys & Convex URL
 │
 ├── convex/
 │   ├── auth.ts                       # Convex Auth configuration
-│   ├── highlights.ts                 # Highlight mutations & queries
+│   ├── highlights.ts                 # Highlight & Notes schemas/mutations
 │   └── schema.ts                     # Database schema
 │
-├── manifest.json                     # Chrome Extension MV3 config
-├── popup.html                        # Popup dashboard layout
-├── popup.css                         # Glassmorphism dark & sky theme styles
-├── popup.js                          # Popup logic — auth, CRUD, AI summary, theme sync
-├── content.js                        # In-page tooltip, AI summary modal & highlight capture
-├── config.js                         # Deployment runtime configuration
-├── config.example.js                 # Runtime configuration template
-├── generate_icons_from_logo.js       # Resize logo → icon PNGs (requires sharp)
-└── .env.local                        # API keys & Convex URL (not committed)
+└── root-level legacy wrappers        # Root config.js, icons generation
 ```
 
 ---
@@ -136,12 +131,11 @@ npm install
 
 ### 2. Configure Environment
 
-Create a `.env.local` file in the project root (developers):
+Copy `extension/.env.example` to `extension/.env` and update the Convex URL. Optionally, add a `VITE_GROQ_API_KEY` for developer-build AI functionality:
 
 ```env
-CONVEX_URL=https://your-deployment.convex.cloud
-# Optional developer cloud-AI key for local builds — not shown in end-user Settings
-GROQ_API_KEY=
+VITE_CONVEX_HTTP_URL=https://your-deployment.convex.cloud
+VITE_GROQ_API_KEY=
 ```
 
 ### 3. Deploy Convex Backend
@@ -150,12 +144,10 @@ GROQ_API_KEY=
 npx convex dev
 ```
 
-This starts the Convex dev server and deploys your backend functions automatically.
-
-### 4. Generate Icons *(optional — icons already included)*
+### 4. Build the Extension
 
 ```bash
-node generate_icons_from_logo.js
+npm run build
 ```
 
 ### 5. Load the Extension in Chrome
@@ -163,7 +155,7 @@ node generate_icons_from_logo.js
 1. Open `chrome://extensions/`
 2. Enable **Developer Mode** (top-right toggle)
 3. Click **Load unpacked**
-4. Select the project root folder
+4. Select the **`extension/dist`** folder (do NOT select the repo root)
 5. The **Website Highlight Saver** icon will appear in your Chrome toolbar ✅
 
 ---
@@ -174,20 +166,21 @@ node generate_icons_from_logo.js
 1. Navigate to any webpage
 2. Select any text with your mouse / keyboard
 3. A **"Save Highlight"** tooltip appears above the selection
-4. Click it — if signed in, the highlight is saved to your Convex account instantly
+4. Click it — if signed in, the highlight is saved to your local IndexedDB and Convex account instantly
 
-### Popup Dashboard
-1. Click the extension icon in the Chrome toolbar
+### Side Panel Dashboard
+1. Click the extension icon in the Chrome toolbar to open the **Side Panel**
 2. **Sign in** or **Sign up** with your email & password
-3. View all saved highlights in a scrollable card list
+3. View all saved highlights and notes with infinite pagination (10/page)
 4. **Search** across highlights in real-time using the search bar
-5. **Delete** individual highlights with the trash icon
+5. **Delete** individual items with the trash icon
 6. Click the 💡 **Summarize** button to generate an AI summary of all highlights
 
-### AI Summary
-- Multi-model AI with automatic switch when one model is slow — no user API key or chrome://flags setup
-- Aggregates all your saved highlights into a concise, structured overview
-- Copy the summary to clipboard with a single click
+### AI Summaries & Flashcards
+- Fast streaming multi-model AI (Groq primary, Gemini Nano fallback) with automatic failure recovery.
+- No user API key or `chrome://flags` setup required.
+- Context cleaning automatically strips Wikipedia/nav chrome and centers on your keyword.
+- Personalize AI via **Accept / Reject** feedback on results.
 
 ---
 

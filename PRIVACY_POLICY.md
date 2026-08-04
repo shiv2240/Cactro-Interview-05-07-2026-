@@ -1,6 +1,6 @@
 # Privacy Policy — Website Highlight Saver
 
-**Last Updated:** August 3, 2026
+**Last Updated:** August 4, 2026
 
 **Website Highlight Saver** ("we", "our", or "the extension") is committed to protecting user privacy. This Privacy Policy outlines how our Chrome Extension collects, uses, and safeguards information when you use our service.
 
@@ -11,12 +11,13 @@
 We collect only the minimum data necessary to fulfill the single purpose of the extension:
 
 1. **Account & Authentication Information**:
-   - **Email Address**: Used to create your user account, identify your saved highlights, and manage sessions.
-   - **Authentication Credentials & Preferences**: Encrypted password hashes, session tokens, theme settings (Light/Dark/System), and feature toggle preferences (`hs_feature_prefs`) stored in `chrome.storage.local`.
+   - **Email Address**: Used to create your user account, identify your saved highlights and notes, and manage sessions.
+   - **Authentication Credentials & Preferences**: Encrypted password hashes, session tokens, theme settings (Light/Dark/System), feature toggle preferences (`hs_feature_prefs`), custom AI tone/style preferences, and position preferences (`hs_tile_position`) stored in local browser storage (`chrome.storage.local` / IndexedDB).
 
-2. **User-Selected Website Content**:
-   - **Text Highlights & Page Summaries**: Text snippets or webpage content that you explicitly select on web pages and choose to save, analyze, or summarize.
-   - **Page Context**: Page title and URL associated with your saved highlights.
+2. **User-Selected Website Content & Personalization**:
+   - **Text Highlights, Notes & Page Summaries**: Text snippets or webpage content that you explicitly select on web pages and choose to save, analyze, or summarize.
+   - **Page Context**: Page title, URL, and favicon associated with your saved highlights.
+   - **Local AI Personalization**: Accept/Reject feedback on AI results used locally to refine system prompt personalization.
 
 We **DO NOT** collect your browsing history, background web activity, personal communications, financial information, or location data.
 
@@ -25,9 +26,9 @@ We **DO NOT** collect your browsing history, background web activity, personal c
 ## 2. How We Use Information
 
 Your data is used strictly for the following purposes:
-- To save, organize, and display your text highlights in your private dashboard.
-- To generate real-time AI summaries, sectioned key takeaways, and keyword insights requested by you via the Groq API.
-- To synchronize your saved highlights across devices using the Convex cloud database.
+- To save, organize, and display your text highlights and notes in your private dashboard.
+- To generate real-time streaming AI summaries, sectioned key takeaways, and keyword insights requested by you via the multi-model AI pipeline (Groq API).
+- To synchronize your saved highlights and notes across devices using the Convex cloud database.
 
 ---
 

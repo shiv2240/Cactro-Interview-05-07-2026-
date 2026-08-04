@@ -18,39 +18,33 @@ Convex agent skills for common tasks can be installed by running
 
 ## Project Overview
 
-**Website Highlight Saver** (v1.0.1) is a Chrome Extension (Manifest V3) that:
-- Injects a floating tooltip on any webpage when text is selected (content script)
+**Website Highlight Saver** (v1.0.1) is a Chrome Extension (Manifest V3) rebuilt as a local-first AI Knowledge Assistant that:
+- Injects a floating tooltip on any webpage when text is selected (Shadow DOM context)
 - Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** (customizable via feature toggles in settings)
-- **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal; AI runs in the background service worker with multiple models and automatic switch when one is slow (no user API key or chrome://flags setup)
-- Features automated keyword highlighting, sectioned AI breakdown, and configurable keywords tile / sticky notes
-- Popup dashboard features a mist-and-ink palette & sky theme aesthetic, pagination (10 items/page), instant search/delete, theme switcher (Light / Dark / System sync), feature toggles, password updates, and total highlights AI summary
-- Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local`
+- **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal with accessible header × buttons; AI runs in the background service worker using fast Groq-first multi-model routing (with automatic failover to on-device Nano) and real-time streaming for faster first paint.
+- Features context cleaning (stripping Wikipedia/nav chrome and centering on keyword), **Accept / Reject** personalization training (which enriches prompts without clobbering base settings), custom **AI Tone & Style** preferences, automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`), and pastel sticky-note marks
+- Side panel dashboard (React/Vite) features a mist-and-ink palette & sky theme aesthetic, pagination (10 items/page for both highlights and notes), instant search/delete, live refresh broadcast across views, theme switcher (Light / Dark / System sync) with fixed dark-theme contrast, feature toggles, password updates, and total highlights/notes AI summaries/rewrites/flashcards
+- Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local` with IndexedDB-first offline support.
 
+## Key Files (New Architecture under `extension/`)
 
-## Key Files
-
-| File | Purpose |
+| Directory / File | Purpose |
 |---|---|
-| `content.js` | Tooltip + in-page AI modal + keywords tile & sticky notes (Shadow DOM, Convex sync, theme & feature prefs sync, SPA handling) |
-| `popup.js` | Extension popup — auth, CRUD, AI summary of all highlights, theme switcher, feature toggles sync |
-| `popup.html` / `popup.css` | Popup UI — glassmorphism sky, dark, & mist-and-ink quiet themes, settings panel, animations |
-| `config.js` | Environment configuration for Convex deployment URL and developer AI keys (not for end users) |
+| `extension/src/content/` | Tooltip + in-page AI modal + keywords tile & sticky notes (Shadow DOM, theme & feature prefs sync, SPA handling) |
+| `extension/src/sidepanel/` | React dashboard — notes, highlights, auth, CRUD, pagination, AI summary, theme switcher, feature toggles |
+| `extension/src/background/` | Service worker (AI routing, sync, message bus) |
+| `extension/src/shared/` | Messaging, IndexedDB, AI, sync, vectors, personalization |
+| `config.js` / `extension/.env` | Environment configuration for Convex deployment URL and developer AI keys (not for end users). Provider brands are hidden in UI. |
 | `convex/` | Backend — auth, highlights schema, mutations, queries |
-| `manifest.json` | MV3 config — permissions, host permissions, content scripts |
+| `extension/manifest.json` | MV3 config for the Vite build |
 
 ## Architecture Rules
 
-- **Content script** (`content.js`) runs in the webpage context — it cannot use ES modules or import Convex client directly. It calls Convex via the HTTP REST API; AI goes through the service worker.
-- **Popup** (`popup.js`) uses the Convex HTTP REST API and `chrome.storage.local` for the session token.
-- **Session token** is stored in `chrome.storage.local` as `session_token` by the popup after login, and read by `content.js` for Convex sync.
-- **Theme preference** (`light`, `dark`, `system`) is stored in `chrome.storage.local` and synchronized between popup UI and the in-page tooltip context.
-- **Feature preferences** (`hs_feature_prefs`) are stored in `chrome.storage.local` and control visibility for on-page keywords tile, sticky notes, and individual tooltip action buttons across popup UI and content scripts.
+- **Content script** runs in the webpage context — it cannot import Convex client directly. It calls the background service worker for AI and Convex sync via message passing.
+- **Side Panel** uses the Convex HTTP REST API, IndexedDB for local-first storage, and `chrome.storage.local` for the session token and settings.
+- **Session token** is stored in `chrome.storage.local` and read by the background script/content script for Convex sync.
+- **Theme preference** (`light`, `dark`, `system`) is stored in `chrome.storage.local` and synchronized between the React UI and the in-page tooltip context.
+- **Feature preferences** (`hs_feature_prefs`) control visibility for on-page keywords tile, sticky notes, and individual tooltip action buttons.
 - **Shadow DOM** is used for all injected UI to prevent CSS bleed from host pages.
-- **API keys** (developer builds) live in `config.js` / `.env.local` (gitignored). End users do not paste keys; multi-model AI switches automatically.
-
-## Coding Conventions
-
-- All injected UI (tooltip, modal) must use Shadow DOM (`attachShadow({ mode: 'open' })`)
-- Always clear `window.getSelection()` when dismissing the tooltip to prevent re-triggering the `mouseup` handler
-- Always wrap Chrome storage callbacks in their own `try/catch` — outer `try/catch` does NOT catch callback exceptions
-- Check `isContextValid()` before any `chrome.*` API call in the content script
+- **AI keys** (developer builds) live in `extension/.env` or root `config.js`. End users do not paste keys or see provider brands in the UI; multi-model AI (Groq primary, Nano fallback) switches automatically.
+- **Coding Conventions**: Always clear `window.getSelection()` when dismissing the tooltip. Always wrap Chrome storage callbacks in their own `try/catch`. Check `isContextValid()` before any `chrome.*` API call in the content script.
