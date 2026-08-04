@@ -43,9 +43,8 @@ HOW TO USE
 
 1. Install the extension and open the side panel from the toolbar icon.
 2. (Optional) Sign in under Settings and set privacy mode to Sync.
-3. Paste a Groq API key in Settings if Gemini Nano is unavailable.
-4. Select text on any page → Save or run AI actions.
-5. Capture longer thoughts in Notes; browse AI Timeline for recent work.
+3. Select text on any page → Save or run AI actions (Gemini Nano on-device, Groq cloud fallback when needed — no API key to paste).
+4. Capture longer thoughts in Notes; browse AI Timeline for recent work.
 
 --------------------------------------------------------------------------------
 PRIVACY

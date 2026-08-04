@@ -37,10 +37,15 @@ npm run typecheck
 
 ## Environment
 
-Copy `extension/.env.example` → `extension/.env` (gitignored).
+Copy `extension/.env.example` → `extension/.env` (gitignored), **or** keep a
+real key in gitignored root `config.js` (`window.HS_CONFIG.GROQ_API_KEY`).
 
 - `VITE_CONVEX_HTTP_URL` — Convex HTTP actions base URL
-- `VITE_GROQ_API_KEY` — optional build-time key (prefer Settings → Groq key in chrome.storage)
+- `VITE_GROQ_API_KEY` / `GROQ_API_KEY` — **developer** Groq fallback baked into
+  the service worker at build time (also read from root `config.js` when present)
+
+AI order: **Gemini Nano → Groq**. End users do not paste a Groq key; Settings
+has an optional override only. Rebuild after changing the key.
 
 **Never import `swConfig` / Groq keys from content scripts.**
 

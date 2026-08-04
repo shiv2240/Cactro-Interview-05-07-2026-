@@ -18,7 +18,7 @@
 - [ ] Notes tab: create markdown note, pin/favorite, tags, Summarize/Rewrite/Flashcards
 - [ ] Settings: theme Light/Dark/System; feature toggles; privacy Private/Sync/Cloud AI
 - [ ] Workspace switcher filters scoped data
-- [ ] Groq key in Settings (SW-only) OR Gemini Nano when available
+- [ ] AI Summary works with Gemini Nano and/or developer-bundled Groq (no user key paste)
 - [ ] AI Timeline shows recent actions with provider + latency
 - [ ] Keyword insights tile (top-right) + pastel sticky-note marks on page when prefs enable them
 - [ ] Sign in → Sync mode → save highlight/note → Sync now shows pushed > 0 (Convex)

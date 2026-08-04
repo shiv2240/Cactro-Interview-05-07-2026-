@@ -139,15 +139,17 @@ export function SettingsView(props: {
       </div>
 
       <div>
-        <h3 className="font-display font-semibold">Groq API key</h3>
+        <h3 className="font-display font-semibold">Groq override (optional)</h3>
         <p className="mt-1 text-xs text-[var(--aka-muted)]">
-          Stored in extension storage and used only by the service worker.
+          AI uses Gemini Nano when available, then a developer-bundled Groq
+          fallback in the service worker. End users do not need a key. Paste
+          here only to override the build-time key (power users / debugging).
         </p>
         <div className="mt-2 flex gap-2">
           <input
             type="password"
             className="w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5"
-            placeholder="gsk_…"
+            placeholder="Optional override gsk_…"
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
           />

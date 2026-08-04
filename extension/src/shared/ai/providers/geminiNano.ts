@@ -1,21 +1,29 @@
 import type { AIProvider, GenerateOptions, StreamChunk } from "../types";
 
+const USABLE = new Set(["readily", "available"]);
+
 /** Chrome Prompt API / Gemini Nano provider (when available in Chrome). */
 export class GeminiNanoProvider implements AIProvider {
   readonly id = "gemini-nano" as const;
   private session: ChromeAISession | null = null;
   private ready = false;
+  private lastDetail = "Gemini Nano not checked";
 
   async initialize(): Promise<void> {
     const ai = getChromeAI();
     if (!ai?.languageModel) {
       this.ready = false;
+      this.session = null;
+      this.lastDetail = "Prompt API (LanguageModel) not present in this context";
       return;
     }
     try {
       const availability = await ai.languageModel.availability();
-      if (availability !== "readily" && availability !== "available" && availability !== "after-download") {
+      // "after-download" / "downloadable" are not usable yet — do not claim available.
+      if (!USABLE.has(availability)) {
         this.ready = false;
+        this.session = null;
+        this.lastDetail = `Gemini Nano status: ${availability}`;
         return;
       }
       this.session = await ai.languageModel.create({
@@ -23,26 +31,22 @@ export class GeminiNanoProvider implements AIProvider {
         topK: 40,
       });
       this.ready = true;
-    } catch {
+      this.lastDetail = `Gemini Nano ready (${availability})`;
+    } catch (e) {
       this.ready = false;
       this.session = null;
+      this.lastDetail =
+        e instanceof Error
+          ? `Gemini Nano init failed: ${e.message}`
+          : "Gemini Nano init failed";
     }
   }
 
   async isAvailable(): Promise<boolean> {
     if (this.ready && this.session) return true;
-    const ai = getChromeAI();
-    if (!ai?.languageModel) return false;
-    try {
-      const availability = await ai.languageModel.availability();
-      return (
-        availability === "readily" ||
-        availability === "available" ||
-        availability === "after-download"
-      );
-    } catch {
-      return false;
-    }
+    // Re-probe once — never return true based on availability strings alone.
+    await this.initialize();
+    return Boolean(this.ready && this.session);
   }
 
   async generate(options: GenerateOptions): Promise<string> {
@@ -62,7 +66,6 @@ export class GeminiNanoProvider implements AIProvider {
     let previous = "";
     for await (const chunk of stream) {
       const text = typeof chunk === "string" ? chunk : String(chunk);
-      // Some implementations return cumulative text
       const delta = text.startsWith(previous) ? text.slice(previous.length) : text;
       previous = text.startsWith(previous) ? text : previous + text;
       if (delta) yield { text: delta, done: false };
@@ -74,7 +77,9 @@ export class GeminiNanoProvider implements AIProvider {
     const available = await this.isAvailable();
     return {
       ok: available,
-      detail: available ? "Gemini Nano available" : "Gemini Nano unavailable",
+      detail:
+        this.lastDetail ||
+        (available ? "Gemini Nano available" : "Gemini Nano unavailable"),
     };
   }
 

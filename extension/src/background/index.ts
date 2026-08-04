@@ -1,5 +1,5 @@
 import { generateAI, streamAI } from "../shared/ai/AIService";
-import { setGroqApiKey } from "../shared/ai/swConfig";
+import { seedGroqKeyFromBundle, setGroqApiKey } from "../shared/ai/swConfig";
 import {
   deleteHighlight,
   listHighlights,
@@ -44,16 +44,19 @@ async function ensureSidePanelOpensOnAction(): Promise<void> {
 
 chrome.runtime.onInstalled.addListener(() => {
   void hydratePrefsFromChromeStorage();
+  void seedGroqKeyFromBundle();
   void ensureSidePanelOpensOnAction();
 });
 
 chrome.runtime.onStartup.addListener(() => {
+  void seedGroqKeyFromBundle();
   void ensureSidePanelOpensOnAction();
 });
 
 // Re-apply on every service worker wake (onInstalled alone is not enough after updates).
 void ensureSidePanelOpensOnAction();
 void hydratePrefsFromChromeStorage();
+void seedGroqKeyFromBundle();
 
 // Fallback when openPanelOnActionClick is not active (onClicked does not fire when it is).
 chrome.action?.onClicked?.addListener((tab) => {

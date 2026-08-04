@@ -9,3 +9,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** Build-time Groq key injected by vite.config.ts — referenced only from SW AI modules. */
+declare const __AKA_BUNDLED_GROQ_KEY__: string;

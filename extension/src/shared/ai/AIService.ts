@@ -20,11 +20,16 @@ class ProviderManager {
 
   async pick(): Promise<AIProvider> {
     await this.init();
+    // Order: Gemini Nano (on-device) → Groq (developer-bundled / optional override)
     for (const p of this.providers) {
-      if (await p.isAvailable()) return p;
+      try {
+        if (await p.isAvailable()) return p;
+      } catch {
+        /* try next provider */
+      }
     }
     throw new Error(
-      "No AI provider available. Enable Gemini Nano or set a Groq API key in Settings."
+      "No AI provider available. Gemini Nano is unavailable and no Groq fallback key is configured for this build."
     );
   }
 
