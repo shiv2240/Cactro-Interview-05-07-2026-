@@ -1,0 +1,51 @@
+{
+  "manifest_version": 3,
+  "name": "AI Knowledge Assistant",
+  "version": "2.0.0",
+  "description": "Local-first AI knowledge assistant: save highlights, take notes, and get on-device or cloud AI summaries with optional Convex sync.",
+  "permissions": [
+    "storage",
+    "sidePanel",
+    "offscreen",
+    "clipboardWrite",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://api.groq.com/*",
+    "https://*.convex.cloud/*",
+    "https://*.convex.site/*"
+  ],
+  "background": {
+    "service_worker": "src/background/index.ts",
+    "type": "module"
+  },
+  "side_panel": {
+    "default_path": "src/sidepanel/index.html"
+  },
+  "action": {
+    "default_title": "AI Knowledge Assistant",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["src/content/index.ts"],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*"],
+      "matches": ["http://*/*", "https://*/*"]
+    }
+  ]
+}

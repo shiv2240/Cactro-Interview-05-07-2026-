@@ -1,83 +1,58 @@
 ================================================================================
-WEBSITE HIGHLIGHT SAVER — CHROME WEB STORE DESCRIPTION
+AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION
 ================================================================================
 
-Website Highlight Saver is your AI-powered reading companion for Google Chrome. Highlight text, capture insights, and get instant AI explanations on any webpage — without leaving the tab.
-
-Whether you are a student researching, a professional reviewing reports, a writer collecting ideas, or a lifelong learner browsing articles, Website Highlight Saver helps you capture and understand what matters online.
+AI Knowledge Assistant is a local-first Chrome extension for capturing highlights,
+taking notes, and getting AI help without leaving the page. Gemini Nano runs on
+device when available; Groq is an automatic cloud fallback. Optional Convex sync
+keeps your account in sync when you choose Sync or Cloud AI privacy modes.
 
 --------------------------------------------------------------------------------
 KEY FEATURES
 --------------------------------------------------------------------------------
 
-★ IN-PAGE SELECTION TOOLTIP
-• Select text on any webpage to open a floating tooltip.
-• Save — store the highlight in your dashboard (synced to the cloud).
-• AI Summary — get an instant explanation of the selected text in an in-page modal.
-• Summarize Page — generate a structured page summary (Overview, Agenda, Key Takeaways).
+★ SELECTION TOOLTIP (SHADOW DOM)
+• Select text to Save, Summarize, Explain, or Summarize Page.
+• All AI and storage go through the background service worker — API keys never
+  touch content scripts.
 
-★ KEYWORD INSIGHTS (AUTO HIGHLIGHTS)
-• A movable Keywords tile appears on the page and analyzes important terms automatically.
-• Key words are highlighted in soft sticky-note colors so they stand out without clutter.
-• Click the tile to see all detected words; click a word for a sectioned AI summary:
-  Meaning · On this page · Why it matters · Quick tip
-• From the explanation popup: Copy to clipboard or Save to your dashboard for later.
-• Press Esc to close explanation popups. Drag the tile anywhere — it remembers its place.
+★ SIDE PANEL DASHBOARD
+• Highlights list with search, delete, and pagination.
+• Notes with markdown body, tags, pin/favorite, and AI actions.
+• Workspaces: Work, Personal, Coding, Research, Study.
+• Theme: Light / Dark / System. Feature toggles for keywords tile & sticky notes.
 
-★ SMART AI MODES (SELECTION SUMMARY)
-• Short selections: word/phrase explanations with clear, useful context.
-• Longer selections: concise key takeaways and structured insights.
-• Page summaries: Overview, main topics, and actionable takeaways.
+★ AI ENGINE
+• Gemini Nano (Chrome Prompt API) first; Groq fallback when needed.
+• Streaming responses, provider + latency metadata, local LRU cache.
+• AI Timeline: searchable history of what you asked the assistant.
 
-★ CLOUD & LOCAL SYNC
-• Highlights sync to a secure Convex backend when you are signed in.
-• Local storage keeps your data available as a reliable fallback.
-• Access your reading list across sessions from the extension popup.
+★ LOCAL-FIRST + PRIVACY MODES
+• IndexedDB is the primary store — highlights work offline.
+• Private = local only · Sync = notes/highlights to Convex · Cloud AI = sync +
+  cloud AI preference surface.
+• Session token stays in chrome.storage.local.
 
-★ POPUP DASHBOARD
-• Browse saved highlights with domain favicons and pagination.
-• Search, expand, open the source URL, or delete entries quickly.
-• Light/Dark theme switcher and account password updates.
-• AI Digest: summarize all saved highlights in one click.
-
-★ PRIVACY & CLEAN UI
-• Tooltips, modals, and the keywords tile use Shadow DOM so host-page CSS cannot break the UI.
-• Email/password authentication keeps your highlights tied to your account.
-• Copy, save, and manage your notes whenever you need them.
+★ PERSONALIZATION & LOCAL SEARCH
+• Learns tone/summary style from accepted AI actions.
+• Local bag-of-words vectors for semantic search (no remote embeddings).
 
 --------------------------------------------------------------------------------
 HOW TO USE
 --------------------------------------------------------------------------------
 
-1. INSTALL & SIGN IN
-   Add the extension, open the popup from the toolbar, and create an account or sign in.
-
-2. CAPTURE TEXT
-   Select any text on a webpage. Use Save, AI Summary, or Summarize Page from the tooltip.
-
-3. EXPLORE KEYWORDS
-   Use the Keywords tile to browse auto-detected terms. Click a word for a sectioned summary,
-   then Copy or Save it to your dashboard.
-
-4. REVIEW LATER
-   Open the extension popup anytime to search, organize, theme, or generate an AI digest
-   of everything you have saved.
+1. Install the extension and open the side panel from the toolbar icon.
+2. (Optional) Sign in under Settings and set privacy mode to Sync.
+3. Paste a Groq API key in Settings if Gemini Nano is unavailable.
+4. Select text on any page → Save or run AI actions.
+5. Capture longer thoughts in Notes; browse AI Timeline for recent work.
 
 --------------------------------------------------------------------------------
-WHO IS THIS FOR?
+PRIVACY
 --------------------------------------------------------------------------------
 
-• Students & Researchers — collect quotes, definitions, and citations while reading.
-• Writers & Creators — gather references and ideas across articles and docs.
-• Developers — save notes from documentation and technical write-ups.
-• Avid Readers — look up terms quickly and keep favorite passages in one place.
+• Private mode never syncs content to Convex.
+• Groq requests (when used) send only the prompt text needed for the action.
+• See PRIVACY_POLICY.md for details.
 
---------------------------------------------------------------------------------
-SUPPORT & CONTACT
---------------------------------------------------------------------------------
-
-Built to make web reading and note-taking clearer and faster.
-For bug reports, suggestions, or updates, reach out on LinkedIn:
-https://www.linkedin.com/in/shivsahnimern/
-
-Start saving smarter today with Website Highlight Saver!
+Version 2.0.0

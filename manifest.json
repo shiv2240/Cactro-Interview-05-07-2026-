@@ -1,19 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "Website Highlight Saver",
-  "version": "1.0.2",
-  "description": "Select text on any website to save it locally, view highlights, and generate summaries using AI.",
+  "name": "AI Knowledge Assistant",
+  "version": "2.0.0",
+  "description": "Load the unpacked build from extension/dist after npm run build. This root file documents the product version; Chrome should load extension/dist/manifest.json.",
   "permissions": [
     "storage",
-    "clipboardWrite"
+    "sidePanel",
+    "offscreen",
+    "clipboardWrite",
+    "alarms"
   ],
   "host_permissions": [
     "https://api.groq.com/*",
-    "https://ardent-partridge-610.convex.cloud/*",
-    "https://ardent-partridge-610.convex.site/*"
+    "https://*.convex.cloud/*",
+    "https://*.convex.site/*"
   ],
   "action": {
-    "default_popup": "popup.html",
+    "default_title": "AI Knowledge Assistant — load extension/dist",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",
@@ -24,18 +27,5 @@
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
-  },
-  "content_scripts": [
-    {
-      "matches": [
-        "http://*/*",
-        "https://*/*"
-      ],
-      "js": [
-        "config.js",
-        "content.js"
-      ],
-      "run_at": "document_end"
-    }
-  ]
+  }
 }

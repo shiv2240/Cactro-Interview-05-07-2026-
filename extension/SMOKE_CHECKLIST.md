@@ -1,0 +1,27 @@
+# Extension smoke checklist (M6)
+
+## Build
+- [ ] `npm install`
+- [ ] `npm run typecheck` passes
+- [ ] `npm run build` produces `extension/dist/manifest.json`
+
+## Load unpacked
+1. Chrome → `chrome://extensions` → Developer mode
+2. Load unpacked → select **`extension/dist`** (not repo root)
+3. Pin the extension; click icon → side panel opens
+
+## Core flows
+- [ ] Select text on a page → tooltip Save / Summarize / Explain / Page
+- [ ] Save highlight → appears in side panel Highlights (offline OK)
+- [ ] Search + delete highlight
+- [ ] Notes tab: create markdown note, pin/favorite, tags, Summarize/Rewrite/Flashcards
+- [ ] Settings: theme Light/Dark/System; feature toggles; privacy Private/Sync/Cloud AI
+- [ ] Workspace switcher filters scoped data
+- [ ] Groq key in Settings (SW-only) OR Gemini Nano when available
+- [ ] AI Timeline shows recent actions with provider + latency
+- [ ] Keyword insights tile + sticky Notes button respect feature prefs
+- [ ] Sign in → Sync now pulls/pushes highlights (Sync mode)
+
+## Security spot-checks
+- [ ] Content script bundle has no `gsk_` / Groq bearer strings
+- [ ] Invalid runtime messages rejected (wrong type / oversize)
