@@ -143,7 +143,7 @@ export function NotesView(props: {
   return (
     <section className="space-y-3">
       <input
-        className="glass w-full rounded-xl px-3 py-2 text-sm outline-none"
+        className="glass aka-input w-full rounded-xl px-3 py-2 text-sm outline-none"
         placeholder="Search notes…"
         value={props.search}
         onChange={(e) => {
@@ -158,25 +158,25 @@ export function NotesView(props: {
             {editing ? "Edit note" : "New note"}
           </h3>
           {editing && (
-            <button type="button" className="text-xs underline" onClick={startNew}>
+            <button type="button" className="text-xs aka-link underline" onClick={startNew}>
               Clear
             </button>
           )}
         </div>
         <input
-          className="w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5 text-sm dark:bg-slate-900/40"
+          className="aka-input w-full rounded-lg px-2 py-1.5 text-sm"
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
         <textarea
-          className="min-h-[140px] w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5 font-mono text-xs leading-relaxed dark:bg-slate-900/40"
+          className="aka-input min-h-[140px] w-full rounded-lg px-2 py-1.5 font-mono text-xs leading-relaxed"
           placeholder="Markdown body…"
           value={body}
           onChange={(e) => setBody(e.target.value)}
         />
         <input
-          className="w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5 text-sm dark:bg-slate-900/40"
+          className="aka-input w-full rounded-lg px-2 py-1.5 text-sm"
           placeholder="Tags (comma-separated)"
           value={tags}
           onChange={(e) => setTags(e.target.value)}
@@ -210,34 +210,34 @@ export function NotesView(props: {
           <button
             type="button"
             onClick={() => void runAI("summarize")}
-            className="rounded-lg bg-white/70 px-3 py-1.5 text-sm font-semibold"
+            className="aka-chip rounded-lg px-3 py-1.5 text-sm font-semibold"
           >
             Summarize
           </button>
           <button
             type="button"
             onClick={() => void runAI("rewrite")}
-            className="rounded-lg bg-white/70 px-3 py-1.5 text-sm font-semibold"
+            className="aka-chip rounded-lg px-3 py-1.5 text-sm font-semibold"
           >
             Rewrite
           </button>
           <button
             type="button"
             onClick={() => void runAI("flashcards")}
-            className="rounded-lg bg-white/70 px-3 py-1.5 text-sm font-semibold"
+            className="aka-chip rounded-lg px-3 py-1.5 text-sm font-semibold"
           >
             Flashcards
           </button>
         </div>
 
         {pendingAI && (
-          <div className="mt-2 rounded-lg border border-slate-300/40 bg-white/50 p-2.5 dark:bg-slate-900/40">
+          <div className="aka-input mt-2 rounded-lg p-2.5">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-accent">
+              <p className="text-[10px] font-semibold uppercase tracking-wide aka-link">
                 AI · {pendingAI.action}
               </p>
               {pendingAI.meta ? (
-                <span className="text-[10px] text-[var(--aka-muted)]">
+                <span className="text-[10px] aka-muted">
                   {pendingAI.meta}
                 </span>
               ) : null}
@@ -247,7 +247,7 @@ export function NotesView(props: {
             </pre>
             <div className="mt-2 flex flex-wrap gap-2">
               {pendingAI.voted ? (
-                <span className="text-[11px] text-[var(--aka-muted)]">
+                <span className="text-[11px] aka-muted">
                   Feedback saved
                 </span>
               ) : (
@@ -274,7 +274,7 @@ export function NotesView(props: {
       </div>
 
       {slice.length === 0 ? (
-        <p className="glass rounded-xl p-4 text-sm text-[var(--aka-muted)]">
+        <p className="glass rounded-xl p-4 text-sm aka-muted">
           {props.search.trim()
             ? "No notes match your search."
             : "No notes yet. Create one above."}
@@ -290,11 +290,11 @@ export function NotesView(props: {
                     {n.favorite ? "★ " : ""}
                     {n.title}
                   </p>
-                  <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs text-[var(--aka-muted)]">
+                  <p className="mt-1 line-clamp-3 whitespace-pre-wrap text-xs aka-muted">
                     {n.body}
                   </p>
                   {n.tags.length > 0 && (
-                    <p className="mt-1 text-[11px] text-sky-accent">
+                    <p className="mt-1 text-[11px] aka-link">
                       {n.tags.join(" · ")}
                     </p>
                   )}
@@ -302,7 +302,7 @@ export function NotesView(props: {
                 <div className="flex shrink-0 flex-col gap-1">
                   <button
                     type="button"
-                    className="rounded-md bg-slate-200 px-2 py-1 text-xs font-semibold dark:bg-slate-700"
+                    className="aka-chip rounded-md px-2 py-1 text-xs font-semibold"
                     onClick={() => startEdit(n)}
                   >
                     Edit
@@ -328,7 +328,7 @@ export function NotesView(props: {
         <div className="flex items-center justify-between text-sm">
           <button
             type="button"
-            className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
+            className="aka-chip rounded-lg px-3 py-1 disabled:opacity-40"
             disabled={safePage === 0}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
           >
@@ -336,13 +336,13 @@ export function NotesView(props: {
           </button>
           <span>
             {safePage + 1} / {pages}
-            <span className="ml-1 text-[var(--aka-muted)]">
+            <span className="ml-1 aka-muted">
               ({props.notes.length})
             </span>
           </span>
           <button
             type="button"
-            className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
+            className="aka-chip rounded-lg px-3 py-1 disabled:opacity-40"
             disabled={safePage >= pages - 1}
             onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
           >

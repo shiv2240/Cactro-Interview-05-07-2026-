@@ -5,19 +5,29 @@
 :root {
   color-scheme: light;
   --aka-bg: #eef4fb;
-  --aka-panel: rgba(255, 255, 255, 0.72);
+  --aka-panel: rgba(255, 255, 255, 0.78);
   --aka-ink: #1e293b;
-  --aka-muted: #64748b;
+  --aka-muted: #475569;
   --aka-accent: #3b82f6;
+  --aka-chip: rgba(255, 255, 255, 0.72);
+  --aka-chip-hover: rgba(255, 255, 255, 0.92);
+  --aka-input: rgba(255, 255, 255, 0.7);
+  --aka-border: rgba(148, 163, 184, 0.45);
+  --aka-placeholder: #64748b;
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
-  --aka-bg: #0f172a;
-  --aka-panel: rgba(30, 41, 59, 0.82);
-  --aka-ink: #e2e8f0;
-  --aka-muted: #94a3b8;
-  --aka-accent: #60a5fa;
+  --aka-bg: #0b1220;
+  --aka-panel: rgba(30, 41, 59, 0.88);
+  --aka-ink: #f1f5f9;
+  --aka-muted: #cbd5e1;
+  --aka-accent: #7dd3fc;
+  --aka-chip: rgba(51, 65, 85, 0.92);
+  --aka-chip-hover: rgba(71, 85, 105, 0.98);
+  --aka-input: rgba(15, 23, 42, 0.85);
+  --aka-border: rgba(148, 163, 184, 0.4);
+  --aka-placeholder: #94a3b8;
 }
 
 html,
@@ -38,16 +48,60 @@ body {
 
 [data-theme="dark"] body {
   background:
-    radial-gradient(1000px 500px at 0% 0%, rgba(30, 58, 138, 0.35), transparent 55%),
-    radial-gradient(800px 400px at 100% 0%, rgba(51, 65, 85, 0.5), transparent 50%),
+    radial-gradient(1000px 500px at 0% 0%, rgba(30, 58, 138, 0.4), transparent 55%),
+    radial-gradient(800px 400px at 100% 0%, rgba(51, 65, 85, 0.55), transparent 50%),
     var(--aka-bg);
 }
 
 .glass {
   background: var(--aka-panel);
+  color: var(--aka-ink);
   backdrop-filter: blur(14px);
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  box-shadow: 0 8px 32px rgba(30, 41, 59, 0.08);
+  border: 1px solid var(--aka-border);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.12);
+}
+
+[data-theme="dark"] .glass {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+/* Theme-aware surfaces — prefer these over raw bg-white/60 in dark mode. */
+.aka-chip {
+  background: var(--aka-chip);
+  color: var(--aka-ink);
+  border: 1px solid transparent;
+}
+
+.aka-chip:hover:not(:disabled) {
+  background: var(--aka-chip-hover);
+}
+
+.aka-input {
+  background: var(--aka-input);
+  color: var(--aka-ink);
+  border: 1px solid var(--aka-border);
+}
+
+.aka-input::placeholder {
+  color: var(--aka-placeholder);
+  opacity: 1;
+}
+
+.aka-muted {
+  color: var(--aka-muted);
+}
+
+.aka-link {
+  color: var(--aka-accent);
+}
+
+.aka-link:hover {
+  text-decoration: underline;
+}
+
+select.aka-input option {
+  background: var(--aka-bg);
+  color: var(--aka-ink);
 }
 
 @keyframes fade-up {

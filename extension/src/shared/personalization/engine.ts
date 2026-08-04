@@ -1,6 +1,5 @@
 import { getDB } from "../db/schema";
 import type { AIAction, PersonalizationProfile, UserPrefs } from "../types";
-import { setPrefs } from "../db/schema";
 
 const DEFAULT_PROFILE: PersonalizationProfile = {
   interests: [],
@@ -19,6 +18,30 @@ export async function getProfile(): Promise<PersonalizationProfile> {
   return profile;
 }
 
+/**
+ * Settings is the source of truth for tone/style.
+ * Keep the personalization profile in sync so Timeline reflects explicit choices.
+ */
+export async function syncProfileStyleFromPrefs(partial: {
+  tone?: UserPrefs["tone"];
+  summaryStyle?: UserPrefs["summaryStyle"];
+}): Promise<PersonalizationProfile> {
+  const db = await getDB();
+  const current = await getProfile();
+  const next: PersonalizationProfile = {
+    ...current,
+    tone: partial.tone ?? current.tone,
+    summaryStyle: partial.summaryStyle ?? current.summaryStyle,
+    updatedAt: Date.now(),
+  };
+  await db.put("personalization", { id: "default", ...next });
+  return next;
+}
+
+/**
+ * Accept/Reject updates interests + counts.
+ * Tone/style stay as the user's Settings choice (not overwritten by heuristics).
+ */
 export async function recordFeedback(input: {
   accepted: boolean;
   action: AIAction;
@@ -38,25 +61,16 @@ export async function recordFeedback(input: {
     }
   }
 
-  let tone: UserPrefs["tone"] = current.tone;
-  let summaryStyle: UserPrefs["summaryStyle"] = current.summaryStyle;
-  if (input.accepted && input.action === "summarize") {
-    summaryStyle = "concise";
-  }
-  if (input.accepted && input.action === "explain") {
-    tone = "friendly";
-  }
-
   const next: PersonalizationProfile = {
     interests,
-    tone,
-    summaryStyle,
+    // Preserve Settings-driven tone/style; feedback only learns interests/counts.
+    tone: current.tone,
+    summaryStyle: current.summaryStyle,
     acceptedActions: current.acceptedActions + (input.accepted ? 1 : 0),
     rejectedActions: current.rejectedActions + (input.accepted ? 0 : 1),
     updatedAt: Date.now(),
   };
 
   await db.put("personalization", { id: "default", ...next });
-  await setPrefs({ tone: next.tone, summaryStyle: next.summaryStyle });
   return next;
 }

@@ -18,7 +18,7 @@ export function SettingsView(props: {
     <section className="glass space-y-4 rounded-xl p-3 text-sm">
       <div>
         <h3 className="font-display font-semibold">AI</h3>
-        <p className="mt-1 text-xs text-[var(--aka-muted)]">
+        <p className="mt-1 text-xs aka-muted">
           Multi-model AI with a fast primary and an automatic backup if that
           model fails — no setup or API keys required.
         </p>
@@ -40,7 +40,7 @@ export function SettingsView(props: {
               className={`rounded-lg px-3 py-1.5 capitalize ${
                 props.prefs.theme === t
                   ? "bg-sky-accent text-white"
-                  : "bg-white/60"
+                  : "aka-chip"
               }`}
             >
               {t}
@@ -51,10 +51,12 @@ export function SettingsView(props: {
 
       <div>
         <h3 className="font-display font-semibold">Privacy mode</h3>
-        <p className="mt-1 text-xs text-[var(--aka-muted)]">
-          <strong>Private</strong> — IndexedDB only (no Convex data sync).{" "}
-          <strong>Sync</strong> (default) — highlights &amp; notes push/pull via
-          Convex when signed in. <strong>Cloud AI</strong> — same sync as Sync.
+        <p className="mt-1 text-xs aka-muted">
+          <strong className="text-ink">Private</strong> — IndexedDB only (no
+          Convex data sync).{" "}
+          <strong className="text-ink">Sync</strong> (default) — highlights &amp;
+          notes push/pull via Convex when signed in.{" "}
+          <strong className="text-ink">Cloud AI</strong> — same sync as Sync.
           Auth always uses Convex. AI timeline and vectors stay local.
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -66,7 +68,7 @@ export function SettingsView(props: {
               className={`rounded-lg px-3 py-1.5 ${
                 props.prefs.privacyMode === m
                   ? "bg-sky-accent text-white"
-                  : "bg-white/60"
+                  : "aka-chip"
               }`}
             >
               {m === "cloud_ai" ? "Cloud AI" : m[0]!.toUpperCase() + m.slice(1)}
@@ -76,13 +78,13 @@ export function SettingsView(props: {
         <button
           type="button"
           disabled={!props.auth.authenticated || props.prefs.privacyMode === "private"}
-          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50 dark:bg-slate-200 dark:text-slate-900"
           onClick={() => void props.onSync()}
         >
           Sync now
         </button>
         {!props.auth.authenticated && (
-          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+          <p className="mt-1 text-xs text-amber-800 dark:text-amber-200">
             Sign in above to enable Convex sync.
           </p>
         )}
@@ -114,6 +116,9 @@ export function SettingsView(props: {
 
       <div>
         <h3 className="font-display font-semibold">AI style</h3>
+        <p className="mt-1 text-xs aka-muted">
+          Applied to every AI Summary, keyword explain, and page summary.
+        </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {(["concise", "detailed", "bullets"] as const).map((s) => (
             <button
@@ -123,7 +128,7 @@ export function SettingsView(props: {
               className={`rounded-lg px-3 py-1.5 capitalize ${
                 props.prefs.summaryStyle === s
                   ? "bg-sky-accent text-white"
-                  : "bg-white/60"
+                  : "aka-chip"
               }`}
             >
               {s}
@@ -139,7 +144,7 @@ export function SettingsView(props: {
               className={`rounded-lg px-3 py-1.5 capitalize ${
                 props.prefs.tone === t
                   ? "bg-sky-accent text-white"
-                  : "bg-white/60"
+                  : "aka-chip"
               }`}
             >
               {t}

@@ -9,14 +9,14 @@ export function TimelineView(props: {
       {props.profile && (
         <div className="glass rounded-xl p-3 text-sm">
           <h3 className="font-display font-semibold">Personalization</h3>
-          <p className="mt-1 text-xs text-[var(--aka-muted)]">
+          <p className="mt-1 text-xs aka-muted">
             Tone {props.profile.tone} · Style {props.profile.summaryStyle} ·
             Accepted {props.profile.acceptedActions} · Rejected{" "}
             {props.profile.rejectedActions}
           </p>
-          <p className="mt-1 text-[11px] text-[var(--aka-muted)]">
-            Tap Accept or Reject on AI summaries (Highlights, Notes, or in-page)
-            to update these counts and refine tone/style.
+          <p className="mt-1 text-[11px] aka-muted">
+            Settings → AI style sets tone/format. Accept/Reject on summaries
+            updates interest counts without overriding your style choice.
           </p>
           {props.profile.interests.length > 0 && (
             <p className="mt-2 text-xs">
@@ -27,15 +27,15 @@ export function TimelineView(props: {
       )}
 
       {props.timeline.length === 0 ? (
-        <p className="glass rounded-xl p-4 text-sm text-[var(--aka-muted)]">
+        <p className="glass rounded-xl p-4 text-sm aka-muted">
           AI timeline is empty. Run a summary to start learning history.
         </p>
       ) : (
         <ul className="space-y-2">
           {props.timeline.map((e) => (
             <li key={e.id} className="glass rounded-xl p-3 text-sm">
-              <div className="flex items-center justify-between gap-2 text-xs text-[var(--aka-muted)]">
-                <span className="font-semibold uppercase tracking-wide text-sky-accent">
+              <div className="flex items-center justify-between gap-2 text-xs aka-muted">
+                <span className="font-semibold uppercase tracking-wide aka-link">
                   {e.action}
                 </span>
                 <span>

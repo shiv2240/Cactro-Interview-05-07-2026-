@@ -6,11 +6,16 @@ const MAX_CACHE = 80;
 const DEFAULT_TTL_MS = 1000 * 60 * 10; // 10 min
 const MEMORY_MAX = 40;
 /** Bump to invalidate junk keyword/selection summaries cached with page chrome. */
-const CACHE_VERSION = "v2-nochrome";
+const CACHE_VERSION = "v3-style-tone";
 
 type MemEntry = AICacheEntry;
 
 const memory = new Map<string, MemEntry>();
+
+export type AICacheStyleOpts = {
+  summaryStyle?: string;
+  tone?: string;
+};
 
 function hashKey(parts: string[]): string {
   const raw = [CACHE_VERSION, ...parts].join("::");
@@ -19,6 +24,19 @@ function hashKey(parts: string[]): string {
     h = (Math.imul(31, h) + raw.charCodeAt(i)) | 0;
   }
   return `c_${Math.abs(h)}`;
+}
+
+function cacheId(
+  action: string,
+  text: string,
+  opts?: AICacheStyleOpts
+): string {
+  return hashKey([
+    action,
+    text.slice(0, 2000),
+    opts?.summaryStyle ?? "concise",
+    opts?.tone ?? "neutral",
+  ]);
 }
 
 function touchMemory(id: string, entry: MemEntry): void {
@@ -33,9 +51,10 @@ function touchMemory(id: string, entry: MemEntry): void {
 
 export async function getCachedAI(
   action: string,
-  text: string
+  text: string,
+  opts?: AICacheStyleOpts
 ): Promise<AICacheEntry | null> {
-  const id = hashKey([action, text.slice(0, 2000)]);
+  const id = cacheId(action, text, opts);
   const now = Date.now();
 
   const mem = memory.get(id);
@@ -63,9 +82,10 @@ export async function setCachedAI(
   action: string,
   text: string,
   value: string,
-  provider: AIProviderId
+  provider: AIProviderId,
+  opts?: AICacheStyleOpts
 ): Promise<void> {
-  const id = hashKey([action, text.slice(0, 2000)]);
+  const id = cacheId(action, text, opts);
   const now = Date.now();
   const entry: AICacheEntry = {
     id,

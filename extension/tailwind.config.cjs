@@ -6,7 +6,8 @@ module.exports = {
     path.join(__dirname, "src/**/*.{html,js,ts,tsx}"),
     path.join(__dirname, "src/**/*.html"),
   ],
-  darkMode: ["class", '[data-theme="dark"]'],
+  // Match App.tsx data-theme attribute (not OS media query alone).
+  darkMode: ["selector", '[data-theme="dark"]'],
   theme: {
     extend: {
       colors: {
@@ -23,8 +24,8 @@ module.exports = {
           soft: "#7dd3fc",
         },
         ink: {
-          DEFAULT: "#1e293b",
-          muted: "#64748b",
+          DEFAULT: "var(--aka-ink)",
+          muted: "var(--aka-muted)",
         },
       },
       fontFamily: {

@@ -46,7 +46,7 @@ function Favicon({ url, title }: { url: string; title: string }) {
   if (!src || failed) {
     return (
       <span
-        className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm bg-slate-300/80 text-[9px] font-bold text-slate-600 dark:bg-slate-600 dark:text-slate-200"
+        className="aka-chip flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-[9px] font-bold"
         aria-hidden
       >
         {label}
@@ -172,7 +172,7 @@ export function HighlightsView(props: {
     <section className="space-y-3">
       <div className="flex gap-2">
         <input
-          className="glass w-full rounded-xl px-3 py-2 text-sm outline-none"
+          className="glass aka-input w-full rounded-xl px-3 py-2 text-sm outline-none"
           placeholder="Search highlights…"
           value={props.search}
           onChange={(e) => {
@@ -191,7 +191,7 @@ export function HighlightsView(props: {
       </div>
 
       {slice.length === 0 ? (
-        <p className="glass rounded-xl p-4 text-sm text-[var(--aka-muted)]">
+        <p className="glass rounded-xl p-4 text-sm aka-muted">
           {props.search.trim()
             ? "No highlights match your search."
             : "No highlights yet. Select text on any page and tap Save Highlight."}
@@ -205,14 +205,14 @@ export function HighlightsView(props: {
               <li key={h.id} className="glass rounded-xl p-3">
                 <p className="text-sm leading-relaxed">{h.text}</p>
 
-                <div className="mt-2 flex items-start gap-2 text-xs text-[var(--aka-muted)]">
+                <div className="mt-2 flex items-start gap-2 text-xs aka-muted">
                   <Favicon url={h.url} title={h.title} />
                   <div className="min-w-0 flex-1">
                     <a
                       href={h.url}
                       target="_blank"
                       rel="noreferrer"
-                      className="block truncate text-sky-accent hover:underline"
+                      className="aka-link block truncate hover:underline"
                       title={h.url}
                     >
                       {h.title || domainFromUrl(h.url) || h.url}
@@ -242,14 +242,14 @@ export function HighlightsView(props: {
                 </div>
 
                 {summary && (
-                  <div className="mt-2 rounded-lg border border-slate-300/40 bg-white/50 p-2.5 dark:bg-slate-900/40">
+                  <div className="aka-input mt-2 rounded-lg p-2.5">
                     <div className="mb-1 flex items-center justify-between gap-2">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-accent">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide aka-link">
                         AI Summary
                       </p>
                       <button
                         type="button"
-                        className="text-[10px] text-[var(--aka-muted)] underline"
+                        className="text-[10px] aka-muted underline"
                         onClick={() =>
                           setCardSummaries((prev) => {
                             const next = { ...prev };
@@ -262,7 +262,7 @@ export function HighlightsView(props: {
                       </button>
                     </div>
                     {summary.meta ? (
-                      <p className="mb-1 text-[10px] text-[var(--aka-muted)]">
+                      <p className="mb-1 text-[10px] aka-muted">
                         {summary.meta}
                       </p>
                     ) : null}
@@ -271,7 +271,7 @@ export function HighlightsView(props: {
                     </pre>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {summary.voted ? (
-                        <span className="text-[11px] text-[var(--aka-muted)]">
+                        <span className="text-[11px] aka-muted">
                           Feedback saved
                         </span>
                       ) : (
@@ -305,7 +305,7 @@ export function HighlightsView(props: {
         <div className="flex items-center justify-between text-sm">
           <button
             type="button"
-            className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
+            className="aka-chip rounded-lg px-3 py-1 disabled:opacity-40"
             disabled={safePage === 0}
             onClick={() => setPage((p) => Math.max(0, p - 1))}
           >
@@ -313,13 +313,13 @@ export function HighlightsView(props: {
           </button>
           <span>
             {safePage + 1} / {pages}
-            <span className="ml-1 text-[var(--aka-muted)]">
+            <span className="ml-1 aka-muted">
               ({props.highlights.length})
             </span>
           </span>
           <button
             type="button"
-            className="rounded-lg bg-white/60 px-3 py-1 disabled:opacity-40"
+            className="aka-chip rounded-lg px-3 py-1 disabled:opacity-40"
             disabled={safePage >= pages - 1}
             onClick={() => setPage((p) => Math.min(pages - 1, p + 1))}
           >

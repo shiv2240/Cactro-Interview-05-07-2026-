@@ -56,7 +56,20 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.classList.toggle("dark", theme === "dark");
   }, [theme]);
+
+  useEffect(() => {
+    if (prefs.theme !== "system") return;
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = () => {
+      const next = mq.matches ? "dark" : "light";
+      document.documentElement.setAttribute("data-theme", next);
+      document.documentElement.classList.toggle("dark", next === "dark");
+    };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [prefs.theme]);
 
   async function refresh() {
     const [p, a, h, n, t, prof] = await Promise.all([
@@ -218,12 +231,12 @@ export default function App() {
             <p className="font-display text-xl font-bold tracking-tight">
               AI Knowledge Assistant
             </p>
-            <p className="text-sm text-[var(--aka-muted)]">
+            <p className="text-sm aka-muted">
               Local-first highlights, notes, and AI
             </p>
           </div>
           <select
-            className="rounded-lg border border-slate-300/60 bg-white/70 px-2 py-1 text-sm dark:bg-slate-800"
+            className="aka-input rounded-lg px-2 py-1 text-sm"
             value={prefs.workspaceId}
             onChange={(e) => void setWorkspace(e.target.value as WorkspaceId)}
             aria-label="Workspace"
@@ -244,7 +257,7 @@ export default function App() {
               className={`rounded-lg px-3 py-1.5 text-sm font-semibold transition ${
                 tab === t.id
                   ? "bg-sky-accent text-white"
-                  : "bg-white/50 text-ink hover:bg-white/80 dark:bg-slate-800/60"
+                  : "aka-chip hover:opacity-95"
               }`}
             >
               {t.label}
@@ -256,7 +269,7 @@ export default function App() {
       <main className="min-h-0 flex-1 overflow-auto px-3 py-3">
         {!auth.authenticated && (
           <div className="mb-3 space-y-2">
-            <p className="px-1 text-xs text-[var(--aka-muted)]">
+            <p className="px-1 text-xs aka-muted">
               Sign in to sync highlights &amp; notes to Convex (Sync / Cloud AI
               modes). Local saves always work offline.
             </p>
@@ -337,7 +350,7 @@ export default function App() {
                 AI Summary · all highlights
               </p>
               {pendingBatchAI.meta ? (
-                <span className="text-[10px] text-[var(--aka-muted)]">
+                <span className="text-[10px] aka-muted">
                   {pendingBatchAI.meta}
                 </span>
               ) : null}
@@ -345,7 +358,7 @@ export default function App() {
             <pre className="whitespace-pre-wrap font-sans">{pendingBatchAI.text}</pre>
             <div className="mt-2 flex flex-wrap gap-2">
               {pendingBatchAI.voted ? (
-                <span className="text-[11px] text-[var(--aka-muted)]">
+                <span className="text-[11px] aka-muted">
                   Feedback saved
                 </span>
               ) : (

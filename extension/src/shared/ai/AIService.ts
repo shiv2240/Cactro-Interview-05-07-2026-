@@ -14,9 +14,6 @@ import {
 } from "./providers/groq";
 import type { AIProvider, AIRequestContext, AIResponseEnvelope } from "./types";
 
-/** Prefer prefs enrichment if ready within this budget; else send lean prompt. */
-const ENRICH_BUDGET_MS = 50;
-
 class ProviderManager {
   private groq = new GroqProvider();
   private nano = new GeminiNanoProvider();
@@ -87,27 +84,15 @@ class ProviderManager {
 
 const manager = new ProviderManager();
 
+/** Always load Settings tone/style so every generate/stream call personalizes. */
 async function enrichContext(
   ctx: AIRequestContext
 ): Promise<{ enriched: AIRequestContext; workspaceId: WorkspaceId }> {
-  const prefsPromise = getPrefs();
-  const raced = await Promise.race([
-    prefsPromise.then((prefs) => ({ prefs, timedOut: false as const })),
-    new Promise<{ prefs: null; timedOut: true }>((resolve) =>
-      setTimeout(() => resolve({ prefs: null, timedOut: true }), ENRICH_BUDGET_MS)
-    ),
-  ]);
-
-  if (raced.timedOut || !raced.prefs) {
-    // Kick off AI without waiting; fire-and-forget prefs for timeline later.
-    void prefsPromise;
-    return { enriched: { ...ctx }, workspaceId: "personal" };
-  }
-
-  const prefs = raced.prefs;
+  const prefs = await getPrefs();
   return {
     enriched: {
       ...ctx,
+      // Explicit request fields win; otherwise use Settings (IndexedDB prefs).
       summaryStyle: ctx.summaryStyle ?? prefs.summaryStyle,
       tone: ctx.tone ?? prefs.tone,
       workspaceLabel:
@@ -130,7 +115,14 @@ export async function generateAI(
 ): Promise<AIResponseEnvelope> {
   const start = Date.now();
 
-  const cached = await getCachedAI(ctx.action, ctx.text);
+  const enrichT0 = Date.now();
+  const { enriched, workspaceId } = await enrichContext(ctx);
+  const enrichMs = Date.now() - enrichT0;
+
+  const cached = await getCachedAI(ctx.action, ctx.text, {
+    summaryStyle: enriched.summaryStyle,
+    tone: enriched.tone,
+  });
   if (cached) {
     const latencyMs = Date.now() - start;
     logBreakdown({
@@ -149,9 +141,6 @@ export async function generateAI(
     };
   }
 
-  const enrichT0 = Date.now();
-  const { enriched, workspaceId } = await enrichContext(ctx);
-  const enrichMs = Date.now() - enrichT0;
   const { system, prompt, maxTokens, temperature } = buildPrompt(enriched);
 
   let provider = await manager.pickPrimary();
@@ -194,7 +183,10 @@ export async function generateAI(
     action: ctx.action,
   });
 
-  void setCachedAI(ctx.action, ctx.text, text, provider.id);
+  void setCachedAI(ctx.action, ctx.text, text, provider.id, {
+    summaryStyle: enriched.summaryStyle,
+    tone: enriched.tone,
+  });
   void addTimelineEvent({
     action: ctx.action,
     preview: text.slice(0, 160),
@@ -219,7 +211,14 @@ export async function* streamAI(
 ): AsyncGenerator<{ chunk: string; done: boolean; envelope?: AIResponseEnvelope }> {
   const start = Date.now();
 
-  const cached = await getCachedAI(ctx.action, ctx.text);
+  const enrichT0 = Date.now();
+  const { enriched, workspaceId } = await enrichContext(ctx);
+  const enrichMs = Date.now() - enrichT0;
+
+  const cached = await getCachedAI(ctx.action, ctx.text, {
+    summaryStyle: enriched.summaryStyle,
+    tone: enriched.tone,
+  });
   if (cached) {
     const latencyMs = Date.now() - start;
     logBreakdown({
@@ -244,9 +243,6 @@ export async function* streamAI(
     return;
   }
 
-  const enrichT0 = Date.now();
-  const { enriched, workspaceId } = await enrichContext(ctx);
-  const enrichMs = Date.now() - enrichT0;
   const { system, prompt, maxTokens, temperature } = buildPrompt(enriched);
 
   let provider = await manager.pickPrimary();
@@ -311,7 +307,10 @@ export async function* streamAI(
     action: ctx.action,
   });
 
-  void setCachedAI(ctx.action, ctx.text, full, provider.id);
+  void setCachedAI(ctx.action, ctx.text, full, provider.id, {
+    summaryStyle: enriched.summaryStyle,
+    tone: enriched.tone,
+  });
   void addTimelineEvent({
     action: ctx.action,
     preview: full.slice(0, 160),

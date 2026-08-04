@@ -32,7 +32,7 @@ export function AuthPanel(props: {
         </p>
         <button
           type="button"
-          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white"
+          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white dark:bg-slate-200 dark:text-slate-900"
           onClick={async () => {
             await sendMessage({ type: MessageType.AUTH_LOGOUT });
             props.onAuthChange();
@@ -49,28 +49,28 @@ export function AuthPanel(props: {
       <div className="flex gap-2 text-sm">
         <button
           type="button"
-          className={mode === "login" ? "font-bold" : "opacity-60"}
+          className={mode === "login" ? "font-bold" : "aka-muted"}
           onClick={() => setMode("login")}
         >
           Login
         </button>
         <button
           type="button"
-          className={mode === "register" ? "font-bold" : "opacity-60"}
+          className={mode === "register" ? "font-bold" : "aka-muted"}
           onClick={() => setMode("register")}
         >
           Register
         </button>
       </div>
       <input
-        className="w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5 text-sm"
+        className="aka-input w-full rounded-lg px-2 py-1.5 text-sm"
         placeholder="Email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
       />
       <input
         type="password"
-        className="w-full rounded-lg border border-slate-300/50 bg-white/50 px-2 py-1.5 text-sm"
+        className="aka-input w-full rounded-lg px-2 py-1.5 text-sm"
         placeholder="Password"
         value={password}
         onChange={(e) => setPassword(e.target.value)}

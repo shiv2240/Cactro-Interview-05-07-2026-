@@ -17,7 +17,11 @@ import {
   type ExtensionRequest,
   type ExtensionResponse,
 } from "../shared/messaging/protocol";
-import { getProfile, recordFeedback } from "../shared/personalization/engine";
+import {
+  getProfile,
+  recordFeedback,
+  syncProfileStyleFromPrefs,
+} from "../shared/personalization/engine";
 import {
   hydratePrefsFromChromeStorage,
   mirrorPrefsToChromeStorage,
@@ -117,6 +121,12 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
       }
       const { groqApiKey: _k, ...rest } = message.prefs;
       const next = await setPrefs(rest);
+      if (rest.tone !== undefined || rest.summaryStyle !== undefined) {
+        await syncProfileStyleFromPrefs({
+          tone: rest.tone,
+          summaryStyle: rest.summaryStyle,
+        });
+      }
       await mirrorPrefsToChromeStorage();
       void syncNow().catch(() => undefined);
       return next;
