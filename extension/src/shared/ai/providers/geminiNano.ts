@@ -3,6 +3,21 @@ import type { AIProvider, GenerateOptions, StreamChunk } from "../types";
 const USABLE = new Set(["readily", "available"]);
 
 /**
+ * Max wall-clock time for a single Nano generate/stream before we abort
+ * the session and let AIService fall back to Groq.
+ */
+export const NANO_GENERATE_TIMEOUT_MS = 1_500;
+
+export class NanoTimeoutError extends Error {
+  readonly timeoutMs: number;
+  constructor(timeoutMs: number = NANO_GENERATE_TIMEOUT_MS) {
+    super(`Gemini Nano timed out after ${timeoutMs}ms`);
+    this.name = "NanoTimeoutError";
+    this.timeoutMs = timeoutMs;
+  }
+}
+
+/**
  * Chrome Prompt API / Gemini Nano (on-device).
  * Never fakes availability — only reports ready after a real session.create().
  *
@@ -66,7 +81,22 @@ export class GeminiNanoProvider implements AIProvider {
     const input = options.system
       ? `${options.system}\n\n${options.prompt}`
       : options.prompt;
-    return session.prompt(input);
+    const timeoutMs = options.timeoutMs ?? NANO_GENERATE_TIMEOUT_MS;
+    const { signal, cleanup } = linkTimeoutSignal(options.signal, timeoutMs);
+
+    try {
+      const text = await promptWithSignal(session, input, signal);
+      if (signal.aborted) throw new NanoTimeoutError(timeoutMs);
+      return text;
+    } catch (e) {
+      if (signal.aborted || isAbortError(e)) {
+        await this.abortSession();
+        throw new NanoTimeoutError(timeoutMs);
+      }
+      throw e;
+    } finally {
+      cleanup();
+    }
   }
 
   async *stream(options: GenerateOptions): AsyncGenerator<StreamChunk> {
@@ -74,15 +104,39 @@ export class GeminiNanoProvider implements AIProvider {
     const input = options.system
       ? `${options.system}\n\n${options.prompt}`
       : options.prompt;
-    const stream = session.promptStreaming(input);
-    let previous = "";
-    for await (const chunk of stream) {
-      const text = typeof chunk === "string" ? chunk : String(chunk);
-      const delta = text.startsWith(previous) ? text.slice(previous.length) : text;
-      previous = text.startsWith(previous) ? text : previous + text;
-      if (delta) yield { text: delta, done: false };
+    const timeoutMs = options.timeoutMs ?? NANO_GENERATE_TIMEOUT_MS;
+    const { signal, cleanup } = linkTimeoutSignal(options.signal, timeoutMs);
+
+    try {
+      const stream = promptStreamingWithSignal(session, input, signal);
+      let previous = "";
+      for await (const chunk of stream) {
+        if (signal.aborted) {
+          await this.abortSession();
+          throw new NanoTimeoutError(timeoutMs);
+        }
+        const text = typeof chunk === "string" ? chunk : String(chunk);
+        const delta = text.startsWith(previous)
+          ? text.slice(previous.length)
+          : text;
+        previous = text.startsWith(previous) ? text : previous + text;
+        if (delta) yield { text: delta, done: false };
+      }
+      if (signal.aborted) {
+        await this.abortSession();
+        throw new NanoTimeoutError(timeoutMs);
+      }
+      yield { text: "", done: true };
+    } catch (e) {
+      if (e instanceof NanoTimeoutError) throw e;
+      if (signal.aborted || isAbortError(e)) {
+        await this.abortSession();
+        throw new NanoTimeoutError(timeoutMs);
+      }
+      throw e;
+    } finally {
+      cleanup();
     }
-    yield { text: "", done: true };
   }
 
   async healthCheck(): Promise<{ ok: boolean; detail?: string }> {
@@ -100,6 +154,19 @@ export class GeminiNanoProvider implements AIProvider {
     this.session = null;
     this.ready = false;
     this.lastDetail = "Gemini Nano disposed — recheck required";
+  }
+
+  /** Kill the active session after a timeout without marking Nano unavailable. */
+  private async abortSession(): Promise<void> {
+    try {
+      this.session?.destroy?.();
+    } catch {
+      /* ignore destroy races */
+    }
+    this.session = null;
+    // Keep ready=true so Nano stays preferred; ensureSession will recreate.
+    this.lastDetail =
+      "Available: Gemini Nano (last request timed out — fell back to Groq)";
   }
 
   private async ensureSession(): Promise<ChromeAISession> {
@@ -123,8 +190,14 @@ function reasonForAvailability(availability: string): string {
 }
 
 interface ChromeAISession {
-  prompt(input: string): Promise<string>;
-  promptStreaming(input: string): AsyncIterable<string>;
+  prompt(
+    input: string,
+    opts?: { signal?: AbortSignal }
+  ): Promise<string>;
+  promptStreaming(
+    input: string,
+    opts?: { signal?: AbortSignal }
+  ): AsyncIterable<string>;
   destroy?: () => void;
 }
 
@@ -145,4 +218,94 @@ function getChromeAI(): ChromeAI | undefined {
   if (g.ai?.languageModel) return g.ai;
   if (g.LanguageModel) return { languageModel: g.LanguageModel };
   return undefined;
+}
+
+/** Combine an optional external signal with a wall-clock timeout. */
+function linkTimeoutSignal(
+  external: AbortSignal | undefined,
+  timeoutMs: number
+): { signal: AbortSignal; cleanup: () => void } {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const onExternalAbort = () => controller.abort();
+  if (external) {
+    if (external.aborted) {
+      controller.abort();
+    } else {
+      external.addEventListener("abort", onExternalAbort, { once: true });
+    }
+  }
+
+  return {
+    signal: controller.signal,
+    cleanup: () => {
+      clearTimeout(timer);
+      external?.removeEventListener("abort", onExternalAbort);
+    },
+  };
+}
+
+async function promptWithSignal(
+  session: ChromeAISession,
+  input: string,
+  signal: AbortSignal
+): Promise<string> {
+  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+
+  // Prefer native AbortSignal on prompt(); race as a hard ceiling if unsupported.
+  try {
+    return await Promise.race([
+      session.prompt(input, { signal }),
+      abortPromise(signal),
+    ]);
+  } catch (e) {
+    // Older Prompt API builds reject unknown options — retry without opts + race.
+    if (isAbortError(e) || signal.aborted) throw e;
+    if (isOptionError(e)) {
+      return await Promise.race([session.prompt(input), abortPromise(signal)]);
+    }
+    throw e;
+  }
+}
+
+function promptStreamingWithSignal(
+  session: ChromeAISession,
+  input: string,
+  signal: AbortSignal
+): AsyncIterable<string> {
+  try {
+    return session.promptStreaming(input, { signal });
+  } catch (e) {
+    if (isOptionError(e)) {
+      return session.promptStreaming(input);
+    }
+    throw e;
+  }
+}
+
+function abortPromise(signal: AbortSignal): Promise<never> {
+  return new Promise((_, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    signal.addEventListener(
+      "abort",
+      () => reject(new DOMException("Aborted", "AbortError")),
+      { once: true }
+    );
+  });
+}
+
+function isAbortError(e: unknown): boolean {
+  return (
+    (e instanceof DOMException && e.name === "AbortError") ||
+    (e instanceof Error && e.name === "AbortError")
+  );
+}
+
+function isOptionError(e: unknown): boolean {
+  const msg = e instanceof Error ? e.message : String(e);
+  return /signal|option|argument|parameter/i.test(msg);
 }

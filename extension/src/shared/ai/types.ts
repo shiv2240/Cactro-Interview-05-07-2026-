@@ -6,6 +6,8 @@ export interface GenerateOptions {
   maxTokens?: number;
   temperature?: number;
   signal?: AbortSignal;
+  /** Override provider latency budget (ms). Used by Gemini Nano. */
+  timeoutMs?: number;
 }
 
 export interface StreamChunk {

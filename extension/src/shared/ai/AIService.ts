@@ -3,7 +3,11 @@ import { getPrefs } from "../db/schema";
 import { addTimelineEvent } from "../db/timeline";
 import { WORKSPACES } from "../types";
 import { buildPrompt } from "./prompts";
-import { GeminiNanoProvider } from "./providers/geminiNano";
+import {
+  GeminiNanoProvider,
+  NANO_GENERATE_TIMEOUT_MS,
+  NanoTimeoutError,
+} from "./providers/geminiNano";
 import { GroqProvider } from "./providers/groq";
 import type { AIProvider, AIRequestContext, AIResponseEnvelope } from "./types";
 
@@ -87,14 +91,23 @@ export async function generateAI(
   let text = "";
 
   try {
-    text = await provider.generate({ system, prompt });
+    text = await provider.generate({
+      system,
+      prompt,
+      // Nano enforces NANO_GENERATE_TIMEOUT_MS; Groq ignores timeoutMs.
+      timeoutMs:
+        provider.id === "gemini-nano" ? NANO_GENERATE_TIMEOUT_MS : undefined,
+    });
   } catch (primaryErr) {
-    // Invisible fallback: try next provider
-    await manager.init();
-    const fallback = new GroqProvider();
-    if (provider.id !== "groq" && (await fallback.isAvailable())) {
-      provider = fallback;
-      text = await provider.generate({ system, prompt });
+    // Fail fast: Nano timeout / errors → Groq. Keep Nano-first order next call.
+    if (provider.id !== "groq") {
+      const fallback = new GroqProvider();
+      if (await fallback.isAvailable()) {
+        provider = fallback;
+        text = await provider.generate({ system, prompt });
+      } else {
+        throw primaryErr;
+      }
     } else {
       throw primaryErr;
     }
@@ -140,14 +153,21 @@ export async function* streamAI(
   let full = "";
 
   try {
-    for await (const part of provider.stream({ system, prompt })) {
+    for await (const part of provider.stream({
+      system,
+      prompt,
+      timeoutMs:
+        provider.id === "gemini-nano" ? NANO_GENERATE_TIMEOUT_MS : undefined,
+    })) {
       if (part.text) {
         full += part.text;
         yield { chunk: part.text, done: false };
       }
       if (part.done) break;
     }
-  } catch {
+  } catch (err) {
+    // Drop any partial Nano output and re-stream from Groq under budget.
+    void err;
     const fallback = new GroqProvider();
     if (provider.id !== "groq" && (await fallback.isAvailable())) {
       provider = fallback;
@@ -160,7 +180,9 @@ export async function* streamAI(
         if (part.done) break;
       }
     } else {
-      throw new Error("AI streaming failed");
+      throw err instanceof NanoTimeoutError
+        ? err
+        : new Error("AI streaming failed");
     }
   }
 
@@ -193,3 +215,5 @@ export async function aiHealth(opts?: { recheck?: boolean }) {
   if (opts?.recheck) return manager.recheck();
   return manager.health();
 }
+
+export { NANO_GENERATE_TIMEOUT_MS };

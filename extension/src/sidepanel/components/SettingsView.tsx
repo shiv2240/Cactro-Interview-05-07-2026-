@@ -58,6 +58,9 @@ export function SettingsView(props: {
           Order: Gemini Nano (on-device) → Groq (fallback). Responses never fake
           Nano — if Nano is unavailable, you will see Groq.
         </p>
+        <p className="mt-1 text-xs text-[var(--aka-muted)]">
+          On-device AI may be slow; we switch to Groq if it takes too long.
+        </p>
         <div className="mt-2 space-y-2 rounded-lg bg-white/50 p-2 dark:bg-slate-900/40">
           <div className="flex items-start justify-between gap-2">
             <div>
