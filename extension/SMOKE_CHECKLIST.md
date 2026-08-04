@@ -7,8 +7,9 @@
 
 ## Load unpacked
 1. Chrome → `chrome://extensions` → Developer mode
-2. Load unpacked → select **`extension/dist`** (not repo root)
-3. Pin the extension; click icon → side panel opens
+2. Load unpacked → select **`extension/dist`** (not repo root, not `extension/`)
+3. Pin the extension; click icon → **side panel** dashboard opens
+4. If you see “Wrong folder”, you loaded the repo root — unload and pick `extension/dist`
 
 ## Core flows
 - [ ] Select text on a page → tooltip Save / Summarize / Explain / Page
