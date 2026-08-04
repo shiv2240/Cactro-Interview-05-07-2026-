@@ -235,6 +235,7 @@ export default function App() {
             }}
             onSummarizeAll={() => void summarizeAll()}
             aiBusy={aiBusy}
+            setStatus={setStatus}
           />
         )}
 
