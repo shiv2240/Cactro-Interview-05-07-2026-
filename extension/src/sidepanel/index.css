@@ -118,3 +118,34 @@ select.aka-input option {
 .animate-fade-up {
   animation: fade-up 0.28s ease-out both;
 }
+
+/* Header dismiss control for AI result panels */
+.aka-close-x {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 9999px;
+  border: 1px solid var(--aka-border);
+  background: var(--aka-chip);
+  color: var(--aka-muted);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.aka-close-x:hover {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.35);
+  color: #e11d48;
+}
+
+[data-theme="dark"] .aka-close-x:hover {
+  background: rgba(244, 63, 94, 0.18);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fb7185;
+}

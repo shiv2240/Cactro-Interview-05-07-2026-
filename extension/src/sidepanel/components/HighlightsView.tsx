@@ -249,7 +249,9 @@ export function HighlightsView(props: {
                       </p>
                       <button
                         type="button"
-                        className="text-[10px] aka-muted underline"
+                        className="aka-close-x"
+                        aria-label="Close"
+                        title="Close"
                         onClick={() =>
                           setCardSummaries((prev) => {
                             const next = { ...prev };
@@ -258,7 +260,7 @@ export function HighlightsView(props: {
                           })
                         }
                       >
-                        Dismiss
+                        &times;
                       </button>
                     </div>
                     {summary.meta ? (

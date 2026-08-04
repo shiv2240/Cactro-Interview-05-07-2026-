@@ -232,7 +232,11 @@ function openModal(opts: {
         box-shadow: 0 20px 50px rgba(15,23,42,0.25);
       }
       .card.dark { background: #1e293b; color: #e2e8f0; }
-      h2 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; word-break: break-word; }
+      .header {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 12px; margin-bottom: 6px;
+      }
+      h2 { margin: 0; flex: 1; font-size: 18px; line-height: 1.3; word-break: break-word; }
       .focus {
         display: ${showFocus ? "block" : "none"};
         margin: 0 0 10px; padding: 8px 10px; border-radius: 8px;
@@ -251,6 +255,23 @@ function openModal(opts: {
       button.save { background: #fbbf24; color: #0f172a; }
       button.accept { background: #059669; color: white; }
       button.reject { background: #64748b; color: white; }
+      button.close-x {
+        flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; padding: 0;
+        border: 1px solid #cbd5e1; background: #f1f5f9; color: #64748b;
+        font-size: 18px; line-height: 1; font-weight: 500;
+        display: flex; align-items: center; justify-content: center;
+        transition: background 0.15s, border-color 0.15s, color 0.15s;
+      }
+      button.close-x:hover {
+        background: rgba(244,63,94,0.12); border-color: rgba(244,63,94,0.35); color: #e11d48;
+      }
+      .card.dark button.close-x {
+        background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1);
+        color: rgba(148,163,184,0.85);
+      }
+      .card.dark button.close-x:hover {
+        background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3); color: #f43f5e;
+      }
       button:disabled { opacity: 0.5; cursor: default; }
       .feedback { display: none; gap: 8px; margin-top: 12px; flex-wrap: wrap; align-items: center; }
       .feedback.visible { display: flex; }
@@ -259,7 +280,10 @@ function openModal(opts: {
     </style>
     <div class="backdrop">
       <div class="card ${document.documentElement.dataset.akaTheme === "dark" ? "dark" : ""}">
-        <h2>${escapeHtml(title)}</h2>
+        <div class="header">
+          <h2>${escapeHtml(title)}</h2>
+          <button type="button" class="close-x" id="close" aria-label="Close" title="Close">&times;</button>
+        </div>
         <div class="focus" id="focus">${escapeHtml(focusLabel)}</div>
         <div class="meta" id="meta">Generating…</div>
         <div class="body" id="body"></div>
@@ -271,7 +295,6 @@ function openModal(opts: {
         <div class="actions">
           <button class="save" id="save">Save</button>
           <button class="primary" id="copy">Copy</button>
-          <button id="close">Close</button>
         </div>
       </div>
     </div>

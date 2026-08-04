@@ -346,14 +346,25 @@ export default function App() {
         {pendingBatchAI && (
           <div className="glass mt-3 rounded-xl p-3 text-xs leading-relaxed">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-accent">
-                AI Summary · all highlights
-              </p>
-              {pendingBatchAI.meta ? (
-                <span className="text-[10px] aka-muted">
-                  {pendingBatchAI.meta}
-                </span>
-              ) : null}
+              <div className="min-w-0 flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wide text-sky-accent">
+                  AI Summary · all highlights
+                </p>
+                {pendingBatchAI.meta ? (
+                  <span className="text-[10px] aka-muted">
+                    {pendingBatchAI.meta}
+                  </span>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="aka-close-x"
+                aria-label="Close"
+                title="Close"
+                onClick={() => setPendingBatchAI(null)}
+              >
+                &times;
+              </button>
             </div>
             <pre className="whitespace-pre-wrap font-sans">{pendingBatchAI.text}</pre>
             <div className="mt-2 flex flex-wrap gap-2">

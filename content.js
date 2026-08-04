@@ -513,8 +513,10 @@ function showTooltip(selection, text, contextValid) {
 
     const closeBtn = document.createElement('button');
     closeBtn.className = 'close-btn';
+    closeBtn.type = 'button';
     closeBtn.innerHTML = '&times;';
-    closeBtn.title = 'Dismiss';
+    closeBtn.setAttribute('aria-label', 'Close');
+    closeBtn.title = 'Close';
     tooltip.appendChild(closeBtn);
     shadow.appendChild(tooltip);
     document.body.appendChild(container);
@@ -1052,12 +1054,6 @@ function showAiSummaryModal(text, contextValid, isPageSummary = false) {
       color: #f1f5f9;
     }
     .fbtn-copy:disabled { opacity: 0.4; cursor: default; }
-    .fbtn-close {
-      background: transparent;
-      color: rgba(148,163,184,0.7);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
-    .fbtn-close:hover { color: #f1f5f9; background: rgba(255,255,255,0.06); }
 
     .badge-powered {
       font-size: 10px;
@@ -1092,7 +1088,7 @@ function showAiSummaryModal(text, contextValid, isPageSummary = false) {
         <div class="header-subtitle">Powered by Shiv Sahni</div>
       </div>
     </div>
-    <button class="close-modal-btn" id="hs-close-modal">&times;</button>
+    <button class="close-modal-btn" id="hs-close-modal" type="button" aria-label="Close" title="Close">&times;</button>
   `;
 
   // Preview of selected text / page title
@@ -2845,7 +2841,7 @@ function showKeywordPopup(item, anchorEl) {
         <div class="term">${escapeHtml(item.term)}</div>
         <span class="badge">AI summary</span>
       </div>
-      <button class="close" type="button" title="Close (Esc)">&times;</button>
+      <button class="close" type="button" aria-label="Close" title="Close (Esc)">&times;</button>
     </div>
     <div class="body">${renderKeywordSectionsHtml(sections)}</div>
     <div class="actions">

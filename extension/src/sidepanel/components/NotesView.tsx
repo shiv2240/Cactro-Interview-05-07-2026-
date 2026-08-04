@@ -233,14 +233,25 @@ export function NotesView(props: {
         {pendingAI && (
           <div className="aka-input mt-2 rounded-lg p-2.5">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide aka-link">
-                AI · {pendingAI.action}
-              </p>
-              {pendingAI.meta ? (
-                <span className="text-[10px] aka-muted">
-                  {pendingAI.meta}
-                </span>
-              ) : null}
+              <div className="min-w-0 flex items-center gap-2">
+                <p className="text-[10px] font-semibold uppercase tracking-wide aka-link">
+                  AI · {pendingAI.action}
+                </p>
+                {pendingAI.meta ? (
+                  <span className="text-[10px] aka-muted">
+                    {pendingAI.meta}
+                  </span>
+                ) : null}
+              </div>
+              <button
+                type="button"
+                className="aka-close-x"
+                aria-label="Close"
+                title="Close"
+                onClick={() => setPendingAI(null)}
+              >
+                &times;
+              </button>
             </div>
             <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
               {pendingAI.text}

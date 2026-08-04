@@ -426,7 +426,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
           <div class="term" id="term">${escapeHtml(meta.term)}</div>
           <span class="badge">Keyword summary</span>
         </div>
-        <button class="close" type="button" title="Close (Esc)" id="close">&times;</button>
+        <button class="close" type="button" aria-label="Close" title="Close (Esc)" id="close">&times;</button>
       </div>
       <div class="status" id="status">Generating insight…</div>
       <div class="body" id="body">Explaining “${escapeHtml(meta.term)}”…</div>
