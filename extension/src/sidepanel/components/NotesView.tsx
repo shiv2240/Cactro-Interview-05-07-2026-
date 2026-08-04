@@ -1,7 +1,11 @@
 import { useMemo, useState } from "react";
 import { aiMetaLine } from "../../shared/ai/providerLabel";
-import { MessageType, sendMessage } from "../../shared/messaging/protocol";
-import type { AIAction, AIResponseEnvelope, Note } from "../../shared/types";
+import {
+  MessageType,
+  sendMessage,
+  streamAIRequest,
+} from "../../shared/messaging/protocol";
+import type { AIAction, Note } from "../../shared/types";
 
 const PAGE_SIZE = 10;
 
@@ -73,33 +77,48 @@ export function NotesView(props: {
     props.onRefresh();
   }
 
-  async function runAI(action: "summarize" | "rewrite" | "flashcards") {
+  function runAI(action: "summarize" | "rewrite" | "flashcards") {
     if (!body.trim()) {
       props.setStatus("Write a note first");
       return;
     }
     props.setStatus("Running AI…");
-    setPendingAI(null);
-    try {
-      const envelope = await sendMessage<AIResponseEnvelope>({
-        type: MessageType.AI_GENERATE,
-        action,
-        text: body,
-      });
-      if (action === "rewrite") {
-        setBody(envelope.text);
+    setPendingAI({ action, text: "", meta: "Streaming…", voted: false });
+    streamAIRequest(
+      { action, text: body },
+      {
+        onChunk: (chunk) => {
+          setPendingAI((prev) => ({
+            action,
+            text: (prev?.text ?? "") + chunk,
+            meta: "Streaming…",
+            voted: false,
+          }));
+        },
+        onDone: (envelope) => {
+          const meta = envelope
+            ? aiMetaLine(envelope.latencyMs, { cached: envelope.cached })
+            : undefined;
+          setPendingAI((prev) => {
+            const text = envelope?.text || prev?.text || "";
+            return {
+              action,
+              text,
+              meta: meta || undefined,
+              voted: false,
+            };
+          });
+          if (action === "rewrite") {
+            const text = envelope?.text;
+            if (text) setBody(text);
+          }
+          props.setStatus("");
+        },
+        onError: (error) => {
+          props.setStatus(error);
+        },
       }
-      const meta = aiMetaLine(envelope.latencyMs, { cached: envelope.cached });
-      setPendingAI({
-        action,
-        text: envelope.text,
-        meta: meta || undefined,
-        voted: false,
-      });
-      props.setStatus("");
-    } catch (e) {
-      props.setStatus(e instanceof Error ? e.message : "AI failed");
-    }
+    );
   }
 
   async function vote(accepted: boolean) {
