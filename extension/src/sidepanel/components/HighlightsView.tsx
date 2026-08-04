@@ -42,7 +42,7 @@ export function HighlightsView(props: {
 
       {slice.length === 0 ? (
         <p className="glass rounded-xl p-4 text-sm text-[var(--aka-muted)]">
-          No highlights yet. Select text on any page and tap Save.
+          No highlights yet. Select text on any page and tap Save Highlight.
         </p>
       ) : (
         <ul className="space-y-2">

@@ -2,6 +2,12 @@ import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { FeaturePrefs, UserPrefs } from "../shared/types";
 import { DEFAULT_FEATURE_PREFS } from "../shared/types";
+import {
+  isKeywordUiTarget,
+  onKeywordEscape,
+  refreshKeywords,
+  teardownKeywords,
+} from "./keywords";
 
 const HOST_ID = "aka-root";
 
@@ -17,8 +23,6 @@ let prefs: UserPrefs | null = null;
 let tooltipHost: HTMLElement | null = null;
 let tooltipShadow: ShadowRoot | null = null;
 let modalHost: HTMLElement | null = null;
-let selectedText = "";
-let keywordsHost: HTMLElement | null = null;
 
 async function loadPrefs(): Promise<UserPrefs> {
   prefs = await sendMessage<UserPrefs>({ type: MessageType.PREFS_GET });
@@ -57,14 +61,19 @@ function showTooltip(x: number, y: number, text: string) {
   const f = feature();
   const buttons: string[] = [];
   if (f.saveHighlight) {
-    buttons.push(`<button data-action="save" class="btn primary">Save</button>`);
+    buttons.push(
+      `<button data-action="save" class="btn primary">Save Highlight</button>`
+    );
   }
   if (f.aiSummary) {
-    buttons.push(`<button data-action="summarize" class="btn">Summarize</button>`);
-    buttons.push(`<button data-action="explain" class="btn">Explain</button>`);
+    buttons.push(
+      `<button data-action="summarize" class="btn">AI Summary</button>`
+    );
   }
   if (f.summarizePage) {
-    buttons.push(`<button data-action="page" class="btn">Page</button>`);
+    buttons.push(
+      `<button data-action="page" class="btn">Summarize Page</button>`
+    );
   }
   if (!buttons.length) return;
 
@@ -73,7 +82,7 @@ function showTooltip(x: number, y: number, text: string) {
       :host { all: initial; }
       .tip {
         position: fixed;
-        left: ${Math.min(x, window.innerWidth - 280)}px;
+        left: ${Math.min(x, window.innerWidth - 340)}px;
         top: ${Math.min(y, window.innerHeight - 56)}px;
         display: flex; gap: 6px; flex-wrap: wrap;
         padding: 8px; border-radius: 12px;
@@ -83,7 +92,6 @@ function showTooltip(x: number, y: number, text: string) {
         border: 1px solid rgba(148,163,184,0.35);
         font-family: "Source Sans 3", Segoe UI, sans-serif;
       }
-      :host-context([data-aka-theme="dark"]) .tip,
       .tip.dark {
         background: rgba(30,41,59,0.94);
         border-color: rgba(71,85,105,0.6);
@@ -95,6 +103,8 @@ function showTooltip(x: number, y: number, text: string) {
       }
       .btn.primary { background: #3b82f6; color: white; }
       .btn:hover { filter: brightness(0.96); }
+      .tip.dark .btn { background: #475569; color: #f8fafc; }
+      .tip.dark .btn.primary { background: #3b82f6; }
     </style>
     <div class="tip ${document.documentElement.dataset.akaTheme === "dark" ? "dark" : ""}">
       ${buttons.join("")}
@@ -130,8 +140,8 @@ async function onAction(action: string, text: string) {
     return;
   }
 
-  if (action === "summarize" || action === "explain") {
-    openModal(action === "summarize" ? "AI Summary" : "Explain", text, action);
+  if (action === "summarize") {
+    openModal("AI Summary", text, "summarize");
     return;
   }
 
@@ -144,7 +154,7 @@ async function onAction(action: string, text: string) {
 function openModal(
   title: string,
   text: string,
-  action: "summarize" | "explain" | "page_summary"
+  action: "summarize" | "page_summary"
 ) {
   closeModal();
   modalHost = document.createElement("div");
@@ -265,99 +275,18 @@ function toast(message: string) {
   setTimeout(() => el.remove(), 2200);
 }
 
-function extractKeywords(limit = 12): string[] {
-  const text = (document.body?.innerText ?? "").toLowerCase();
-  const freq = new Map<string, number>();
-  for (const t of text.split(/[^a-z0-9+#]+/)) {
-    if (t.length < 5 || t.length > 24) continue;
-    freq.set(t, (freq.get(t) ?? 0) + 1);
-  }
-  return [...freq.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, limit)
-    .map(([w]) => w);
-}
-
-function renderKeywordsTile() {
-  keywordsHost?.remove();
-  keywordsHost = null;
-  if (!feature().keywordsTile) return;
-
-  const words = extractKeywords();
-  if (!words.length) return;
-
-  keywordsHost = document.createElement("div");
-  keywordsHost.style.all = "initial";
-  keywordsHost.style.position = "fixed";
-  keywordsHost.style.bottom = "16px";
-  keywordsHost.style.left = "16px";
-  keywordsHost.style.zIndex = "2147483645";
-  const shadow = keywordsHost.attachShadow({ mode: "open" });
-  shadow.innerHTML = `
-    <style>
-      .tile {
-        max-width: 220px; padding: 10px 12px; border-radius: 12px;
-        background: rgba(248,250,252,0.92); backdrop-filter: blur(8px);
-        border: 1px solid rgba(148,163,184,0.35);
-        font-family: Segoe UI, sans-serif; font-size: 11px; color: #334155;
-        box-shadow: 0 8px 24px rgba(15,23,42,0.12);
-      }
-      .title { font-weight: 700; margin-bottom: 6px; font-size: 12px; }
-      .chips { display: flex; flex-wrap: wrap; gap: 4px; }
-      .chip {
-        background: #e2e8f0; border-radius: 999px; padding: 2px 8px;
-      }
-    </style>
-    <div class="tile">
-      <div class="title">Keyword insights</div>
-      <div class="chips">${words.map((w) => `<span class="chip">${escapeHtml(w)}</span>`).join("")}</div>
-    </div>
-  `;
-  document.documentElement.appendChild(keywordsHost);
-}
-
-function renderStickyNotes() {
-  const existing = document.getElementById("aka-sticky");
-  existing?.remove();
-  if (!feature().stickyNotes) return;
-  const el = document.createElement("button");
-  el.id = "aka-sticky";
-  el.textContent = "Notes";
-  Object.assign(el.style, {
-    position: "fixed",
-    bottom: "16px",
-    right: "16px",
-    zIndex: "2147483645",
-    border: "0",
-    borderRadius: "999px",
-    padding: "10px 14px",
-    background: "#fde68a",
-    color: "#78350f",
-    fontWeight: "700",
-    cursor: "pointer",
-    boxShadow: "0 8px 20px rgba(120,53,15,0.2)",
-    fontFamily: "Segoe UI, sans-serif",
-  } as CSSStyleDeclaration);
-  el.addEventListener("click", () => {
-    void sendMessage({ type: MessageType.OPEN_SIDE_PANEL }).catch(() => {
-      toast("Open the extension side panel for notes");
-    });
-  });
-  document.documentElement.appendChild(el);
-}
-
 function onMouseUp(e: MouseEvent) {
   if (!isContextValid()) return;
+  const path = e.composedPath();
+  if (isKeywordUiTarget(path as EventTarget[])) return;
+  if (path.some((n) => n === tooltipHost || n === modalHost)) return;
+
   const sel = window.getSelection();
   const text = sel?.toString().trim() ?? "";
   if (!text || text.length < 2) {
     hideTooltip();
     return;
   }
-  // Ignore selections inside our UI
-  const path = e.composedPath();
-  if (path.some((n) => n === tooltipHost || n === modalHost)) return;
-  selectedText = text;
   showTooltip(e.clientX + 8, e.clientY + 8, text);
 }
 
@@ -365,39 +294,7 @@ function onKeyDown(e: KeyboardEvent) {
   if (e.key === "Escape") {
     hideTooltip();
     closeModal();
-  }
-}
-
-async function boot() {
-  if (!isContextValid()) return;
-  try {
-    await loadPrefs();
-  } catch {
-    prefs = null;
-  }
-  applyTheme();
-  renderKeywordsTile();
-  renderStickyNotes();
-  document.addEventListener("mouseup", onMouseUp);
-  document.addEventListener("keydown", onKeyDown);
-
-  try {
-    chrome.storage.onChanged.addListener((changes, area) => {
-      try {
-        if (area !== "local") return;
-        if (changes.theme || changes.hs_feature_prefs) {
-          void loadPrefs().then(() => {
-            applyTheme();
-            renderKeywordsTile();
-            renderStickyNotes();
-          });
-        }
-      } catch {
-        /* outer try/catch does not catch callback exceptions */
-      }
-    });
-  } catch {
-    /* ignore */
+    onKeywordEscape();
   }
 }
 
@@ -412,15 +309,45 @@ function applyTheme() {
   document.documentElement.dataset.akaTheme = resolved;
 }
 
+function refreshPageFeatures() {
+  applyTheme();
+  refreshKeywords(feature());
+}
+
+async function boot() {
+  if (!isContextValid()) return;
+  try {
+    await loadPrefs();
+  } catch {
+    prefs = null;
+  }
+  refreshPageFeatures();
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("keydown", onKeyDown);
+
+  try {
+    chrome.storage.onChanged.addListener((changes, area) => {
+      try {
+        if (area !== "local") return;
+        if (changes.theme || changes.hs_feature_prefs) {
+          void loadPrefs().then(() => refreshPageFeatures());
+        }
+      } catch {
+        /* outer try/catch does not catch callback exceptions */
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
 void boot();
 
-// SPA navigation: re-render tiles periodically lightly
 let lastHref = location.href;
 setInterval(() => {
   if (location.href !== lastHref) {
     lastHref = location.href;
-    renderKeywordsTile();
+    teardownKeywords();
+    refreshKeywords(feature());
   }
 }, 1500);
-
-void selectedText;

@@ -20,8 +20,8 @@
 - [ ] Workspace switcher filters scoped data
 - [ ] Groq key in Settings (SW-only) OR Gemini Nano when available
 - [ ] AI Timeline shows recent actions with provider + latency
-- [ ] Keyword insights tile + sticky Notes button respect feature prefs
-- [ ] Sign in → Sync now pulls/pushes highlights (Sync mode)
+- [ ] Keyword insights tile (top-right) + pastel sticky-note marks on page when prefs enable them
+- [ ] Sign in → Sync mode → save highlight/note → Sync now shows pushed > 0 (Convex)
 
 ## Security spot-checks
 - [ ] Content script bundle has no `gsk_` / Groq bearer strings

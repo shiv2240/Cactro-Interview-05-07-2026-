@@ -3,6 +3,7 @@ import type { FeaturePrefs, UserPrefs } from "../../shared/types";
 
 export function SettingsView(props: {
   prefs: UserPrefs;
+  auth: { authenticated: boolean; email: string | null };
   onUpdate: (partial: Partial<UserPrefs>) => void;
   onSync: () => Promise<void>;
 }) {
@@ -40,8 +41,11 @@ export function SettingsView(props: {
       <div>
         <h3 className="font-display font-semibold">Privacy mode</h3>
         <p className="mt-1 text-xs text-[var(--aka-muted)]">
-          Private = local only · Sync = notes/highlights to Convex · Cloud AI =
-          sync + allow cloud AI memory prefs
+          <strong>Private</strong> — IndexedDB only (no Convex data sync).{" "}
+          <strong>Sync</strong> (default) — highlights &amp; notes push/pull via
+          Convex when signed in. <strong>Cloud AI</strong> — same sync as Sync.
+          Auth always uses Convex. AI timeline, vectors, and Groq keys stay
+          local.
         </p>
         <div className="mt-2 flex flex-wrap gap-2">
           {(["private", "sync", "cloud_ai"] as const).map((m) => (
@@ -61,11 +65,17 @@ export function SettingsView(props: {
         </div>
         <button
           type="button"
-          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white"
+          disabled={!props.auth.authenticated || props.prefs.privacyMode === "private"}
+          className="mt-2 rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
           onClick={() => void props.onSync()}
         >
           Sync now
         </button>
+        {!props.auth.authenticated && (
+          <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+            Sign in above to enable Convex sync.
+          </p>
+        )}
       </div>
 
       <div>
@@ -74,10 +84,10 @@ export function SettingsView(props: {
           {(
             [
               ["keywordsTile", "Keywords tile"],
-              ["stickyNotes", "Sticky notes button"],
-              ["saveHighlight", "Save highlight"],
-              ["aiSummary", "AI summary / explain"],
-              ["summarizePage", "Summarize page"],
+              ["stickyNotes", "Sticky note keyword marks"],
+              ["saveHighlight", "Save Highlight (tooltip)"],
+              ["aiSummary", "AI Summary (tooltip)"],
+              ["summarizePage", "Summarize Page (tooltip)"],
             ] as const
           ).map(([key, label]) => (
             <label key={key} className="flex items-center gap-2">

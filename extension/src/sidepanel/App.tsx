@@ -193,7 +193,19 @@ export default function App() {
       </header>
 
       <main className="min-h-0 flex-1 overflow-auto px-3 py-3">
-        {!auth.authenticated && tab === "settings" ? null : null}
+        {!auth.authenticated && (
+          <div className="mb-3 space-y-2">
+            <p className="px-1 text-xs text-[var(--aka-muted)]">
+              Sign in to sync highlights &amp; notes to Convex (Sync / Cloud AI
+              modes). Local saves always work offline.
+            </p>
+            <AuthPanel
+              auth={auth}
+              onAuthChange={() => void refresh()}
+              setStatus={setStatus}
+            />
+          </div>
+        )}
 
         {tab === "highlights" && (
           <HighlightsView
@@ -225,13 +237,16 @@ export default function App() {
 
         {tab === "settings" && (
           <div className="space-y-3">
-            <AuthPanel
-              auth={auth}
-              onAuthChange={() => void refresh()}
-              setStatus={setStatus}
-            />
+            {auth.authenticated && (
+              <AuthPanel
+                auth={auth}
+                onAuthChange={() => void refresh()}
+                setStatus={setStatus}
+              />
+            )}
             <SettingsView
               prefs={prefs}
+              auth={auth}
               onUpdate={(p) => void updatePrefs(p)}
               onSync={async () => {
                 const result = await sendMessage<{
@@ -241,6 +256,7 @@ export default function App() {
                 }>({ type: MessageType.SYNC_NOW });
                 setStatus(
                   `Synced · pushed ${result.pushed}` +
+                    (result.pulled ? " · pulled" : "") +
                     (result.errors.length
                       ? ` · ${result.errors[0]}`
                       : "")

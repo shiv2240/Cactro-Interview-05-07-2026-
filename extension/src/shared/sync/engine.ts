@@ -36,6 +36,8 @@ export async function register(email: string, password: string) {
     session_token: data.token,
     user_email: data.email,
   });
+  // Pull cloud data + flush local queue after account creation
+  void syncNow().catch(() => undefined);
   return { email: data.email as string };
 }
 
@@ -51,6 +53,7 @@ export async function login(email: string, password: string) {
     session_token: data.token,
     user_email: data.email,
   });
+  void syncNow().catch(() => undefined);
   return { email: data.email as string };
 }
 
@@ -148,7 +151,6 @@ async function pushNote(n: Note): Promise<void> {
       deleted: n.deleted ?? false,
     }),
   });
-  if (resp.status === 404) return; // endpoint may not exist yet during migrate
   if (resp.status === 401) throw new Error("Unauthorized");
   if (!resp.ok) {
     const data = await resp.json().catch(() => ({}));
@@ -207,15 +209,21 @@ async function pullNotes(): Promise<void> {
 
 async function processQueueItem(item: OfflineQueueItem): Promise<void> {
   switch (item.op) {
-    case "upsert_highlight":
-      await pushHighlight(item.payload as Highlight);
+    case "upsert_highlight": {
+      const h = item.payload as Highlight;
+      await pushHighlight(h);
+      await upsertHighlightLocal({ ...h, syncedAt: Date.now() });
       break;
+    }
     case "delete_highlight":
       await deleteRemoteHighlight((item.payload as { id: string }).id);
       break;
-    case "upsert_note":
-      await pushNote(item.payload as Note);
+    case "upsert_note": {
+      const n = item.payload as Note;
+      await pushNote(n);
+      await upsertNoteLocal({ ...n, syncedAt: Date.now() });
       break;
+    }
     case "delete_note":
       await deleteRemoteNote((item.payload as { id: string }).id);
       break;
@@ -280,8 +288,8 @@ export async function syncNow(): Promise<{
         await pushNote(n);
         await upsertNoteLocal({ ...n, syncedAt: Date.now() });
         pushed++;
-      } catch {
-        /* notes endpoint optional during rollout */
+      } catch (e) {
+        errors.push(e instanceof Error ? e.message : String(e));
       }
     }
   } catch (e) {

@@ -5,6 +5,32 @@ import { DEFAULT_FEATURE_PREFS } from "../types";
 const FEATURE_KEY = "hs_feature_prefs";
 const THEME_KEY = "theme";
 
+/** Map legacy v1 feature-pref keys onto the v2 FeaturePrefs shape. */
+function normalizeFeaturePrefs(raw: Record<string, unknown>): FeaturePrefs {
+  return {
+    keywordsTile:
+      typeof raw.keywordsTile === "boolean"
+        ? raw.keywordsTile
+        : raw.keywordsTileEnabled !== false,
+    stickyNotes:
+      typeof raw.stickyNotes === "boolean"
+        ? raw.stickyNotes
+        : raw.stickyNotesEnabled !== false,
+    saveHighlight:
+      typeof raw.saveHighlight === "boolean"
+        ? raw.saveHighlight
+        : raw.tooltipSave !== false,
+    aiSummary:
+      typeof raw.aiSummary === "boolean"
+        ? raw.aiSummary
+        : raw.tooltipAiSummary !== false,
+    summarizePage:
+      typeof raw.summarizePage === "boolean"
+        ? raw.summarizePage
+        : raw.tooltipSummarizePage !== false,
+  };
+}
+
 /** Bridge legacy chrome.storage keys with IndexedDB prefs. */
 export async function hydratePrefsFromChromeStorage(): Promise<void> {
   try {
@@ -16,7 +42,7 @@ export async function hydratePrefsFromChromeStorage(): Promise<void> {
     if (result[FEATURE_KEY] && typeof result[FEATURE_KEY] === "object") {
       patch.featurePrefs = {
         ...DEFAULT_FEATURE_PREFS,
-        ...(result[FEATURE_KEY] as Partial<FeaturePrefs>),
+        ...normalizeFeaturePrefs(result[FEATURE_KEY] as Record<string, unknown>),
       };
     }
     if (Object.keys(patch).length) await setPrefs(patch);

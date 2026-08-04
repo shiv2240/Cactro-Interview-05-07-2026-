@@ -44,9 +44,21 @@ Copy `extension/.env.example` → `extension/.env` (gitignored).
 
 **Never import `swConfig` / Groq keys from content scripts.**
 
+## Sync model
+
+| Data | IndexedDB | Convex (Sync / Cloud AI + signed in) |
+|---|---|---|
+| Highlights | Always | Yes |
+| Notes | Always | Yes |
+| Auth session | chrome.storage | Convex auth HTTP |
+| Prefs / theme / feature toggles | IndexedDB + chrome.storage mirror | Optional preferences route |
+| AI timeline, vectors, personalization, Groq key | Local only | No |
+
+**Private** mode disables highlight/note sync. Default privacy mode is **Sync**.
+
 ## Architecture
 
 - `src/background` — service worker (AI, sync, message bus)
-- `src/content` — selection tooltip + keyword tile (Shadow DOM)
-- `src/sidepanel` — React dashboard
+- `src/content` — selection tooltip + keyword tile + sticky-note marks (Shadow DOM)
+- `src/sidepanel` — React dashboard (mist/ink)
 - `src/shared` — messaging, IndexedDB, AI, sync, vectors, personalization
