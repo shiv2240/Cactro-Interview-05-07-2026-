@@ -4,6 +4,10 @@ import {
 } from "../db/highlights";
 import { listAllNotesForSync, upsertNoteLocal } from "../db/notes";
 import { getDB, getPrefs } from "../db/schema";
+import {
+  broadcastHighlightsChanged,
+  broadcastNotesChanged,
+} from "../messaging/protocol";
 import type { Highlight, Note, OfflineQueueItem } from "../types";
 import { getConvexHttpUrl } from "../ai/swConfig";
 
@@ -303,6 +307,12 @@ export async function syncNow(): Promise<{
     pulled = true;
   } catch (e) {
     errors.push(e instanceof Error ? e.message : String(e));
+  }
+
+  // Alarm / background sync: notify open side panel without a remount.
+  if (pulled || pushed > 0) {
+    broadcastHighlightsChanged();
+    broadcastNotesChanged();
   }
 
   return { pushed, pulled, errors };

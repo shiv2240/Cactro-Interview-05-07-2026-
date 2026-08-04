@@ -76,6 +76,22 @@ export default function App() {
     );
   }, []);
 
+  // Live refresh when SW/content mutates IDB (save/delete/sync) while panel is open.
+  useEffect(() => {
+    const onMessage = (msg: unknown) => {
+      if (!msg || typeof msg !== "object" || !("type" in msg)) return;
+      const type = (msg as { type: string }).type;
+      if (
+        type === MessageType.HIGHLIGHTS_CHANGED ||
+        type === MessageType.NOTES_CHANGED
+      ) {
+        void refresh().catch(() => undefined);
+      }
+    };
+    chrome.runtime.onMessage.addListener(onMessage);
+    return () => chrome.runtime.onMessage.removeListener(onMessage);
+  }, []);
+
   async function onSearch(q: string) {
     setSearch(q);
     if (!q.trim()) {

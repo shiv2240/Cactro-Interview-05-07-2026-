@@ -41,7 +41,36 @@ export const MessageType = {
   PERSONALIZATION_FEEDBACK: "PERSONALIZATION_FEEDBACK",
   SET_WORKSPACE: "SET_WORKSPACE",
   OPEN_SIDE_PANEL: "OPEN_SIDE_PANEL",
+  /** Broadcast-only: IDB highlights mutated (save/delete/sync pull) */
+  HIGHLIGHTS_CHANGED: "HIGHLIGHTS_CHANGED",
+  /** Broadcast-only: IDB notes mutated (upsert/delete/sync pull) */
+  NOTES_CHANGED: "NOTES_CHANGED",
 } as const;
+
+/** Events pushed from the SW to open extension pages (side panel). Not request/response. */
+export type DataChangedEvent =
+  | { type: typeof MessageType.HIGHLIGHTS_CHANGED }
+  | { type: typeof MessageType.NOTES_CHANGED };
+
+export function broadcastHighlightsChanged(): void {
+  try {
+    void chrome.runtime
+      .sendMessage({ type: MessageType.HIGHLIGHTS_CHANGED } satisfies DataChangedEvent)
+      .catch(() => undefined);
+  } catch {
+    /* no listeners / SW wake edge */
+  }
+}
+
+export function broadcastNotesChanged(): void {
+  try {
+    void chrome.runtime
+      .sendMessage({ type: MessageType.NOTES_CHANGED } satisfies DataChangedEvent)
+      .catch(() => undefined);
+  } catch {
+    /* no listeners / SW wake edge */
+  }
+}
 
 export type MessageTypeName = (typeof MessageType)[keyof typeof MessageType];
 

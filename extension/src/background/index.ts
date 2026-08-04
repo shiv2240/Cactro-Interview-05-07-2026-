@@ -11,6 +11,8 @@ import { getPrefs, setPrefs } from "../shared/db/schema";
 import { listTimeline } from "../shared/db/timeline";
 import {
   MessageType,
+  broadcastHighlightsChanged,
+  broadcastNotesChanged,
   validateMessage,
   type ExtensionRequest,
   type ExtensionResponse,
@@ -79,6 +81,7 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 
     case MessageType.SAVE_HIGHLIGHT: {
       const hl = await saveHighlight(message);
+      broadcastHighlightsChanged();
       void indexDocument({
         sourceType: "highlight",
         sourceId: hl.id,
@@ -94,6 +97,7 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 
     case MessageType.DELETE_HIGHLIGHT: {
       const ok = await deleteHighlight(message.id);
+      if (ok) broadcastHighlightsChanged();
       void syncNow().catch(() => undefined);
       return { deleted: ok };
     }
@@ -149,6 +153,7 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 
     case MessageType.NOTE_UPSERT: {
       const note = await upsertNote(message.note);
+      broadcastNotesChanged();
       void indexDocument({
         sourceType: "note",
         sourceId: note.id,
@@ -164,6 +169,7 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 
     case MessageType.NOTE_DELETE: {
       const ok = await deleteNote(message.id);
+      if (ok) broadcastNotesChanged();
       void syncNow().catch(() => undefined);
       return { deleted: ok };
     }
@@ -204,6 +210,19 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
 }
 
 chrome.runtime.onMessage.addListener((raw, sender, sendResponse) => {
+  // Ignore broadcast events (and stream chunks) so they don't hit request validation.
+  if (
+    raw &&
+    typeof raw === "object" &&
+    "type" in raw &&
+    (raw.type === MessageType.HIGHLIGHTS_CHANGED ||
+      raw.type === MessageType.NOTES_CHANGED ||
+      raw.type === MessageType.AI_STREAM_CHUNK ||
+      raw.type === MessageType.AI_STREAM_DONE)
+  ) {
+    return;
+  }
+
   void (async () => {
     try {
       const message = validateMessage(raw);
