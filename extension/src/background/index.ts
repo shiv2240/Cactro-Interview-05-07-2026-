@@ -1,4 +1,4 @@
-import { generateAI, streamAI } from "../shared/ai/AIService";
+import { aiHealth, generateAI, streamAI } from "../shared/ai/AIService";
 import { seedGroqKeyFromBundle, setGroqApiKey } from "../shared/ai/swConfig";
 import {
   deleteHighlight,
@@ -134,6 +134,9 @@ async function handle(message: ExtensionRequest): Promise<unknown> {
       // Streaming is handled specially in onMessage to post chunks
       return { started: true };
     }
+
+    case MessageType.AI_HEALTH:
+      return aiHealth({ recheck: message.recheck });
 
     case MessageType.AUTH_LOGIN:
       return login(message.email, message.password);

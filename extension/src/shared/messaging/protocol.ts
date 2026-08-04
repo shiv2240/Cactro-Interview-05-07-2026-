@@ -25,6 +25,7 @@ export const MessageType = {
   AI_STREAM: "AI_STREAM",
   AI_STREAM_CHUNK: "AI_STREAM_CHUNK",
   AI_STREAM_DONE: "AI_STREAM_DONE",
+  AI_HEALTH: "AI_HEALTH",
   AUTH_LOGIN: "AUTH_LOGIN",
   AUTH_REGISTER: "AUTH_REGISTER",
   AUTH_LOGOUT: "AUTH_LOGOUT",
@@ -151,6 +152,10 @@ export const messageSchemas = {
     pageTitle: z.string().max(1_000).optional(),
     url: z.string().max(4_000).optional(),
   }),
+  [MessageType.AI_HEALTH]: z.object({
+    type: z.literal(MessageType.AI_HEALTH),
+    recheck: z.boolean().optional(),
+  }),
   [MessageType.AUTH_LOGIN]: z.object({
     type: z.literal(MessageType.AUTH_LOGIN),
     email: z.string().email().max(320),
@@ -251,6 +256,7 @@ export type ExtensionRequest =
       pageTitle?: string;
       url?: string;
     }
+  | { type: "AI_HEALTH"; recheck?: boolean }
   | { type: "AUTH_LOGIN"; email: string; password: string }
   | { type: "AUTH_REGISTER"; email: string; password: string }
   | { type: "AUTH_LOGOUT" }

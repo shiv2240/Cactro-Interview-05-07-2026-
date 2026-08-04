@@ -1,3 +1,4 @@
+import { providerBadge } from "../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { FeaturePrefs, UserPrefs } from "../shared/types";
@@ -203,7 +204,17 @@ function openModal(
       }
       .card.dark { background: #1e293b; color: #e2e8f0; }
       h2 { margin: 0 0 8px; font-size: 18px; }
-      .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; }
+      .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .badge {
+        display: inline-block; font-size: 11px; font-weight: 700;
+        padding: 2px 8px; border-radius: 999px; letter-spacing: 0.02em;
+        background: #e2e8f0; color: #0f172a;
+      }
+      .badge.nano { background: #dbeafe; color: #1d4ed8; }
+      .badge.groq { background: #fef3c7; color: #b45309; }
+      .card.dark .badge { background: #334155; color: #e2e8f0; }
+      .card.dark .badge.nano { background: #1e3a5f; color: #93c5fd; }
+      .card.dark .badge.groq { background: #422006; color: #fcd34d; }
       .body { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
       .actions { display: flex; gap: 8px; margin-top: 16px; }
       button {
@@ -240,7 +251,7 @@ function openModal(
     type?: string;
     requestId?: string;
     chunk?: string;
-    envelope?: { provider?: string; latencyMs?: number };
+    envelope?: { provider?: string; latencyMs?: number; cached?: boolean };
     error?: string;
   }) => {
     if (msg.requestId !== requestId) return;
@@ -251,7 +262,16 @@ function openModal(
       if (msg.error) {
         metaEl.textContent = msg.error;
       } else if (msg.envelope) {
-        metaEl.textContent = `${msg.envelope.provider ?? "ai"} · ${msg.envelope.latencyMs ?? 0}ms`;
+        const badge = providerBadge(msg.envelope.provider, {
+          cached: msg.envelope.cached,
+        });
+        const kind =
+          msg.envelope.provider === "gemini-nano"
+            ? "nano"
+            : msg.envelope.provider === "groq"
+              ? "groq"
+              : "";
+        metaEl.innerHTML = `<span class="badge ${kind}">${escapeHtml(badge)}</span><span>${msg.envelope.latencyMs ?? 0}ms</span>`;
       } else {
         metaEl.textContent = "Done";
       }

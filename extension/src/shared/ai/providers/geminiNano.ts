@@ -2,7 +2,18 @@ import type { AIProvider, GenerateOptions, StreamChunk } from "../types";
 
 const USABLE = new Set(["readily", "available"]);
 
-/** Chrome Prompt API / Gemini Nano provider (when available in Chrome). */
+/**
+ * Chrome Prompt API / Gemini Nano (on-device).
+ * Never fakes availability — only reports ready after a real session.create().
+ *
+ * Enable (Chrome 128+ / Canary / Dev recommended):
+ *   chrome://flags/#prompt-api-for-gemini-nano → Enabled
+ *   chrome://flags/#optimization-guide-on-device-model → Enabled BypassPerfRequirement
+ * Restart Chrome, then wait for the model under chrome://components
+ * (Optimization Guide On Device Model) or chrome://on-device-internals.
+ * Prompt API may be missing in the extension service worker even when flags
+ * are on — Settings → Nano status shows the exact probe reason.
+ */
 export class GeminiNanoProvider implements AIProvider {
   readonly id = "gemini-nano" as const;
   private session: ChromeAISession | null = null;
@@ -14,16 +25,17 @@ export class GeminiNanoProvider implements AIProvider {
     if (!ai?.languageModel) {
       this.ready = false;
       this.session = null;
-      this.lastDetail = "Prompt API (LanguageModel) not present in this context";
+      this.lastDetail =
+        "Unavailable: Prompt API missing — enable chrome://flags/#prompt-api-for-gemini-nano (and on-device model flag), restart Chrome";
       return;
     }
     try {
       const availability = await ai.languageModel.availability();
-      // "after-download" / "downloadable" are not usable yet — do not claim available.
+      // "after-download" / "downloadable" / "unavailable" are not usable yet.
       if (!USABLE.has(availability)) {
         this.ready = false;
         this.session = null;
-        this.lastDetail = `Gemini Nano status: ${availability}`;
+        this.lastDetail = reasonForAvailability(availability);
         return;
       }
       this.session = await ai.languageModel.create({
@@ -31,14 +43,14 @@ export class GeminiNanoProvider implements AIProvider {
         topK: 40,
       });
       this.ready = true;
-      this.lastDetail = `Gemini Nano ready (${availability})`;
+      this.lastDetail = `Available: Gemini Nano ready (${availability})`;
     } catch (e) {
       this.ready = false;
       this.session = null;
       this.lastDetail =
         e instanceof Error
-          ? `Gemini Nano init failed: ${e.message}`
-          : "Gemini Nano init failed";
+          ? `Unavailable: Gemini Nano init failed — ${e.message}`
+          : "Unavailable: Gemini Nano init failed";
     }
   }
 
@@ -79,7 +91,7 @@ export class GeminiNanoProvider implements AIProvider {
       ok: available,
       detail:
         this.lastDetail ||
-        (available ? "Gemini Nano available" : "Gemini Nano unavailable"),
+        (available ? "Available: Gemini Nano" : "Unavailable: Gemini Nano"),
     };
   }
 
@@ -87,12 +99,26 @@ export class GeminiNanoProvider implements AIProvider {
     this.session?.destroy?.();
     this.session = null;
     this.ready = false;
+    this.lastDetail = "Gemini Nano disposed — recheck required";
   }
 
   private async ensureSession(): Promise<ChromeAISession> {
     if (!this.session) await this.initialize();
     if (!this.session) throw new Error("Gemini Nano is not available");
     return this.session;
+  }
+}
+
+function reasonForAvailability(availability: string): string {
+  switch (availability) {
+    case "downloadable":
+    case "after-download":
+    case "downloading":
+      return `Unavailable: model not ready (${availability}) — wait for download in chrome://components or chrome://on-device-internals`;
+    case "unavailable":
+      return "Unavailable: on-device model blocked — check Chrome flags / hardware support";
+    default:
+      return `Unavailable: Gemini Nano status "${availability}"`;
   }
 }
 

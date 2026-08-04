@@ -1,3 +1,4 @@
+import { providerBadge } from "../../shared/ai/providerLabel";
 import type { AITimelineEvent, PersonalizationProfile } from "../../shared/types";
 
 export function TimelineView(props: {
@@ -35,7 +36,7 @@ export function TimelineView(props: {
                   {e.action}
                 </span>
                 <span>
-                  {e.provider} · {e.latencyMs}ms ·{" "}
+                  {providerBadge(e.provider)} · {e.latencyMs}ms ·{" "}
                   {new Date(e.createdAt).toLocaleString()}
                 </span>
               </div>

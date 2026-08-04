@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { providerBadge } from "../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import type {
   AIResponseEnvelope,
@@ -148,7 +149,7 @@ export default function App() {
         text,
       });
       setStatus(
-        `${envelope.provider} · ${envelope.latencyMs}ms\n\n${envelope.text}`
+        `${providerBadge(envelope.provider, { cached: envelope.cached })} · ${envelope.latencyMs}ms\n\n${envelope.text}`
       );
       await refresh();
     } catch (e) {

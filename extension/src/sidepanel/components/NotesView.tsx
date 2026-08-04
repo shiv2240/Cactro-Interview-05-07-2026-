@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { providerBadge } from "../../shared/ai/providerLabel";
 import { MessageType, sendMessage } from "../../shared/messaging/protocol";
 import type { AIResponseEnvelope, Note } from "../../shared/types";
 
@@ -69,7 +70,7 @@ export function NotesView(props: {
         setBody(envelope.text);
       }
       props.setStatus(
-        `${envelope.provider} · ${envelope.latencyMs}ms\n\n${envelope.text}`
+        `${providerBadge(envelope.provider, { cached: envelope.cached })} · ${envelope.latencyMs}ms\n\n${envelope.text}`
       );
       await sendMessage({
         type: MessageType.PERSONALIZATION_FEEDBACK,

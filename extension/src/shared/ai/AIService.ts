@@ -42,6 +42,15 @@ class ProviderManager {
       })
     );
   }
+
+  /** Force dispose + re-probe (Settings → Recheck Nano). */
+  async recheck(): Promise<{ provider: string; ok: boolean; detail?: string }[]> {
+    await this.init();
+    await Promise.all(this.providers.map((p) => p.dispose().catch(() => undefined)));
+    this.initialized = false;
+    await this.init();
+    return this.health();
+  }
 }
 
 const manager = new ProviderManager();
@@ -52,6 +61,7 @@ export async function generateAI(
   const start = Date.now();
   const cached = await getCachedAI(ctx.action, ctx.text);
   if (cached) {
+    // Envelope always includes provider so UI can badge Nano vs Groq.
     return {
       text: cached.value,
       provider: cached.provider,
@@ -179,6 +189,7 @@ export async function* streamAI(
   };
 }
 
-export async function aiHealth() {
+export async function aiHealth(opts?: { recheck?: boolean }) {
+  if (opts?.recheck) return manager.recheck();
   return manager.health();
 }
