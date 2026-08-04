@@ -6,6 +6,7 @@ import {
   isKeywordUiTarget,
   onKeywordEscape,
   refreshKeywords,
+  setKeywordHooks,
   teardownKeywords,
 } from "./keywords";
 
@@ -32,6 +33,27 @@ async function loadPrefs(): Promise<UserPrefs> {
 function feature(): FeaturePrefs {
   return prefs?.featurePrefs ?? DEFAULT_FEATURE_PREFS;
 }
+
+setKeywordHooks({
+  isContextValid,
+  onSaveHighlight: async (text) => {
+    await sendMessage({
+      type: MessageType.SAVE_HIGHLIGHT,
+      text,
+      url: location.href,
+      title: document.title,
+    });
+    toast("Highlight saved");
+  },
+  onFeaturePatch: async (patch) => {
+    const next = { ...feature(), ...patch };
+    prefs = await sendMessage<UserPrefs>({
+      type: MessageType.PREFS_SET,
+      prefs: { featurePrefs: next },
+    });
+    refreshPageFeatures();
+  },
+});
 
 function ensureTooltip() {
   if (tooltipHost) return;

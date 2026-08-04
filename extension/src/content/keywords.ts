@@ -3,15 +3,17 @@ import type { FeaturePrefs } from "../shared/types";
 
 /** Classic sticky-note pastels — flat/matte paper */
 const KW_COLORS = [
-  { bg: "#fff59d", border: "#f0e68c" },
-  { bg: "#f8bbd0", border: "#f0a8c0" },
-  { bg: "#bbdefb", border: "#a8d0f0" },
-  { bg: "#c8e6c9", border: "#b5d8b8" },
-  { bg: "#ffe0b2", border: "#f0d0a0" },
-  { bg: "#e1bee7", border: "#d0aee0" },
-  { bg: "#b2dfdb", border: "#a0d0cc" },
-  { bg: "#ffccbc", border: "#f0b8a8" },
+  { bg: "#fff59d", border: "#f0e68c", text: "#3d3420" },
+  { bg: "#f8bbd0", border: "#f0a8c0", text: "#4a2030" },
+  { bg: "#bbdefb", border: "#a8d0f0", text: "#1e3048" },
+  { bg: "#c8e6c9", border: "#b5d8b8", text: "#1e3a28" },
+  { bg: "#ffe0b2", border: "#f0d0a0", text: "#4a3020" },
+  { bg: "#e1bee7", border: "#d0aee0", text: "#3a2048" },
+  { bg: "#b2dfdb", border: "#a0d0cc", text: "#1e3a38" },
+  { bg: "#ffccbc", border: "#f0b8a8", text: "#4a2820" },
 ] as const;
+
+const TILE_POS_KEY = "hs_tile_position";
 
 const STOP = new Set(
   (
@@ -38,6 +40,35 @@ type KeywordMeta = {
 const keywordStore = new Map<string, KeywordMeta>();
 let tileHost: HTMLElement | null = null;
 let popupHost: HTMLElement | null = null;
+let popupCleanup: (() => void) | null = null;
+let tileResizeHandler: (() => void) | null = null;
+let currentFeature: FeaturePrefs | null = null;
+
+export type KeywordTileHooks = {
+  onSaveHighlight: (text: string) => Promise<void>;
+  onFeaturePatch: (patch: Partial<FeaturePrefs>) => Promise<void>;
+  isContextValid: () => boolean;
+};
+
+let hooks: KeywordTileHooks = {
+  onSaveHighlight: async () => undefined,
+  onFeaturePatch: async () => undefined,
+  isContextValid: () => {
+    try {
+      return Boolean(chrome.runtime?.id);
+    } catch {
+      return false;
+    }
+  },
+};
+
+export function setKeywordHooks(next: KeywordTileHooks): void {
+  hooks = next;
+}
+
+function isContextValid(): boolean {
+  return hooks.isContextValid();
+}
 
 function escapeRegExp(str: string): string {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -224,90 +255,661 @@ export function applyKeywordHighlights(
 }
 
 function closeKeywordPopup(): void {
+  if (popupCleanup) {
+    popupCleanup();
+    popupCleanup = null;
+  }
   popupHost?.remove();
   popupHost = null;
+  document.getElementById(POPUP_ID)?.remove();
 }
 
-function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement): void {
+function buildKeywordPlainText(meta: KeywordMeta): string {
+  return `${meta.term}\n\n${meta.summary}`.trim();
+}
+
+function positionKeywordPopupAbsolute(
+  host: HTMLElement,
+  anchorEl: HTMLElement | null
+): void {
+  if (!host.isConnected) return;
+  const gap = 10;
+  const pad = 12;
+  const popupW = Math.min(
+    360,
+    Math.max(240, document.documentElement.clientWidth - 24)
+  );
+  const card = host.shadowRoot?.querySelector(".card") as HTMLElement | null;
+  const popupH = card?.offsetHeight || 220;
+  const scrollX = window.scrollX || 0;
+  const scrollY = window.scrollY || 0;
+
+  let rect: DOMRect | { top: number; bottom: number; left: number; width: number; height: number };
+  if (anchorEl && document.contains(anchorEl)) {
+    rect = anchorEl.getBoundingClientRect();
+  } else {
+    const tile = document.getElementById(TILE_ID);
+    const t = tile?.getBoundingClientRect();
+    rect =
+      t ||
+      ({
+        top: 80,
+        bottom: 110,
+        left: window.innerWidth - 380,
+        width: 0,
+        height: 0,
+      } as const);
+  }
+
+  const spaceBelow = window.innerHeight - rect.bottom;
+  let topViewport: number;
+  if (spaceBelow >= Math.min(popupH + gap, 140)) {
+    topViewport = rect.bottom + gap;
+  } else {
+    topViewport = rect.top - popupH - gap;
+  }
+
+  let leftViewport = rect.left + (rect.width || 0) / 2 - popupW / 2;
+  const docW = Math.max(
+    document.documentElement.scrollWidth,
+    document.documentElement.clientWidth
+  );
+  let leftDoc = leftViewport + scrollX;
+  leftDoc = Math.max(pad, Math.min(leftDoc, docW - popupW - pad));
+  const topDoc = Math.max(pad, topViewport + scrollY);
+
+  host.style.top = `${topDoc}px`;
+  host.style.left = `${leftDoc}px`;
+  host.style.width = `${popupW}px`;
+}
+
+function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
   closeKeywordPopup();
   popupHost = document.createElement("div");
   popupHost.id = POPUP_ID;
-  popupHost.style.all = "initial";
-  popupHost.style.position = "absolute";
-  popupHost.style.zIndex = "2147483647";
-  const rect = anchor.getBoundingClientRect();
-  popupHost.style.left = `${rect.left + window.scrollX}px`;
-  popupHost.style.top = `${rect.bottom + window.scrollY + 6}px`;
+  popupHost.style.cssText =
+    "position:absolute;z-index:2147483647;opacity:0;transform:translateY(6px) scale(0.97);";
   const shadow = popupHost.attachShadow({ mode: "open" });
   const color = KW_COLORS[meta.colorIndex % KW_COLORS.length]!;
+  const plainText = buildKeywordPlainText(meta);
+  const key = meta.term.toLowerCase();
+  let liveAnchor =
+    anchor && document.contains(anchor) ? anchor : null;
+  if (!liveAnchor && key) {
+    liveAnchor = document.querySelector(
+      `mark.${MARK_CLASS}[data-aka-key="${CSS.escape(key)}"]`
+    ) as HTMLElement | null;
+  }
+
   shadow.innerHTML = `
     <style>
       .card {
-        width: min(280px, 90vw); padding: 12px 14px; border-radius: 12px;
-        background: ${color.bg}; border: 1px solid ${color.border};
-        font-family: "Source Sans 3", Segoe UI, sans-serif;
-        color: #1e293b; box-shadow: 0 12px 28px rgba(15,23,42,0.18);
+        font-family: "Segoe UI", system-ui, sans-serif;
+        width: 100%; background: #fffef8; border: 1px solid #e8e4d8;
+        border-radius: 10px; box-shadow: 0 4px 16px rgba(60,50,30,0.12);
+        overflow: hidden; color: #3d3420;
       }
-      .term { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
-      .body { font-size: 12px; line-height: 1.45; opacity: 0.9; }
-      button {
-        margin-top: 10px; border: 0; border-radius: 8px; padding: 5px 10px;
-        font-size: 11px; font-weight: 600; cursor: pointer; background: #0f172a; color: #fff;
+      .accent { height: 6px; background: ${color.bg}; border-bottom: 1px solid ${color.border}; }
+      .head {
+        display: flex; align-items: flex-start; justify-content: space-between;
+        gap: 10px; padding: 12px 14px 8px;
+      }
+      .term { font-size: 15px; font-weight: 700; letter-spacing: -0.02em; color: #2c2416; }
+      .badge {
+        display: inline-block; margin-top: 6px; font-size: 10px; font-weight: 650;
+        letter-spacing: 0.03em; text-transform: uppercase; padding: 3px 8px;
+        border-radius: 4px; background: ${color.bg}; border: 1px solid ${color.border};
+        color: ${color.text};
+      }
+      .close {
+        border: 1px solid #e0dccf; background: #f7f5ee; color: #5c5548;
+        width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px;
+      }
+      .close:hover { background: #efece3; color: #9a3412; }
+      .body {
+        padding: 2px 14px 10px; max-height: min(360px, 58vh); overflow: auto;
+        font-size: 13px; line-height: 1.55; color: #4a4336;
+      }
+      .actions {
+        display: flex; align-items: center; gap: 8px;
+        padding: 10px 14px 12px; border-top: 1px solid #ebe6da; background: #faf8f1;
+      }
+      .abtn {
+        display: inline-flex; align-items: center; gap: 5px;
+        border: 1px solid #e0dccf; background: #fff; color: #3d3420;
+        border-radius: 6px; padding: 7px 11px; font-size: 12px; font-weight: 650; cursor: pointer;
+      }
+      .abtn:hover { background: #f3f0e6; }
+      .abtn-save { background: #fff59d; border-color: #f0e68c; }
+      .abtn-save:hover { background: #fff176; }
+      .abtn-save:disabled {
+        background: #e8f5e9; border-color: #c8e6c9; color: #2e7d32; cursor: default;
+      }
+      .hint { margin-left: auto; font-size: 10.5px; color: #8a8272; }
+      .kbd {
+        font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 10px;
+        padding: 2px 6px; border-radius: 4px; border: 1px solid #e0dccf; background: #fff;
       }
     </style>
     <div class="card">
-      <div class="term">${escapeHtml(meta.term)}</div>
+      <div class="accent"></div>
+      <div class="head">
+        <div>
+          <div class="term">${escapeHtml(meta.term)}</div>
+          <span class="badge">Keyword summary</span>
+        </div>
+        <button class="close" type="button" title="Close (Esc)" id="close">&times;</button>
+      </div>
       <div class="body">${escapeHtml(meta.summary)}</div>
-      <button type="button" id="close">Close</button>
+      <div class="actions">
+        <button class="abtn abtn-save" type="button" id="save">Save</button>
+        <button class="abtn" type="button" id="copy">Copy</button>
+        <span class="hint"><span class="kbd">Esc</span> close</span>
+      </div>
     </div>
   `;
+
   shadow.getElementById("close")?.addEventListener("click", closeKeywordPopup);
+
+  const saveBtn = shadow.getElementById("save") as HTMLButtonElement | null;
+  const copyBtn = shadow.getElementById("copy") as HTMLButtonElement | null;
+
+  copyBtn?.addEventListener("click", () => {
+    const flash = () => {
+      if (!copyBtn) return;
+      const orig = copyBtn.innerHTML;
+      copyBtn.textContent = "Copied!";
+      setTimeout(() => {
+        copyBtn.innerHTML = orig;
+      }, 1400);
+    };
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = plainText;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand("copy");
+        flash();
+      } catch {
+        /* ignore */
+      }
+      ta.remove();
+    };
+    if (navigator.clipboard?.writeText) {
+      void navigator.clipboard.writeText(plainText).then(flash).catch(fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  saveBtn?.addEventListener("click", () => {
+    if (!isContextValid()) {
+      window.location.reload();
+      return;
+    }
+    void (async () => {
+      try {
+        await hooks.onSaveHighlight(plainText);
+        if (saveBtn) {
+          saveBtn.disabled = true;
+          saveBtn.textContent = "Saved!";
+        }
+      } catch {
+        if (saveBtn) saveBtn.textContent = "Failed";
+      }
+    })();
+  });
+
   document.documentElement.appendChild(popupHost);
+
+  const place = () => {
+    if (!liveAnchor || !document.contains(liveAnchor)) {
+      if (key) {
+        liveAnchor = document.querySelector(
+          `mark.${MARK_CLASS}[data-aka-key="${CSS.escape(key)}"]`
+        ) as HTMLElement | null;
+      }
+    }
+    if (popupHost) positionKeywordPopupAbsolute(popupHost, liveAnchor);
+  };
+
+  place();
+  requestAnimationFrame(() => {
+    if (!popupHost) return;
+    popupHost.style.transition = "opacity 0.2s ease, transform 0.2s ease";
+    popupHost.style.opacity = "1";
+    popupHost.style.transform = "translateY(0) scale(1)";
+    place();
+  });
+
+  const onResize = () => place();
+  window.addEventListener("resize", onResize);
+  const onDocDown = (e: MouseEvent) => {
+    const path = e.composedPath();
+    if (
+      !path.includes(popupHost!) &&
+      !path.some(
+        (n) => n instanceof Element && n.classList?.contains(MARK_CLASS)
+      ) &&
+      !path.some((n) => n instanceof Element && n.id === TILE_ID)
+    ) {
+      closeKeywordPopup();
+    }
+  };
+  setTimeout(() => document.addEventListener("mousedown", onDocDown, true), 0);
+
+  popupCleanup = () => {
+    window.removeEventListener("resize", onResize);
+    document.removeEventListener("mousedown", onDocDown, true);
+  };
+}
+
+function clampTilePosition(
+  left: number,
+  top: number,
+  width: number,
+  height: number
+): { left: number; top: number } {
+  const pad = 8;
+  const maxL = Math.max(pad, window.innerWidth - width - pad);
+  const maxT = Math.max(pad, window.innerHeight - height - pad);
+  return {
+    left: Math.min(Math.max(pad, left), maxL),
+    top: Math.min(Math.max(pad, top), maxT),
+  };
+}
+
+function applyTilePosition(
+  host: HTMLElement,
+  left: number,
+  top: number
+): { left: number; top: number } {
+  const w = host.offsetWidth || 210;
+  const h = host.offsetHeight || 56;
+  const pos = clampTilePosition(left, top, w, h);
+  host.style.left = `${pos.left}px`;
+  host.style.top = `${pos.top}px`;
+  host.style.right = "auto";
+  host.style.bottom = "auto";
+  return pos;
+}
+
+function saveTilePosition(left: number, top: number): void {
+  if (!isContextValid()) return;
+  try {
+    chrome.storage.local.set({ [TILE_POS_KEY]: { left, top } }, () => {
+      try {
+        void chrome.runtime?.lastError;
+      } catch {
+        /* ignore */
+      }
+    });
+  } catch {
+    /* ignore */
+  }
+}
+
+function loadTilePosition(
+  cb: (pos: { left: number; top: number } | null) => void
+): void {
+  if (!isContextValid()) {
+    cb(null);
+    return;
+  }
+  try {
+    chrome.storage.local.get([TILE_POS_KEY], (result) => {
+      try {
+        if (chrome.runtime?.lastError) {
+          cb(null);
+          return;
+        }
+        const p = result?.[TILE_POS_KEY] as
+          | { left?: unknown; top?: unknown }
+          | undefined;
+        if (
+          p &&
+          typeof p.left === "number" &&
+          typeof p.top === "number"
+        ) {
+          cb({ left: p.left, top: p.top });
+        } else {
+          cb(null);
+        }
+      } catch {
+        cb(null);
+      }
+    });
+  } catch {
+    cb(null);
+  }
+}
+
+function enableKeywordTileDrag(
+  host: HTMLElement,
+  headerEl: HTMLElement
+): void {
+  let dragging = false;
+  let moved = false;
+  let startX = 0;
+  let startY = 0;
+  let origLeft = 0;
+  let origTop = 0;
+  const DRAG_THRESHOLD = 5;
+
+  const onPointerMove = (e: PointerEvent) => {
+    if (!dragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    if (
+      !moved &&
+      (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD)
+    ) {
+      moved = true;
+      host.classList.add("aka-dragging");
+      host.shadowRoot?.querySelector(".tile")?.classList.add("dragging");
+      headerEl.style.cursor = "grabbing";
+    }
+    if (!moved) return;
+    e.preventDefault();
+    applyTilePosition(host, origLeft + dx, origTop + dy);
+  };
+
+  const onPointerUp = (e: PointerEvent) => {
+    if (!dragging) return;
+    dragging = false;
+    host.classList.remove("aka-dragging");
+    host.shadowRoot?.querySelector(".tile")?.classList.remove("dragging");
+    headerEl.style.cursor = "grab";
+    window.removeEventListener("pointermove", onPointerMove, true);
+    window.removeEventListener("pointerup", onPointerUp, true);
+    window.removeEventListener("pointercancel", onPointerUp, true);
+    try {
+      headerEl.releasePointerCapture?.(e.pointerId);
+    } catch {
+      /* ignore */
+    }
+
+    if (moved) {
+      const left = parseFloat(host.style.left) || 0;
+      const top = parseFloat(host.style.top) || 0;
+      const pos = applyTilePosition(host, left, top);
+      saveTilePosition(pos.left, pos.top);
+      (host as HTMLElement & { _akaSkipNextHeaderClick?: boolean })._akaSkipNextHeaderClick =
+        true;
+      setTimeout(() => {
+        (host as HTMLElement & { _akaSkipNextHeaderClick?: boolean })._akaSkipNextHeaderClick =
+          false;
+      }, 0);
+    }
+  };
+
+  headerEl.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    const t = e.target as Element | null;
+    if (
+      t?.closest?.(
+        ".gear-btn, .clear-btn, .prefs-panel, button, input, label, .chip, #list"
+      )
+    ) {
+      return;
+    }
+    dragging = true;
+    moved = false;
+    startX = e.clientX;
+    startY = e.clientY;
+    const rect = host.getBoundingClientRect();
+    origLeft = rect.left;
+    origTop = rect.top;
+    applyTilePosition(host, origLeft, origTop);
+    headerEl.setPointerCapture?.(e.pointerId);
+    window.addEventListener("pointermove", onPointerMove, true);
+    window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("pointercancel", onPointerUp, true);
+  });
+
+  if (tileResizeHandler) {
+    window.removeEventListener("resize", tileResizeHandler);
+  }
+  tileResizeHandler = () => {
+    const left = parseFloat(host.style.left);
+    const top = parseFloat(host.style.top);
+    if (Number.isFinite(left) && Number.isFinite(top)) {
+      applyTilePosition(host, left, top);
+    }
+  };
+  window.addEventListener("resize", tileResizeHandler);
 }
 
 function removeTile(): void {
+  if (tileResizeHandler) {
+    window.removeEventListener("resize", tileResizeHandler);
+    tileResizeHandler = null;
+  }
   tileHost?.remove();
   tileHost = null;
   document.getElementById(TILE_ID)?.remove();
 }
 
-function renderTile(items: KeywordMeta[]): void {
+function renderTile(items: KeywordMeta[], feature: FeaturePrefs): void {
   removeTile();
   if (!items.length) return;
+
+  let listOpen = false;
+  let prefsOpen = false;
+
   tileHost = document.createElement("div");
   tileHost.id = TILE_ID;
-  tileHost.style.all = "initial";
-  tileHost.style.position = "fixed";
-  tileHost.style.top = "16px";
-  tileHost.style.right = "16px";
-  tileHost.style.zIndex = "2147483645";
+  tileHost.style.cssText =
+    "all:initial;position:fixed;top:16px;right:16px;z-index:2147483645;";
   const shadow = tileHost.attachShadow({ mode: "open" });
+  const theme =
+    document.documentElement.dataset.akaTheme === "dark" ? "dark" : "light";
+
   shadow.innerHTML = `
     <style>
+      :host { all: initial; }
       .tile {
-        width: 200px; max-height: 280px; overflow: auto;
-        padding: 10px 12px; border-radius: 14px;
-        background: rgba(248,250,252,0.94); backdrop-filter: blur(10px);
-        border: 1px solid rgba(148,163,184,0.4);
-        font-family: Segoe UI, sans-serif; color: #334155;
-        box-shadow: 0 10px 28px rgba(15,23,42,0.14);
+        font-family: "Segoe UI", system-ui, sans-serif;
+        display: flex; flex-direction: column; width: 210px;
+        border-radius: 10px; background: #fffef8; border: 1px solid #e8e4d8;
+        box-shadow: 0 2px 8px rgba(60,50,30,0.08); color: #3d3420;
+        user-select: none; overflow: hidden; touch-action: none;
       }
-      .title { font-weight: 700; font-size: 12px; margin-bottom: 4px; }
-      .status { font-size: 10px; opacity: 0.7; margin-bottom: 8px; }
+      :host(.aka-dragging) .tile, .tile.dragging {
+        box-shadow: 0 6px 18px rgba(60,50,30,0.16); opacity: 0.96;
+      }
+      .header {
+        display: flex; align-items: flex-start; gap: 8px;
+        padding: 11px 12px; cursor: grab;
+      }
+      .header:hover { background: #faf7ef; }
+      .header:active { cursor: grabbing; }
+      .drag-hint {
+        font-size: 9px; color: #a89f8c; letter-spacing: 0.08em; margin-bottom: 2px;
+      }
+      .meta { flex: 1; min-width: 0; }
+      .title-row { display: flex; align-items: center; gap: 6px; }
+      .title { font-size: 12px; font-weight: 650; color: #2c2416; }
+      .chevron { font-size: 10px; color: #8a8272; margin-left: auto; transition: transform 0.18s; }
+      .tile.open .chevron { transform: rotate(180deg); }
+      .status { font-size: 11px; color: #6b6354; margin-top: 3px; line-height: 1.35; }
+      .header-actions {
+        display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0;
+      }
+      .gear-btn, .clear-btn {
+        border: 1px solid #e0dccf; background: #f7f5ee; color: #5c5548;
+        border-radius: 6px; cursor: pointer; outline: none; touch-action: auto;
+      }
+      .gear-btn { width: 26px; height: 26px; padding: 0; font-size: 13px; }
+      .gear-btn.active { background: #ebe6da; border-color: #cfc8b6; }
+      .clear-btn { padding: 3px 8px; font-size: 10.5px; font-weight: 600; }
+      .clear-btn:disabled { opacity: 0.4; cursor: default; }
+      .prefs-panel {
+        display: none; flex-direction: column; gap: 8px;
+        padding: 8px 10px 10px; border-top: 1px solid #ebe6da; touch-action: auto;
+      }
+      .tile.prefs-open .prefs-panel { display: flex; }
+      .tile.prefs-open .word-panel { display: none !important; }
+      .prefs-heading {
+        font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+        text-transform: uppercase; color: #8a8272; margin: 2px 0 0;
+      }
+      .pref-row {
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 10px; font-size: 11.5px; font-weight: 550; color: #3d3420;
+      }
+      .switch { position: relative; width: 34px; height: 18px; flex-shrink: 0; }
+      .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+      .switch-slider {
+        position: absolute; inset: 0; background: #d5cfbf; border-radius: 999px; cursor: pointer;
+      }
+      .switch-slider::before {
+        content: ''; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px;
+        background: #fff; border-radius: 50%; transition: transform 0.15s;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      }
+      .switch input:checked + .switch-slider { background: #5b8f3a; }
+      .switch input:checked + .switch-slider::before { transform: translateX(16px); }
+      .word-panel {
+        display: none; flex-direction: column; gap: 6px;
+        padding: 0 10px 10px; max-height: min(340px, 55vh); overflow: auto;
+        border-top: 1px solid #ebe6da; padding-top: 8px; touch-action: auto;
+      }
+      .tile.open .word-panel { display: flex; }
+      .hint { font-size: 10px; color: #8a8272; padding: 0 2px 2px; }
       .chip {
-        display: block; width: 100%; text-align: left; border: 0; cursor: pointer;
-        margin: 0 0 4px; padding: 5px 8px; border-radius: 8px; font-size: 11px;
-        font-weight: 600; background: #e2e8f0; color: #0f172a;
+        display: block; width: 100%; text-align: left; font-size: 12px; font-weight: 600;
+        padding: 7px 9px; border-radius: 6px; border: 1px solid transparent;
+        cursor: pointer; outline: none; touch-action: auto;
       }
-      .chip:hover { filter: brightness(0.97); }
+      .chip:hover { opacity: 0.9; }
+      .tile[data-theme="dark"] {
+        background: rgba(18,28,48,0.92); border-color: rgba(160,190,230,0.16);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.4); color: #e6eef8;
+      }
+      .tile[data-theme="dark"] .title { color: #e6eef8; }
+      .tile[data-theme="dark"] .status, .tile[data-theme="dark"] .hint { color: #9db0c8; }
+      .tile[data-theme="dark"] .drag-hint, .tile[data-theme="dark"] .prefs-heading { color: #7a8fa8; }
+      .tile[data-theme="dark"] .gear-btn, .tile[data-theme="dark"] .clear-btn {
+        border-color: rgba(160,190,230,0.18); background: rgba(30,42,68,0.9); color: #c5d4ef;
+      }
+      .tile[data-theme="dark"] .pref-row { color: #e6eef8; }
+      .tile[data-theme="dark"] .header:hover { background: rgba(30,42,68,0.55); }
+      .tile[data-theme="dark"] .switch-slider { background: #3a4a62; }
+      .tile[data-theme="dark"] .switch input:checked + .switch-slider { background: #4ade80; }
     </style>
-    <div class="tile">
-      <div class="title">Keyword insights</div>
-      <div class="status" id="status">${items.length} words · click to jump</div>
-      <div id="list"></div>
+    <div class="tile" data-theme="${theme}" id="tile">
+      <div class="header" id="header" title="Drag to move · Click to show keywords">
+        <div class="meta">
+          <div class="drag-hint">⠿ DRAG</div>
+          <div class="title-row">
+            <div class="title">Keywords</div>
+            <span class="chevron" aria-hidden="true">▾</span>
+          </div>
+          <div class="status" id="status">${items.length} words · click tile</div>
+        </div>
+        <div class="header-actions">
+          <button class="gear-btn" id="gear" title="Feature settings" type="button">⚙</button>
+          <button class="clear-btn" id="clear" title="Clear highlights" type="button">Clear</button>
+        </div>
+      </div>
+      <div class="prefs-panel" id="prefs">
+        <div class="prefs-heading">Page highlights</div>
+        <label class="pref-row">
+          <span>Sticky notes</span>
+          <span class="switch">
+            <input type="checkbox" id="pref-sticky" />
+            <span class="switch-slider"></span>
+          </span>
+        </label>
+        <div class="prefs-heading">Selection tooltip</div>
+        <label class="pref-row">
+          <span>Save Highlight</span>
+          <span class="switch">
+            <input type="checkbox" id="pref-save" />
+            <span class="switch-slider"></span>
+          </span>
+        </label>
+        <label class="pref-row">
+          <span>AI Summary</span>
+          <span class="switch">
+            <input type="checkbox" id="pref-ai" />
+            <span class="switch-slider"></span>
+          </span>
+        </label>
+        <label class="pref-row">
+          <span>Summarize Page</span>
+          <span class="switch">
+            <input type="checkbox" id="pref-page" />
+            <span class="switch-slider"></span>
+          </span>
+        </label>
+      </div>
+      <div class="word-panel" id="words">
+        <div class="hint">Click a word for summary</div>
+      </div>
     </div>
   `;
-  const list = shadow.getElementById("list")!;
+
+  const tile = shadow.getElementById("tile")!;
+  const headerEl = shadow.getElementById("header")!;
+  const gearBtn = shadow.getElementById("gear")!;
+  const clearBtn = shadow.getElementById("clear") as HTMLButtonElement;
+  const wordsEl = shadow.getElementById("words")!;
+  const prefSticky = shadow.getElementById("pref-sticky") as HTMLInputElement;
+  const prefSave = shadow.getElementById("pref-save") as HTMLInputElement;
+  const prefAi = shadow.getElementById("pref-ai") as HTMLInputElement;
+  const prefPage = shadow.getElementById("pref-page") as HTMLInputElement;
+
+  const syncPrefsUi = () => {
+    const f = currentFeature ?? feature;
+    prefSticky.checked = !!f.stickyNotes;
+    prefSave.checked = !!f.saveHighlight;
+    prefAi.checked = !!f.aiSummary;
+    prefPage.checked = !!f.summarizePage;
+    gearBtn.classList.toggle("active", prefsOpen);
+    tile.classList.toggle("prefs-open", prefsOpen);
+  };
+
+  const setListOpen = (open: boolean) => {
+    listOpen = !!open && items.length > 0;
+    if (listOpen) {
+      prefsOpen = false;
+      syncPrefsUi();
+    }
+    tile.classList.toggle("open", listOpen);
+  };
+
+  syncPrefsUi();
+  enableKeywordTileDrag(tileHost, headerEl);
+
+  loadTilePosition((saved) => {
+    if (saved && tileHost) applyTilePosition(tileHost, saved.left, saved.top);
+  });
+
+  gearBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    prefsOpen = !prefsOpen;
+    if (prefsOpen) setListOpen(false);
+    syncPrefsUi();
+  });
+
+  const bindPref = (
+    el: HTMLInputElement,
+    key: keyof FeaturePrefs
+  ) => {
+    el.addEventListener("change", (e) => {
+      e.stopPropagation();
+      void hooks.onFeaturePatch({ [key]: el.checked });
+    });
+    el.addEventListener("click", (e) => e.stopPropagation());
+  };
+  bindPref(prefSticky, "stickyNotes");
+  bindPref(prefSave, "saveHighlight");
+  bindPref(prefAi, "aiSummary");
+  bindPref(prefPage, "summarizePage");
+
   for (const item of items) {
     const color = KW_COLORS[item.colorIndex % KW_COLORS.length]!;
     const btn = document.createElement("button");
@@ -315,8 +917,10 @@ function renderTile(items: KeywordMeta[]): void {
     btn.className = "chip";
     btn.textContent = item.term;
     btn.style.background = color.bg;
-    btn.style.border = `1px solid ${color.border}`;
-    btn.addEventListener("click", () => {
+    btn.style.borderColor = color.border;
+    btn.style.color = color.text;
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
       const key = item.term.toLowerCase();
       const mark = document.querySelector(
         `mark.${MARK_CLASS}[data-aka-key="${CSS.escape(key)}"]`
@@ -325,11 +929,36 @@ function renderTile(items: KeywordMeta[]): void {
         mark.scrollIntoView({ behavior: "smooth", block: "center" });
         showKeywordPopup(item, mark);
       } else {
-        showKeywordPopup(item, tileHost!);
+        showKeywordPopup(item, tileHost);
       }
     });
-    list.appendChild(btn);
+    wordsEl.appendChild(btn);
   }
+
+  headerEl.addEventListener("click", (e) => {
+    const hostExt = tileHost as HTMLElement & {
+      _akaSkipNextHeaderClick?: boolean;
+    };
+    if (hostExt._akaSkipNextHeaderClick) return;
+    const t = e.target as Element;
+    if (t === clearBtn || clearBtn.contains(t)) return;
+    if (t === gearBtn || gearBtn.contains(t)) return;
+    if (shadow.getElementById("prefs")?.contains(t)) return;
+    if (!items.length) return;
+    prefsOpen = false;
+    syncPrefsUi();
+    setListOpen(!listOpen);
+  });
+
+  clearBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    clearKeywordHighlights();
+    const status = shadow.getElementById("status");
+    if (status) status.textContent = "Cleared";
+    setListOpen(false);
+    closeKeywordPopup();
+  });
+
   document.documentElement.appendChild(tileHost);
 }
 
@@ -339,6 +968,7 @@ export function refreshKeywords(feature: FeaturePrefs): void {
   clearKeywordHighlights();
   keywordStore.clear();
   removeTile();
+  currentFeature = feature;
 
   if (!feature.keywordsTile && !feature.stickyNotes) return;
 
@@ -348,7 +978,7 @@ export function refreshKeywords(feature: FeaturePrefs): void {
     keywordStore.set(item.term.toLowerCase(), item);
   });
 
-  if (feature.keywordsTile) renderTile(items);
+  if (feature.keywordsTile) renderTile(items, feature);
   if (feature.stickyNotes) applyKeywordHighlights(true);
 }
 
