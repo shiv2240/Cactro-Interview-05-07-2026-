@@ -3,57 +3,62 @@ AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION
 ================================================================================
 
 AI Knowledge Assistant is a local-first Chrome extension for capturing highlights,
-taking notes, and getting AI help without leaving the page. Multiple AI models
-power summaries with automatic failover when one is slow — no API keys or flags
-to configure. Optional Convex sync keeps your account in sync when you choose
+taking notes, and getting real-time AI summaries without leaving the webpage.
+Powered by fast multi-model AI routing with automatic failover and Streamdown
+Markdown rendering — no API keys or complex flags required. Optional Convex cloud
+sync keeps your highlights and notes synchronized across devices when you choose
 Sync or Cloud AI privacy modes.
 
 --------------------------------------------------------------------------------
 KEY FEATURES
 --------------------------------------------------------------------------------
 
-★ SELECTION TOOLTIP (SHADOW DOM)
+★ SELECTION TOOLTIP & IN-PAGE MODAL (SHADOW DOM)
 • Select text to Save, Summarize, Explain, or Summarize Page.
-• All AI and storage go through the background service worker — API keys never
-  touch content scripts.
+• In-page Shadow DOM modal displays real-time streaming AI answers with formatted
+  HTML Markdown rendering (headings, bold text, code blocks, lists, blockquotes).
+• Background service worker handles all AI routing — developer API keys never
+  touch webpage content scripts.
+
+★ STREAMDOWN MARKDOWN RENDERING
+• Powered by Streamdown for ultra-fast, beautifully rendered Markdown output
+  across summaries, rewrites, and flashcards.
 
 ★ SIDE PANEL DASHBOARD
-• Highlights list with search, delete, and pagination (10 per page).
-• Notes with markdown body, tags, pin/favorite, AI actions, and pagination.
-• Workspaces: Work, Personal, Coding, Research, Study.
-• Theme: Light / Dark / System. Feature toggles for keywords tile & sticky notes.
+• Highlights View: Searchable list with favicons, saved dates, delete, and pagination (10 per page).
+• Notes View: Markdown note editor with tags, pin/favorite, AI actions (Summarize, Rewrite, Flashcards), and pagination (10 per page).
+• AI Timeline View: Searchable event history with latency metadata, Streamdown rendering, and pagination (10 per page).
+• Workspaces: Work, Personal, Coding, Research, and Study.
+• Theme & Toggles: Light / Dark / System sync themes with feature toggles for Keywords Tile, Sticky Notes, and Tooltip Buttons.
 
-★ AI ENGINE
-• Multi-model AI with automatic switch when a model is slow.
-• Streaming responses, latency metadata, local LRU cache.
-• AI Timeline: searchable history of what you asked the assistant.
-• No user API key paste and no chrome://flags setup required.
+★ SINGLE-TAP 👍 LIKE PERSONALIZATION
+• Train AI tone and interest preferences with a single 👍 Like button on any AI output without clobbering base settings.
+• Custom AI Tone (Neutral, Friendly, Professional) & Style (Concise, Detailed, Bullets) preferences.
 
-★ LOCAL-FIRST + PRIVACY MODES
-• IndexedDB is the primary store — highlights work offline.
-• Private = local only · Sync = notes/highlights to Convex · Cloud AI = sync +
-  cloud AI preference surface.
-• Session token stays in chrome.storage.local.
+★ MULTI-MODEL AI ENGINE
+• Fast multi-model AI with automatic failover if a model is slow or unavailable.
+• Real-time streaming responses with local LRU caching and zero user key setup.
 
-★ PERSONALIZATION & LOCAL SEARCH
-• Learns tone/summary style from accepted AI actions.
-• Local bag-of-words vectors for semantic search (no remote embeddings).
+★ LOCAL-FIRST & PRIVACY MODES
+• IndexedDB-first architecture — highlights and notes work offline instantly.
+• Flexible Privacy Modes: Private (Local only) · Sync (Convex sync) · Cloud AI (Sync + Cloud AI preferences).
+• Session tokens securely stored in chrome.storage.local.
 
 --------------------------------------------------------------------------------
 HOW TO USE
 --------------------------------------------------------------------------------
 
-1. Install the extension and open the side panel from the toolbar icon.
-2. (Optional) Sign in under Settings and set privacy mode to Sync.
-3. Select text on any page → Save or run AI actions (no API key to paste).
-4. Capture longer thoughts in Notes; browse AI Timeline for recent work.
+1. Install the extension and open the side panel dashboard from the toolbar icon.
+2. (Optional) Sign in under Settings and select your preferred Privacy Mode.
+3. Select text on any webpage → Save Highlight or run AI Summary (no API key to paste).
+4. Enjoy formatted Markdown responses, manage notes, and browse paginated AI history.
 
 --------------------------------------------------------------------------------
 PRIVACY
 --------------------------------------------------------------------------------
 
 • Private mode never syncs content to Convex.
-• Cloud AI requests (when used) send only the prompt text needed for the action.
-• See PRIVACY_POLICY.md for details.
+• Cloud AI requests send only the prompt text needed to execute the selected AI action.
+• Full details available in PRIVACY_POLICY.md.
 
-Version 2.0.0
+Version 2.0.0 (Manifest V3)
