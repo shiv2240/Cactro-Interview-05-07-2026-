@@ -1,5 +1,5 @@
 ================================================================================
-AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION
+AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION & PRIVACY JUSTIFICATIONS
 ================================================================================
 
 AI Knowledge Assistant is a local-first Chrome extension for capturing highlights,
@@ -62,3 +62,33 @@ PRIVACY
 • Full details available in PRIVACY_POLICY.md.
 
 Version 2.0.0 (Manifest V3)
+
+
+================================================================================
+CHROME WEB STORE PRIVACY PRACTICES — PERMISSION JUSTIFICATIONS
+================================================================================
+(Copy and paste these exact justifications into the Developer Console -> Privacy tab)
+
+1. Justification for 'alarms':
+--------------------------------------------------------------------------------
+The 'alarms' permission is required to schedule periodic background tasks in the service worker, specifically to retry syncing queued offline highlights/notes when internet connectivity is restored and to prune expired local AI response cache entries.
+
+2. Justification for 'offscreen':
+--------------------------------------------------------------------------------
+The 'offscreen' permission is required to create an offscreen document for parsing HTML web page structure, performing DOM text extraction for webpage summarization, and processing background tasks that require DOM capabilities unavailable in Manifest V3 service workers.
+
+3. Justification for 'sidePanel':
+--------------------------------------------------------------------------------
+The 'sidePanel' permission is required to display the extension's interactive React knowledge assistant dashboard persistently alongside the active browser tab, enabling seamless view, search, editing of notes, and management of saved highlights without leaving the web page.
+
+4. Justification for 'storage':
+--------------------------------------------------------------------------------
+The 'storage' permission is required to store local user preferences, offline highlight backups, and the encrypted account authentication session token in chrome.storage.local for fast access across browser sessions.
+
+5. Justification for 'clipboardWrite':
+--------------------------------------------------------------------------------
+The 'clipboardWrite' permission is required solely to allow users to click the "Copy" and "Copy to Clipboard" buttons in the extension popup and in-page AI modal to copy AI summaries and highlight text directly to their device clipboard.
+
+6. Justification for Host permissions (api.groq.com, convex.cloud):
+--------------------------------------------------------------------------------
+Host permissions (api.groq.com and convex.site/cloud) are required strictly to send user-selected text to the Groq API for AI text summarization and to communicate with the Convex cloud database for syncing saved highlights across user sessions.
