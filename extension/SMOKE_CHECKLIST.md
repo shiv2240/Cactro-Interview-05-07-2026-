@@ -15,7 +15,7 @@
 - [ ] Settings → **AI** explains fast primary + backup on failure — no Nano status, no flags, no key paste
 - [ ] AI Summary / side-panel AI results do **not** show Gemini Nano or Groq provider badges
 - [ ] Timeline rows show action + latency (no provider brand names)
-- [ ] Accept / Reject on AI results increments Personalization Accepted/Rejected
+- [ ] 👍 Like on AI results increments Personalization Liked count
 - [ ] AI still works when primary fails (automatic backup; never fake responses)
 
 ## Core flows
@@ -24,11 +24,11 @@
 - [ ] Search filters the **full** highlights list, then paginates 10 / page (Prev / Next)
 - [ ] Notes search filters the **full** notes list, then paginates 10 / page
 - [ ] Delete highlight
-- [ ] Notes tab: create markdown note, pin/favorite, tags, Summarize/Rewrite/Flashcards
+- [ ] Notes tab: create markdown note, pin/favorite, tags, Summarize/Rewrite/Flashcards (rendered via Streamdown)
 - [ ] Settings: theme Light/Dark/System; feature toggles; privacy Private/Sync/Cloud AI
 - [ ] Workspace switcher filters scoped data
 - [ ] AI Summary works with no user key paste or chrome://flags setup
-- [ ] AI Timeline shows recent actions with latency
+- [ ] AI Timeline shows recent actions with latency, Streamdown rendering, and 10 items / page pagination
 - [ ] Keyword insights tile (top-right) + pastel sticky-note marks on page when prefs enable them
 - [ ] Sign in → Sync mode → save highlight/note → Sync now shows pushed > 0 (Convex)
 

@@ -23,25 +23,25 @@
 | Feature | Description |
 |---|---|
 | 🖱️ **In-Page Tooltip** | Select any text — a floating tooltip appears with customizable actions: **Save Highlight**, **AI Summary**, and **Summarize Page** |
-| ⚡ **Fast Streaming AI** | Real-time streaming AI responses for summaries, rewrites, and flashcards with instant first-paint results |
+| ⚡ **Fast Streaming AI** | Real-time streaming AI responses powered by **Streamdown** Markdown rendering for summaries, rewrites, and flashcards with instant first-paint results |
 | 🎯 **Context Cleaning** | Selection & keyword AI automatically strips webpage navigation chrome (e.g. Wikipedia headers) to focus purely on relevant content |
-| 🎛️ **Personalization & Style Controls** | Train AI via **Accept / Reject** feedback and set custom **AI Tone & Style** preferences (e.g. concise, technical, academic) |
+| 🎛️ **Personalization & Style Controls** | Train AI via a single **👍 Like** button and set custom **AI Tone & Style** preferences (e.g. concise, technical, academic) |
 | 🎨 **Mist-and-Ink & Sky Theme UI** | Premium glassmorphism, mist-and-ink palette, and cloudy day/night theme with dynamic background animations and dark mode contrast |
 | 🎛️ **Feature Toggles** | Customize extension behavior in popup/sidepanel settings — toggle on-page features (Keywords tile, Sticky notes) and tooltip action buttons |
 | 📄 **Full Webpage Summarization** | Click "Summarize Page" to extract webpage content and generate structured sections: **Overview**, **Agenda & Main Topics**, and **Key Takeaways** |
 | 🌓 **Light / Dark / System Theme** | Seamless theme switcher (Light/Dark/System) with live synchronization between popup dashboard, side panel, and in-page Shadow DOM tooltip |
 | 🏷️ **Draggable Keyword Insights** | Automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`) and pastel sticky-note marks |
 | 🌐 **Website Favicon Icons** | Displays original site favicons alongside saved highlights for easy visual website recognition |
-| ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with instant AI explanations & accessible header close controls |
+| ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with formatted HTML Markdown rendering & accessible header close controls |
 | ⚡ **SPA Navigation Handling** | Hardened SPA single-page application navigation detection and dynamic DOM re-injection |
 | 🔐 **User Authentication** | Sign up / Sign in with email & password via Convex Auth — highlights are tied to your account |
 | ☁️ **Cloud Storage & Sync** | Highlights and notes synced to Convex backend — persist across devices and browser sessions |
-| 🔍 **Search & Filter** | Full-text search across all saved highlights and notes in the dashboard |
+| 🔍 **Search & Filter** | Full-text search across all saved highlights, notes, and AI timeline history in the dashboard |
 | 🗑️ **Delete Highlights & Notes** | Remove individual items from the dashboard with instant live UI updates |
 | 🤖 **AI Summarization (Dashboard)** | Generate an AI summary of all your highlights (Groq-first multi-model AI with automatic failover) |
 | 📋 **Copy to Clipboard** | Copy AI-generated summaries directly to clipboard with a single click |
 | 📅 **Date & Time Stamps** | Highlights record and display localized 12-hour full date and time (e.g., `Jul 28, 2026, 6:59 PM`) |
-| 📄 **Dashboard Pagination** | Highlights and notes lists are paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
+| 📄 **Dashboard Pagination** | Highlights, notes, and AI timelines are paginated with 10 saved items per page, featuring `Prev`/`Next` controls |
 | 🔑 **Change Password** | Secure password updates in settings using **Current Password Verification** |
 | 🛡️ **Shadow DOM Isolation** | Tooltip, sticky notes, and AI dialog UI are fully isolated from host page CSS |
 
