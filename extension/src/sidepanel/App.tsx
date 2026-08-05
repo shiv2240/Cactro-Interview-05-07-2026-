@@ -198,19 +198,17 @@ export default function App() {
     );
   }
 
-  async function voteBatchAI(accepted: boolean) {
+  async function likeBatchAI() {
     if (!pendingBatchAI || pendingBatchAI.voted) return;
     try {
       await sendMessage({
         type: MessageType.PERSONALIZATION_FEEDBACK,
-        accepted,
+        accepted: true,
         action: "highlights_summary",
         textPreview: pendingBatchAI.text.slice(0, 200),
       });
       setPendingBatchAI({ ...pendingBatchAI, voted: true });
-      setStatus(
-        accepted ? "Accepted — personalization updated" : "Rejected — preference noted"
-      );
+      setStatus("Liked — personalization updated");
       await refresh();
     } catch (e) {
       setStatus(e instanceof Error ? e.message : "Feedback failed");
@@ -373,25 +371,16 @@ export default function App() {
             <div className="mt-2 flex flex-wrap gap-2">
               {pendingBatchAI.voted ? (
                 <span className="text-[11px] aka-muted">
-                  Feedback saved
+                  Liked
                 </span>
               ) : (
-                <>
-                  <button
-                    type="button"
-                    className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
-                    onClick={() => void voteBatchAI(true)}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md bg-slate-500/90 px-2 py-1 text-xs font-semibold text-white"
-                    onClick={() => void voteBatchAI(false)}
-                  >
-                    Reject
-                  </button>
-                </>
+                <button
+                  type="button"
+                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                  onClick={() => void likeBatchAI()}
+                >
+                  👍 Like
+                </button>
               )}
             </div>
           </div>

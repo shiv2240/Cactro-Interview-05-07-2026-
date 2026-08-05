@@ -146,13 +146,13 @@ export function HighlightsView(props: {
     );
   }
 
-  async function voteSummary(h: Highlight, accepted: boolean) {
+  async function voteSummary(h: Highlight) {
     const summary = cardSummaries[h.id];
     if (!summary || summary.voted) return;
     try {
       await sendMessage({
         type: MessageType.PERSONALIZATION_FEEDBACK,
-        accepted,
+        accepted: true,
         action: "summarize",
         textPreview: summary.text.slice(0, 200),
       });
@@ -160,9 +160,7 @@ export function HighlightsView(props: {
         ...prev,
         [h.id]: { ...summary, voted: true },
       }));
-      props.setStatus(
-        accepted ? "Accepted — personalization updated" : "Rejected — preference noted"
-      );
+      props.setStatus("Liked — personalization updated");
       props.onRefresh?.();
     } catch (e) {
       props.setStatus(e instanceof Error ? e.message : "Feedback failed");
@@ -275,25 +273,16 @@ export function HighlightsView(props: {
                     <div className="mt-2 flex flex-wrap gap-2">
                       {summary.voted ? (
                         <span className="text-[11px] aka-muted">
-                          Feedback saved
+                          Liked
                         </span>
                       ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
-                            onClick={() => void voteSummary(h, true)}
-                          >
-                            Accept
-                          </button>
-                          <button
-                            type="button"
-                            className="rounded-md bg-slate-500/90 px-2 py-1 text-xs font-semibold text-white"
-                            onClick={() => void voteSummary(h, false)}
-                          >
-                            Reject
-                          </button>
-                        </>
+                        <button
+                          type="button"
+                          className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                          onClick={() => void voteSummary(h)}
+                        >
+                          👍 Like
+                        </button>
                       )}
                     </div>
                   </div>

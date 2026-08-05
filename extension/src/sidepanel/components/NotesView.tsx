@@ -122,19 +122,17 @@ export function NotesView(props: {
     );
   }
 
-  async function vote(accepted: boolean) {
+  async function likeAI() {
     if (!pendingAI || pendingAI.voted) return;
     try {
       await sendMessage({
         type: MessageType.PERSONALIZATION_FEEDBACK,
-        accepted,
+        accepted: true,
         action: pendingAI.action,
         textPreview: pendingAI.text.slice(0, 200),
       });
       setPendingAI({ ...pendingAI, voted: true });
-      props.setStatus(
-        accepted ? "Accepted — personalization updated" : "Rejected — preference noted"
-      );
+      props.setStatus("Liked — personalization updated");
       props.onRefresh();
     } catch (e) {
       props.setStatus(e instanceof Error ? e.message : "Feedback failed");
@@ -260,25 +258,16 @@ export function NotesView(props: {
             <div className="mt-2 flex flex-wrap gap-2">
               {pendingAI.voted ? (
                 <span className="text-[11px] aka-muted">
-                  Feedback saved
+                  Liked
                 </span>
               ) : (
-                <>
-                  <button
-                    type="button"
-                    className="rounded-md bg-emerald-600 px-2 py-1 text-xs font-semibold text-white"
-                    onClick={() => void vote(true)}
-                  >
-                    Accept
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-md bg-slate-500/90 px-2 py-1 text-xs font-semibold text-white"
-                    onClick={() => void vote(false)}
-                  >
-                    Reject
-                  </button>
-                </>
+                <button
+                  type="button"
+                  className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700 transition"
+                  onClick={() => void likeAI()}
+                >
+                  👍 Like
+                </button>
               )}
             </div>
           </div>

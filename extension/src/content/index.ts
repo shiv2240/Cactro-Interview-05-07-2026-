@@ -277,8 +277,7 @@ function openModal(opts: {
       }
       button.primary { background: #3b82f6; color: white; }
       button.save { background: #fbbf24; color: #0f172a; }
-      button.accept { background: #059669; color: white; }
-      button.reject { background: #64748b; color: white; }
+      button.like { background: #059669; color: white; }
       button.close-x {
         flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; padding: 0;
         border: 1px solid #cbd5e1; background: #f1f5f9; color: #64748b;
@@ -312,9 +311,8 @@ function openModal(opts: {
         <div class="meta" id="meta">Generating…</div>
         <div class="body" id="body"></div>
         <div class="feedback" id="feedback">
-          <button class="accept" id="accept">Accept</button>
-          <button class="reject" id="reject">Reject</button>
-          <span class="feedback-note" id="feedback-note">Feedback saved</span>
+          <button class="like" id="like">👍 Like</button>
+          <span class="feedback-note" id="feedback-note">Liked</span>
         </div>
         <div class="actions">
           <button class="save" id="save">Save</button>
@@ -328,8 +326,7 @@ function openModal(opts: {
   const metaEl = shadow.getElementById("meta")!;
   const feedbackEl = shadow.getElementById("feedback")!;
   const feedbackNote = shadow.getElementById("feedback-note")!;
-  const acceptBtn = shadow.getElementById("accept") as HTMLButtonElement;
-  const rejectBtn = shadow.getElementById("reject") as HTMLButtonElement;
+  const likeBtn = shadow.getElementById("like") as HTMLButtonElement;
   const saveBtn = shadow.getElementById("save") as HTMLButtonElement;
   let rawMarkdown = "";
   let voted = false;
@@ -377,32 +374,29 @@ function openModal(opts: {
     })();
   });
 
-  async function vote(accepted: boolean) {
+  async function voteLike() {
     if (voted) return;
     const preview = (rawMarkdown || bodyEl.textContent || "").slice(0, 200);
     if (!preview.trim()) return;
     voted = true;
-    acceptBtn.disabled = true;
-    rejectBtn.disabled = true;
+    likeBtn.disabled = true;
     try {
       await sendMessage({
         type: MessageType.PERSONALIZATION_FEEDBACK,
-        accepted,
+        accepted: true,
         action,
         textPreview: preview,
       });
       feedbackNote.classList.add("visible");
-      toast(accepted ? "Accepted" : "Rejected");
+      toast("Liked — preferences updated");
     } catch (e) {
       voted = false;
-      acceptBtn.disabled = false;
-      rejectBtn.disabled = false;
+      likeBtn.disabled = false;
       toast(e instanceof Error ? e.message : "Feedback failed");
     }
   }
 
-  acceptBtn.addEventListener("click", () => void vote(true));
-  rejectBtn.addEventListener("click", () => void vote(false));
+  likeBtn.addEventListener("click", () => void voteLike());
 
   const onChunk = (msg: {
     type?: string;

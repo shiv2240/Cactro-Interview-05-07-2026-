@@ -35,12 +35,11 @@ export function TimelineView(props: {
           <h3 className="font-display font-semibold">Personalization</h3>
           <p className="mt-1 text-xs aka-muted">
             Tone {props.profile.tone} · Style {props.profile.summaryStyle} ·
-            Accepted {props.profile.acceptedActions} · Rejected{" "}
-            {props.profile.rejectedActions}
+            Liked {props.profile.acceptedActions}
           </p>
           <p className="mt-1 text-[11px] aka-muted">
-            Settings → AI style sets tone/format. Accept/Reject on summaries
-            updates interest counts without overriding your style choice.
+            Settings → AI style sets tone/format. Liking summaries updates interest
+            counts without overriding your style choice.
           </p>
           {props.profile.interests.length > 0 && (
             <p className="mt-2 text-xs">
