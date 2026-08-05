@@ -3,7 +3,7 @@ CHROME WEB STORE PRIVACY & PERMISSIONS COMPLIANCE FORM GUIDELINES
 ================================================================================
 
 Copy and paste the exact text below into the corresponding form fields on the 
-Chrome Web Store Developer Console -> Privacy tab.
+Chrome Web Store Developer Console -> Privacy tab (Permission Justifications).
 
 --------------------------------------------------------------------------------
 1. SINGLE PURPOSE & DESCRIPTION
@@ -15,18 +15,35 @@ Website Highlight Saver has a single, focused purpose: to allow users to select 
 
 
 --------------------------------------------------------------------------------
-2. PERMISSION JUSTIFICATIONS
+2. REQUIRED PERMISSION JUSTIFICATIONS (Copy-paste into Privacy Tab)
 --------------------------------------------------------------------------------
 
-[storage justification] (Max 1,000 characters)
+[alarms justification]
+--------------------------------------------------------------------------------
+The 'alarms' permission is required to schedule periodic background tasks in the service worker, specifically to retry syncing queued offline highlights/notes when internet connectivity is restored and to prune expired local AI response cache entries.
+
+
+[offscreen justification]
+--------------------------------------------------------------------------------
+The 'offscreen' permission is required to create an offscreen document for parsing HTML web page structure, performing DOM text extraction for webpage summarization, and processing background tasks that require DOM capabilities unavailable in Manifest V3 service workers.
+
+
+[sidePanel justification]
+--------------------------------------------------------------------------------
+The 'sidePanel' permission is required to display the extension's interactive React knowledge assistant dashboard persistently alongside the active browser tab, enabling seamless view, search, editing of notes, and management of saved highlights without leaving the web page.
+
+
+[storage justification]
 --------------------------------------------------------------------------------
 The 'storage' permission is required to store local user preferences, offline highlight backups, and the encrypted account authentication session token in chrome.storage.local for fast access across browser sessions.
 
-[clipboardWrite justification] (Max 1,000 characters)
+
+[clipboardWrite justification]
 --------------------------------------------------------------------------------
 The 'clipboardWrite' permission is required solely to allow users to click the "Copy" and "Copy to Clipboard" buttons in the extension popup and in-page AI modal to copy AI summaries and highlight text directly to their device clipboard.
 
-[Host permission justification] (Max 1,000 characters)
+
+[Host permission justification]
 --------------------------------------------------------------------------------
 Host permissions (api.groq.com and convex.site/cloud) are required strictly to send user-selected text to the Groq API for AI text summarization and to communicate with the Convex cloud database for syncing saved highlights across user sessions.
 
