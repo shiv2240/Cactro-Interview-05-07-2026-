@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Streamdown } from "streamdown";
 import { aiMetaLine } from "../../shared/ai/providerLabel";
 import {
   MessageType,
@@ -268,9 +269,9 @@ export function HighlightsView(props: {
                         {summary.meta}
                       </p>
                     ) : null}
-                    <pre className="whitespace-pre-wrap font-sans text-xs leading-relaxed">
+                    <Streamdown parseIncompleteMarkdown={true} className="text-xs leading-relaxed">
                       {summary.text}
-                    </pre>
+                    </Streamdown>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {summary.voted ? (
                         <span className="text-[11px] aka-muted">

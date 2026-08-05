@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useTransition } from "react";
+import { Streamdown } from "streamdown";
 import { aiMetaLine } from "../shared/ai/providerLabel";
 import {
   MessageType,
@@ -79,7 +80,7 @@ export default function App() {
       }),
       sendMessage<Highlight[]>({ type: MessageType.LIST_HIGHLIGHTS }),
       sendMessage<Note[]>({ type: MessageType.NOTE_LIST }),
-      sendMessage<AITimelineEvent[]>({ type: MessageType.TIMELINE_LIST, limit: 40 }),
+      sendMessage<AITimelineEvent[]>({ type: MessageType.TIMELINE_LIST, limit: 100 }),
       sendMessage<PersonalizationProfile>({ type: MessageType.PERSONALIZATION_GET }),
     ]);
     startTransition(() => {
@@ -366,7 +367,9 @@ export default function App() {
                 &times;
               </button>
             </div>
-            <pre className="whitespace-pre-wrap font-sans">{pendingBatchAI.text}</pre>
+            <Streamdown parseIncompleteMarkdown={true} className="text-xs leading-relaxed">
+              {pendingBatchAI.text}
+            </Streamdown>
             <div className="mt-2 flex flex-wrap gap-2">
               {pendingBatchAI.voted ? (
                 <span className="text-[11px] aka-muted">
