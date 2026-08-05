@@ -1,3 +1,4 @@
+import { marked } from "marked";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { AIAction, FeaturePrefs, UserPrefs } from "../shared/types";
@@ -245,7 +246,30 @@ function openModal(opts: {
       }
       .card.dark .focus { background: #334155; color: #e2e8f0; }
       .meta { font-size: 12px; opacity: 0.7; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-      .body { white-space: pre-wrap; line-height: 1.5; font-size: 14px; }
+      .body { line-height: 1.6; font-size: 14px; word-break: break-word; }
+      .body h1, .body h2, .body h3, .body h4 {
+        margin: 12px 0 6px 0; font-size: 15px; font-weight: 700; color: inherit;
+      }
+      .body h1 { font-size: 17px; }
+      .body h2 { font-size: 16px; }
+      .body p { margin: 0 0 10px 0; }
+      .body p:last-child { margin-bottom: 0; }
+      .body ul, .body ol { margin: 6px 0 10px 0; padding-left: 22px; }
+      .body li { margin-bottom: 4px; }
+      .body code {
+        background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px;
+        font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px;
+      }
+      .card.dark .body code { background: rgba(255,255,255,0.12); color: #f1f5f9; }
+      .body pre {
+        background: rgba(0,0,0,0.05); padding: 12px; border-radius: 8px;
+        overflow-x: auto; font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px; margin: 10px 0;
+      }
+      .card.dark .body pre { background: rgba(0,0,0,0.35); color: #f1f5f9; }
+      .body strong { font-weight: 700; color: inherit; }
+      .body blockquote {
+        border-left: 3px solid #3b82f6; padding-left: 12px; margin: 10px 0; opacity: 0.9;
+      }
       .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
       button {
         border: 0; border-radius: 8px; padding: 8px 12px;
@@ -307,11 +331,12 @@ function openModal(opts: {
   const acceptBtn = shadow.getElementById("accept") as HTMLButtonElement;
   const rejectBtn = shadow.getElementById("reject") as HTMLButtonElement;
   const saveBtn = shadow.getElementById("save") as HTMLButtonElement;
+  let rawMarkdown = "";
   let voted = false;
   let saved = false;
 
   const copyPayload = () => {
-    const body = (bodyEl.textContent ?? "").trim();
+    const body = (rawMarkdown || bodyEl.textContent || "").trim();
     const head = (selectedText || focusLabel || "").trim();
     if (head && body) return `${head}\n\n${body}`;
     return body || head;
@@ -354,7 +379,7 @@ function openModal(opts: {
 
   async function vote(accepted: boolean) {
     if (voted) return;
-    const preview = (bodyEl.textContent ?? "").slice(0, 200);
+    const preview = (rawMarkdown || bodyEl.textContent || "").slice(0, 200);
     if (!preview.trim()) return;
     voted = true;
     acceptBtn.disabled = true;
@@ -388,18 +413,23 @@ function openModal(opts: {
   }) => {
     if (msg.requestId !== requestId) return;
     if (msg.type === MessageType.AI_STREAM_CHUNK && msg.chunk) {
-      if (!(bodyEl.textContent ?? "").length) {
+      if (!rawMarkdown.length) {
         metaEl.textContent = "Streaming…";
       }
-      const next = (bodyEl.textContent ?? "") + msg.chunk;
+      rawMarkdown += msg.chunk;
       // Drop Wikipedia chrome dumps if the model echoes nav soup
-      if (isChromeText(next) && next.length > 120) {
-        bodyEl.textContent =
+      if (isChromeText(rawMarkdown) && rawMarkdown.length > 120) {
+        rawMarkdown =
           "Could not produce a clean summary for this selection. Try again.";
+        bodyEl.innerHTML = `<p>${escapeHtml(rawMarkdown)}</p>`;
         metaEl.textContent = "Filtered page chrome";
         return;
       }
-      bodyEl.textContent = next;
+      try {
+        bodyEl.innerHTML = marked.parse(rawMarkdown, { async: false }) as string;
+      } catch {
+        bodyEl.textContent = rawMarkdown;
+      }
     }
     if (msg.type === MessageType.AI_STREAM_DONE) {
       if (msg.error) {
