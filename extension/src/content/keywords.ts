@@ -262,12 +262,75 @@ export function applyKeywordHighlights(
         box-decoration-break: clone;
         -webkit-box-decoration-break: clone;
       `;
-      mark.title = "Click for context · Esc to close";
-      mark.addEventListener("click", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        showKeywordPopup(meta, mark);
-      });
+      const parentAnchor = textNode.parentElement?.closest("a") as HTMLAnchorElement | null;
+      if (parentAnchor && parentAnchor.href) {
+        mark.title = "Click for AI context · Double-click to open link";
+      } else {
+        mark.title = "Click for context · Esc to close";
+      }
+
+      let markClickTimer: ReturnType<typeof setTimeout> | null = null;
+      let markClickCount = 0;
+
+      const navigateAnchor = (anchor: HTMLAnchorElement, e: MouseEvent) => {
+        if (anchor.target === "_blank" || e.ctrlKey || e.metaKey) {
+          window.open(anchor.href, "_blank", "noopener,noreferrer");
+        } else if (
+          anchor.href &&
+          !anchor.href.startsWith("javascript:") &&
+          anchor.getAttribute("href") !== "#"
+        ) {
+          window.location.href = anchor.href;
+        } else {
+          anchor.click();
+        }
+      };
+
+      const handleMarkClick = (ev: MouseEvent) => {
+        const anchor = (mark.closest("a") || mark.querySelector("a")) as HTMLAnchorElement | null;
+        if (anchor && anchor.href) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          markClickCount++;
+          if (markClickCount === 1) {
+            markClickTimer = setTimeout(() => {
+              markClickCount = 0;
+              markClickTimer = null;
+              showKeywordPopup(meta, mark);
+            }, 250);
+          } else if (markClickCount >= 2) {
+            if (markClickTimer) {
+              clearTimeout(markClickTimer);
+              markClickTimer = null;
+            }
+            markClickCount = 0;
+            closeKeywordPopup();
+            navigateAnchor(anchor, ev);
+          }
+        } else {
+          ev.preventDefault();
+          ev.stopPropagation();
+          showKeywordPopup(meta, mark);
+        }
+      };
+
+      const handleMarkDblClick = (ev: MouseEvent) => {
+        const anchor = (mark.closest("a") || mark.querySelector("a")) as HTMLAnchorElement | null;
+        if (anchor && anchor.href) {
+          ev.preventDefault();
+          ev.stopPropagation();
+          if (markClickTimer) {
+            clearTimeout(markClickTimer);
+            markClickTimer = null;
+          }
+          markClickCount = 0;
+          closeKeywordPopup();
+          navigateAnchor(anchor, ev);
+        }
+      };
+
+      mark.addEventListener("click", handleMarkClick);
+      mark.addEventListener("dblclick", handleMarkDblClick);
       frag.appendChild(mark);
       madeMark = true;
       markCount++;
