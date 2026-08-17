@@ -1,6 +1,6 @@
 {
   "name": "ai-knowledge-assistant",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Local-first AI Knowledge Assistant Chrome extension (highlights, notes, multi-model AI, Convex sync).",
   "scripts": {
     "dev": "vite --config extension/vite.config.ts",

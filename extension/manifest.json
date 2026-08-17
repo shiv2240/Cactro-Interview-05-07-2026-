@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AI Knowledge Assistant",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Local-first AI knowledge assistant: save highlights, take notes, and get on-device or cloud AI summaries with optional Convex sync.",
   "permissions": [
     "storage",

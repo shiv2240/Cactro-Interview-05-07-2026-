@@ -18,11 +18,11 @@ Convex agent skills for common tasks can be installed by running
 
 ## Project Overview
 
-**Website Highlight Saver** (v2.0.2) is a Chrome Extension (Manifest V3) rebuilt as a local-first AI Knowledge Assistant that:
+**Website Highlight Saver** (v2.0.3) is a Chrome Extension (Manifest V3) rebuilt as a local-first AI Knowledge Assistant that:
 - Injects a floating tooltip on any webpage when text is selected (Shadow DOM context)
 - Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** (customizable via feature toggles in settings)
 - **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal with accessible header × buttons and marked HTML markdown rendering; AI runs in the background service worker using fast Groq-first multi-model routing (with automatic failover to on-device Nano) and real-time streaming for faster first paint.
-- Features context cleaning (stripping Wikipedia/nav chrome and centering on keyword), **👍 Like** personalization training (which enriches prompts without clobbering base settings), custom **AI Tone & Style** preferences, automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`), and pastel sticky-note marks
+- Features context cleaning (stripping Wikipedia/nav chrome and centering on keyword), **👍 Like** personalization training (which enriches prompts without clobbering base settings), custom **AI Tone & Style** preferences, automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`), and pastel sticky-note marks (supporting single-click for AI context and double-click to navigate embedded links)
 - Side panel dashboard (React/Vite) features a mist-and-ink palette & sky theme aesthetic, Streamdown markdown response rendering, pagination (10 items/page for highlights, notes, and timelines), instant search/delete, live refresh broadcast across views, theme switcher (Light / Dark / System sync) with fixed dark-theme contrast, feature toggles, password updates, and total highlights/notes AI summaries/rewrites/flashcards
 - Auth uses Convex Auth (email/password); session tokens stored in `chrome.storage.local` with IndexedDB-first offline support.
 

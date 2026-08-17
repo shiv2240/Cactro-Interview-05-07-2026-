@@ -29,7 +29,7 @@
 - [ ] Workspace switcher filters scoped data
 - [ ] AI Summary works with no user key paste or chrome://flags setup
 - [ ] AI Timeline shows recent actions with latency, Streamdown rendering, and 10 items / page pagination
-- [ ] Keyword insights tile (top-right) + pastel sticky-note marks on page when prefs enable them
+- [ ] Keyword insights tile (top-right) + pastel sticky-note marks on page when prefs enable them (single-click for AI popup, double-click link to navigate)
 - [ ] Sign in → Sync mode → save highlight/note → Sync now shows pushed > 0 (Convex)
 
 ## Security spot-checks

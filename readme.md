@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Backend-Convex-8b5cf6?style=flat-square" alt="Convex"/>
   <img src="https://img.shields.io/badge/AI-Multi--model-10b981?style=flat-square" alt="AI"/>
   <img src="https://img.shields.io/badge/Auth-Convex%20Auth-f59e0b?style=flat-square" alt="Auth"/>
-  <img src="https://img.shields.io/badge/Version-2.0.2-0ea5e9?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-2.0.3-0ea5e9?style=flat-square" alt="Version"/>
 </p>
 
 ---
@@ -30,7 +30,7 @@
 | 🎛️ **Feature Toggles** | Customize extension behavior in popup/sidepanel settings — toggle on-page features (Keywords tile, Sticky notes) and tooltip action buttons |
 | 📄 **Full Webpage Summarization** | Click "Summarize Page" to extract webpage content and generate structured sections: **Overview**, **Agenda & Main Topics**, and **Key Takeaways** |
 | 🌓 **Light / Dark / System Theme** | Seamless theme switcher (Light/Dark/System) with live synchronization between popup dashboard, side panel, and in-page Shadow DOM tooltip |
-| 🏷️ **Draggable Keyword Insights** | Automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`) and pastel sticky-note marks |
+| 🏷️ **Draggable Keyword Insights** | Automated keyword highlighting with a draggable, position-persisted keyword tile (`hs_tile_position`), pastel sticky-note marks, and dual link interaction (single-click for AI context, double-click to navigate link) |
 | 🌐 **Website Favicon Icons** | Displays original site favicons alongside saved highlights for easy visual website recognition |
 | ✦ **In-Page AI Summary** | Click "AI Summary" in the tooltip to open an in-page Shadow DOM modal with formatted HTML Markdown rendering & accessible header close controls |
 | ⚡ **SPA Navigation Handling** | Hardened SPA single-page application navigation detection and dynamic DOM re-injection |
