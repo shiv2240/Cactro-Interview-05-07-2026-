@@ -1,9 +1,10 @@
 ================================================================================
 AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION & PRIVACY JUSTIFICATIONS
 ================================================================================
+Version 2.0.1 (Manifest V3)
 
-AI Knowledge Assistant is a local-first Chrome extension for capturing highlights,
-taking notes, and getting real-time AI summaries without leaving the webpage.
+AI Knowledge Assistant is a local-first Chrome extension for capturing text highlights,
+taking notes, and receiving real-time AI summaries directly on any webpage.
 Powered by fast multi-model AI routing with automatic failover and Streamdown
 Markdown rendering — no API keys or complex flags required. Optional Convex cloud
 sync keeps your highlights and notes synchronized across devices when you choose
@@ -14,29 +15,37 @@ KEY FEATURES
 --------------------------------------------------------------------------------
 
 ★ SELECTION TOOLTIP & IN-PAGE MODAL (SHADOW DOM)
-• Select text to Save, Summarize, Explain, or Summarize Page.
+• Select text on any webpage to Save, Summarize, Explain, or Summarize Page.
 • In-page Shadow DOM modal displays real-time streaming AI answers with formatted
   HTML Markdown rendering (headings, bold text, code blocks, lists, blockquotes).
 • Background service worker handles all AI routing — developer API keys never
   touch webpage content scripts.
 
+★ FULL WEBPAGE SUMMARIZATION
+• Click "Summarize Page" to extract webpage content and generate structured sections:
+  Overview, Agenda & Main Topics, and Key Takeaways.
+
 ★ STREAMDOWN MARKDOWN RENDERING
 • Powered by Streamdown for ultra-fast, beautifully rendered Markdown output
-  across summaries, rewrites, and flashcards.
+  across summaries, rewrites, and flashcards with instant first-paint results.
 
 ★ SIDE PANEL DASHBOARD
-• Highlights View: Searchable list with favicons, saved dates, delete, and pagination (10 per page).
+• Highlights View: Searchable list with site favicons, saved dates, delete, and pagination (10 per page).
 • Notes View: Markdown note editor with tags, pin/favorite, AI actions (Summarize, Rewrite, Flashcards), and pagination (10 per page).
 • AI Timeline View: Searchable event history with latency metadata, Streamdown rendering, and pagination (10 per page).
 • Workspaces: Work, Personal, Coding, Research, and Study.
-• Theme & Toggles: Light / Dark / System sync themes with feature toggles for Keywords Tile, Sticky Notes, and Tooltip Buttons.
+• Theme & Toggles: Light / Dark / System sync themes with feature toggles for Keywords Tile, Sticky Notes, and Tooltip Action Buttons.
 
 ★ SINGLE-TAP 👍 LIKE PERSONALIZATION
 • Train AI tone and interest preferences with a single 👍 Like button on any AI output without clobbering base settings.
 • Custom AI Tone (Neutral, Friendly, Professional) & Style (Concise, Detailed, Bullets) preferences.
 
-★ MULTI-MODEL AI ENGINE
-• Fast multi-model AI with automatic failover if a model is slow or unavailable.
+★ CONTEXT CLEANING & KEYWORD INSIGHTS
+• Selection & keyword AI automatically strips webpage navigation chrome (e.g. Wikipedia headers) to focus purely on relevant content.
+• Draggable, position-persisted keyword tile (hs_tile_position) with pastel sticky-note marks.
+
+★ FAST MULTI-MODEL AI ENGINE
+• Multi-model AI routing with automatic failure recovery if a model is slow or unavailable.
 • Real-time streaming responses with local LRU caching and zero user key setup.
 
 ★ LOCAL-FIRST & PRIVACY MODES
