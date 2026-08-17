@@ -1,4 +1,6 @@
-import { marked } from "marked";
+import React from "react";
+import { createRoot, type Root } from "react-dom/client";
+import ReactMarkdown from "react-markdown";
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
 import { escapeHtml } from "../shared/sanitize";
 import type { AIAction, FeaturePrefs, UserPrefs } from "../shared/types";
@@ -75,13 +77,38 @@ function ensureTooltip() {
   tooltipShadow = tooltipHost.attachShadow({ mode: "open" });
 }
 
-function hideTooltip() {
+function hideTooltip(clearSelection = true) {
   if (tooltipShadow) tooltipShadow.innerHTML = "";
+  if (!clearSelection) return;
   try {
     window.getSelection()?.removeAllRanges();
   } catch {
     /* ignore */
   }
+}
+
+/**
+ * The content script must leave form controls and rich-text editors entirely
+ * alone. Clearing their Selection range on mouseup removes the editor caret on
+ * some sites, which makes normal typing appear to stop working.
+ */
+function isEditableTarget(path: EventTarget[]): boolean {
+  const editableSelector = [
+    "input",
+    "textarea",
+    "select",
+    "[contenteditable]",
+    "[role='textbox']",
+    "[role='searchbox']",
+    "[role='combobox']",
+    "[aria-multiline='true']",
+  ].join(",");
+
+  return path.some(
+    (node) =>
+      node instanceof HTMLElement &&
+      (node.isContentEditable || Boolean(node.closest(editableSelector)))
+  );
 }
 
 function showTooltip(x: number, y: number, text: string) {
@@ -270,12 +297,17 @@ function openModal(opts: {
       .body blockquote {
         border-left: 3px solid #3b82f6; padding-left: 12px; margin: 10px 0; opacity: 0.9;
       }
+      .header-actions { display: flex; align-items: center; gap: 8px; }
       .actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
       button {
         border: 0; border-radius: 8px; padding: 8px 12px;
         font-weight: 600; cursor: pointer; background: #e2e8f0; color: #0f172a;
       }
       button.primary { background: #3b82f6; color: white; }
+      button.copy-top {
+        width: 30px; height: 30px; padding: 0; display: inline-grid; place-items: center;
+      }
+      button.copy-top svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.8; }
       button.save { background: #fbbf24; color: #0f172a; }
       button.like { background: #059669; color: white; }
       button.close-x {
@@ -305,7 +337,12 @@ function openModal(opts: {
       <div class="card ${document.documentElement.dataset.akaTheme === "dark" ? "dark" : ""}">
         <div class="header">
           <h2>${escapeHtml(title)}</h2>
-          <button type="button" class="close-x" id="close" aria-label="Close" title="Close">&times;</button>
+          <div class="header-actions">
+            <button type="button" class="copy-top" id="copy" aria-label="Copy response" title="Copy">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h4"></path></svg>
+            </button>
+            <button type="button" class="close-x" id="close" aria-label="Close" title="Close">&times;</button>
+          </div>
         </div>
         <div class="focus" id="focus">${escapeHtml(focusLabel)}</div>
         <div class="meta" id="meta">Generating…</div>
@@ -316,13 +353,13 @@ function openModal(opts: {
         </div>
         <div class="actions">
           <button class="save" id="save">Save</button>
-          <button class="primary" id="copy">Copy</button>
         </div>
       </div>
     </div>
   `;
 
   const bodyEl = shadow.getElementById("body")!;
+  const markdownRoot: Root = createRoot(bodyEl);
   const metaEl = shadow.getElementById("meta")!;
   const feedbackEl = shadow.getElementById("feedback")!;
   const feedbackNote = shadow.getElementById("feedback-note")!;
@@ -331,6 +368,12 @@ function openModal(opts: {
   let rawMarkdown = "";
   let voted = false;
   let saved = false;
+
+  const renderMarkdown = (markdown: string) => {
+    markdownRoot.render(
+      React.createElement(ReactMarkdown, null, markdown)
+    );
+  };
 
   const copyPayload = () => {
     const body = (rawMarkdown || bodyEl.textContent || "").trim();
@@ -415,15 +458,11 @@ function openModal(opts: {
       if (isChromeText(rawMarkdown) && rawMarkdown.length > 120) {
         rawMarkdown =
           "Could not produce a clean summary for this selection. Try again.";
-        bodyEl.innerHTML = `<p>${escapeHtml(rawMarkdown)}</p>`;
+        renderMarkdown(rawMarkdown);
         metaEl.textContent = "Filtered page chrome";
         return;
       }
-      try {
-        bodyEl.innerHTML = marked.parse(rawMarkdown, { async: false }) as string;
-      } catch {
-        bodyEl.textContent = rawMarkdown;
-      }
+      renderMarkdown(rawMarkdown);
     }
     if (msg.type === MessageType.AI_STREAM_DONE) {
       if (msg.error) {
@@ -482,6 +521,11 @@ function toast(message: string) {
 function onMouseUp(e: MouseEvent) {
   if (!isContextValid()) return;
   const path = e.composedPath();
+  if (isEditableTarget(path as EventTarget[])) {
+    // Never clear a caret/selection owned by an input or rich-text editor.
+    hideTooltip(false);
+    return;
+  }
   if (isKeywordUiTarget(path as EventTarget[])) return;
   if (path.some((n) => n === tooltipHost || n === modalHost)) return;
 
@@ -495,6 +539,8 @@ function onMouseUp(e: MouseEvent) {
 }
 
 function onKeyDown(e: KeyboardEvent) {
+  // Let the host page fully own keyboard interaction while an editor has focus.
+  if (isEditableTarget(e.composedPath() as EventTarget[])) return;
   if (e.key === "Escape") {
     hideTooltip();
     closeModal();

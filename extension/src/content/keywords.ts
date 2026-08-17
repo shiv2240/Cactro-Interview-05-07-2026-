@@ -1,4 +1,7 @@
 import { MessageType, sendMessage } from "../shared/messaging/protocol";
+import React from "react";
+import { createRoot } from "react-dom/client";
+import ReactMarkdown from "react-markdown";
 import { escapeHtml } from "../shared/sanitize";
 import type { FeaturePrefs } from "../shared/types";
 import {
@@ -153,7 +156,16 @@ function isSkippable(node: Element | null): boolean {
   ) {
     return true;
   }
-  if ((node as HTMLElement).isContentEditable) return true;
+  // Rich-text editors commonly nest spans/divs under their editable host.
+  // Mutating any of those text nodes destroys the editor's caret and state.
+  if (
+    (node as HTMLElement).isContentEditable ||
+    node.closest?.(
+      "[contenteditable], [role='textbox'], [role='searchbox'], [role='combobox'], [aria-multiline='true']"
+    )
+  ) {
+    return true;
+  }
   if (node.id === TILE_ID || node.id === POPUP_ID || node.id === "aka-root") return true;
   if (node.closest?.(`#${TILE_ID}, #${POPUP_ID}, #aka-root, mark.${MARK_CLASS}`)) {
     return true;
@@ -376,6 +388,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         display: flex; align-items: flex-start; justify-content: space-between;
         gap: 10px; padding: 12px 14px 8px;
       }
+      .head-actions { display: flex; align-items: center; gap: 7px; }
       .term {
         font-size: 16px; font-weight: 780; letter-spacing: -0.02em; color: #2c2416;
         line-height: 1.25; word-break: break-word;
@@ -394,10 +407,23 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-size: 16px;
       }
       .close:hover { background: #efece3; color: #9a3412; }
+      .copy-top {
+        border: 1px solid #e0dccf; background: #fff; color: #5c5548;
+        border-radius: 6px; width: 28px; height: 28px; padding: 0; cursor: pointer;
+        display: inline-grid; place-items: center;
+      }
+      .copy-top:hover { background: #f3f0e6; }
+      .copy-top svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
       .body {
         padding: 2px 14px 10px; max-height: min(360px, 58vh); overflow: auto;
-        font-size: 13px; line-height: 1.55; color: #4a4336; white-space: pre-wrap;
+        font-size: 13px; line-height: 1.55; color: #4a4336; word-break: break-word;
       }
+      .body p { margin: 0 0 8px; }
+      .body p:last-child { margin-bottom: 0; }
+      .body h1, .body h2, .body h3 { margin: 10px 0 5px; font-size: 14px; line-height: 1.3; }
+      .body ul, .body ol { margin: 5px 0 9px; padding-left: 20px; }
+      .body li { margin: 3px 0; }
+      .body code { padding: 1px 4px; border-radius: 3px; background: #f1eee4; font-family: ui-monospace, Menlo, Consolas, monospace; }
       .actions {
         display: flex; align-items: center; gap: 8px;
         padding: 10px 14px 12px; border-top: 1px solid #ebe6da; background: #faf8f1;
@@ -426,20 +452,29 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
           <div class="term" id="term">${escapeHtml(meta.term)}</div>
           <span class="badge">Keyword summary</span>
         </div>
-        <button class="close" type="button" aria-label="Close" title="Close (Esc)" id="close">&times;</button>
+        <div class="head-actions">
+          <button class="copy-top" type="button" id="copy" aria-label="Copy response" title="Copy">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M15 9V5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h4"></path></svg>
+          </button>
+          <button class="close" type="button" aria-label="Close" title="Close (Esc)" id="close">&times;</button>
+        </div>
       </div>
       <div class="status" id="status">Generating insight…</div>
       <div class="body" id="body">Explaining “${escapeHtml(meta.term)}”…</div>
       <div class="actions">
         <button class="abtn abtn-save" type="button" id="save">Save</button>
-        <button class="abtn" type="button" id="copy">Copy</button>
         <span class="hint"><span class="kbd">Esc</span> close</span>
       </div>
     </div>
   `;
 
   const bodyEl = shadow.getElementById("body")!;
+  const markdownRoot = createRoot(bodyEl);
   const statusEl = shadow.getElementById("status")!;
+  const renderMarkdown = (markdown: string) => {
+    markdownRoot.render(React.createElement(ReactMarkdown, null, markdown));
+  };
+  renderMarkdown(`Explaining “${meta.term}”…`);
 
   shadow.getElementById("close")?.addEventListener("click", closeKeywordPopup);
 
@@ -536,7 +571,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
   let streamed = "";
   const applySafeFallback = (reason: string) => {
     liveSummary = safeOffline;
-    bodyEl.textContent = safeOffline;
+    renderMarkdown(safeOffline);
     statusEl.textContent = reason;
   };
   const onChunk = (msg: {
@@ -555,7 +590,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         return;
       }
       liveSummary = streamed;
-      bodyEl.textContent = streamed;
+      renderMarkdown(streamed);
       statusEl.textContent = "Streaming…";
       place();
     }
@@ -567,7 +602,7 @@ function showKeywordPopup(meta: KeywordMeta, anchor: HTMLElement | null): void {
         applySafeFallback("Done");
       } else {
         liveSummary = streamed;
-        bodyEl.textContent = streamed;
+        renderMarkdown(streamed);
         statusEl.textContent = msg.envelope?.latencyMs
           ? `${msg.envelope.latencyMs}ms`
           : "Done";

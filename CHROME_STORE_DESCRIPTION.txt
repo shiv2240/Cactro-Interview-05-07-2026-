@@ -61,7 +61,7 @@ PRIVACY
 • Cloud AI requests send only the prompt text needed to execute the selected AI action.
 • Full details available in PRIVACY_POLICY.md.
 
-Version 2.0.0 (Manifest V3)
+Version 2.0.1 (Manifest V3)
 
 
 ================================================================================

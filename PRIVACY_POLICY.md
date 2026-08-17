@@ -1,6 +1,6 @@
 # Privacy Policy — Website Highlight Saver
 
-**Last Updated:** August 4, 2026
+**Last Updated:** August 17, 2026
 
 **Website Highlight Saver** ("we", "our", or "the extension") is committed to protecting user privacy. This Privacy Policy outlines how our Chrome Extension collects, uses, and safeguards information when you use our service.
 

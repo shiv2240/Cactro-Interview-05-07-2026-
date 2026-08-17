@@ -2,8 +2,12 @@ import { getGroqApiKey } from "../swConfig";
 import type { AIProvider, GenerateOptions, StreamChunk } from "../types";
 
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-/** Fastest interactive model used in legacy popup/content paths — prefer over 70B. */
-export const GROQ_FAST_MODEL = "llama-3.1-8b-instant";
+/**
+ * Fast, production Groq model for interactive summaries.
+ * Groq retired llama-3.1-8b-instant for developer/free-tier API keys on
+ * 2026-08-16; openai/gpt-oss-20b is its documented replacement.
+ */
+export const GROQ_FAST_MODEL = "openai/gpt-oss-20b";
 export const GROQ_REQUEST_TIMEOUT_MS = 8_000;
 
 function withTimeout(

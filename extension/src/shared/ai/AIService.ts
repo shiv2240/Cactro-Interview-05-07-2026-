@@ -110,6 +110,10 @@ function logBreakdown(parts: Record<string, number | string | boolean>) {
   console.log(`[AI latency] ${bits}`);
 }
 
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown AI error";
+}
+
 export async function generateAI(
   ctx: AIRequestContext
 ): Promise<AIResponseEnvelope> {
@@ -157,16 +161,24 @@ export async function generateAI(
     });
   } catch (primaryErr) {
     // Groq failed → optional Nano (never before Groq). Timeout only on Nano path.
+    const primaryMessage = errorMessage(primaryErr);
+    console.warn(`[AI] Groq primary request failed; trying Nano fallback: ${primaryMessage}`);
     const fallback = await manager.pickNanoFallback();
     if (fallback) {
       provider = fallback;
-      text = await provider.generate({
-        system,
-        prompt,
-        maxTokens,
-        temperature,
-        timeoutMs: NANO_GENERATE_TIMEOUT_MS,
-      });
+      try {
+        text = await provider.generate({
+          system,
+          prompt,
+          maxTokens,
+          temperature,
+          timeoutMs: NANO_GENERATE_TIMEOUT_MS,
+        });
+      } catch (fallbackErr) {
+        throw new Error(
+          `Groq request failed (${primaryMessage}). Gemini Nano fallback failed (${errorMessage(fallbackErr)}).`
+        );
+      }
     } else {
       throw primaryErr;
     }
@@ -269,22 +281,30 @@ export async function* streamAI(
     // Drop partial Groq output and try Nano only on explicit Groq failure.
     const fallback = await manager.pickNanoFallback();
     if (provider.id === "groq" && fallback) {
+      const primaryMessage = errorMessage(err);
+      console.warn(`[AI] Groq primary stream failed; trying Nano fallback: ${primaryMessage}`);
       provider = fallback;
       full = "";
       ttftMs = null;
-      for await (const part of provider.stream({
-        system,
-        prompt,
-        maxTokens,
-        temperature,
-        timeoutMs: NANO_GENERATE_TIMEOUT_MS,
-      })) {
-        if (part.text) {
-          if (ttftMs === null) ttftMs = Date.now() - start;
-          full += part.text;
-          yield { chunk: part.text, done: false };
+      try {
+        for await (const part of provider.stream({
+          system,
+          prompt,
+          maxTokens,
+          temperature,
+          timeoutMs: NANO_GENERATE_TIMEOUT_MS,
+        })) {
+          if (part.text) {
+            if (ttftMs === null) ttftMs = Date.now() - start;
+            full += part.text;
+            yield { chunk: part.text, done: false };
+          }
+          if (part.done) break;
         }
-        if (part.done) break;
+      } catch (fallbackErr) {
+        throw new Error(
+          `Groq request failed (${primaryMessage}). Gemini Nano fallback failed (${errorMessage(fallbackErr)}).`
+        );
       }
     } else {
       throw err instanceof NanoTimeoutError
