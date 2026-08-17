@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WRONG FOLDER — Load extension/dist",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "You loaded the repo root. Unload this extension, run npm run build, then Load unpacked → extension/dist.",
   "action": {
     "default_title": "Wrong folder — use extension/dist",

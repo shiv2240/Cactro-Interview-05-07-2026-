@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/Backend-Convex-8b5cf6?style=flat-square" alt="Convex"/>
   <img src="https://img.shields.io/badge/AI-Multi--model-10b981?style=flat-square" alt="AI"/>
   <img src="https://img.shields.io/badge/Auth-Convex%20Auth-f59e0b?style=flat-square" alt="Auth"/>
-  <img src="https://img.shields.io/badge/Version-2.0.1-0ea5e9?style=flat-square" alt="Version"/>
+  <img src="https://img.shields.io/badge/Version-2.0.2-0ea5e9?style=flat-square" alt="Version"/>
 </p>
 
 ---

@@ -1,7 +1,7 @@
 ================================================================================
 CHROME WEB STORE PRIVACY & PERMISSIONS COMPLIANCE FORM GUIDELINES
 ================================================================================
-Version 2.0.1 (Manifest V3)
+Version 2.0.2 (Manifest V3)
 
 Copy and paste the exact text below into the corresponding form fields on the 
 Chrome Web Store Developer Console -> Privacy tab (Permission Justifications).

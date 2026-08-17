@@ -18,7 +18,7 @@ Convex agent skills for common tasks can be installed by running
 
 ## Project Overview
 
-**Website Highlight Saver** (v2.0.1) is a Chrome Extension (Manifest V3) rebuilt as a local-first AI Knowledge Assistant that:
+**Website Highlight Saver** (v2.0.2) is a Chrome Extension (Manifest V3) rebuilt as a local-first AI Knowledge Assistant that:
 - Injects a floating tooltip on any webpage when text is selected (Shadow DOM context)
 - Tooltip has three actions: **Save Highlight**, **AI Summary**, and **Summarize Page** (customizable via feature toggles in settings)
 - **AI Summary** and **Summarize Page** open an in-page Shadow DOM modal with accessible header × buttons and marked HTML markdown rendering; AI runs in the background service worker using fast Groq-first multi-model routing (with automatic failover to on-device Nano) and real-time streaming for faster first paint.

@@ -1,7 +1,7 @@
 ================================================================================
 AI KNOWLEDGE ASSISTANT — CHROME WEB STORE DESCRIPTION & PRIVACY JUSTIFICATIONS
 ================================================================================
-Version 2.0.1 (Manifest V3)
+Version 2.0.2 (Manifest V3)
 
 AI Knowledge Assistant is a local-first Chrome extension for capturing text highlights,
 taking notes, and receiving real-time AI summaries directly on any webpage.
